@@ -48,7 +48,13 @@ def subprocess_run(argv,cwd,env,timeout=100):
 def command(user,argv,cwd,env,timeout=110):
     # Arguments are native Saltcorn CLI commands, not mocks.
     # OS umask is applied inside the actual owner/guest user process.
+    # runuser on Ubuntu resets PATH/HOME even when passed an env dict.
+    # Re-introduce ONLY those two non-secret variables AFTER the UID switch;
+    # SQLite path and random credentials remain inherited environment,
+    # NEVER as process argv.
     args=["sudo","-n","runuser","-u",user,"--",
+          "/usr/bin/env","PATH="+env.get("PATH","/usr/bin:/bin"),
+          "HOME="+env.get("HOME","/tmp"),
           "/bin/bash","-c",'umask 077; exec "$@"',"s1-b8",*argv]
     return subprocess_run(args,cwd,env,timeout=timeout)
 
@@ -384,6 +390,8 @@ def main():
             with salt_log.open("w") as output:
                 owner_srv=subprocess.Popen([
                     "sudo","-n","runuser","-u",KERNEL,"--",
+                    "/usr/bin/env","PATH="+pathenv.get("PATH","/usr/bin:/bin"),
+                    "HOME="+pathenv.get("HOME","/tmp"),
                     "saltcorn","serve","--port","3108","--noscheduler"
                 ],cwd=str(stage),env=pathenv,stdout=output,
                   stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
