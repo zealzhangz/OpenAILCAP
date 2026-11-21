@@ -45,18 +45,20 @@ def subprocess_run(argv,cwd,env,timeout=100):
                           capture_output=True,check=False,timeout=timeout)
 
 
+def cli_env(env):
+    return {key:env[key] for key in (
+        "PATH","HOME","SQLITE_FILEPATH","SALTCORN_SESSION_SECRET",
+        "SALTCORN_NWORKERS")}
+
+
 def command(user,argv,cwd,env,timeout=110):
-    # Arguments are native Saltcorn CLI commands, not mocks.
-    # OS umask is applied inside the actual owner/guest user process.
-    # runuser on Ubuntu resets PATH/HOME even when passed an env dict.
-    # Re-introduce ONLY those two non-secret variables AFTER the UID switch;
-    # SQLite path and random credentials remain inherited environment,
-    # NEVER as process argv.
+    # Actual Saltcorn native CLI invoked through a one-use stdin launcher
+    # AFTER sudo/runuser changes Linux uid. No secret in process argv.
     args=["sudo","-n","runuser","-u",user,"--",
-          "/usr/bin/env","PATH="+env.get("PATH","/usr/bin:/bin"),
-          "HOME="+env.get("HOME","/tmp"),
-          "/bin/bash","-c",'umask 077; exec "$@"',"s1-b8",*argv]
-    return subprocess_run(args,cwd,env,timeout=timeout)
+          sys.executable,str(cwd/"native_env_launcher.py"),*argv]
+    return subprocess.run(
+        args,cwd=str(cwd),env=env,input=json.dumps(cli_env(env))+"\n",
+        text=True,capture_output=True,check=False,timeout=timeout)
 
 
 def cli_observation(result):
@@ -174,6 +176,7 @@ def main():
             "contract-pack.json":ROOT/"platform-saltcorn"/"contract-pack.json",
             "seed-contract.js":ROOT/"platform-saltcorn"/"seed-contract.js",
             "gateway_service.py":HERE/"gateway_service.py",
+            "native_env_launcher.py":HERE/"native_env_launcher.py",
             "native_http_client.py":HERE/"native_http_client.py",
             "physical_native_oracle.py":HERE/"physical_native_oracle.py"
         }
@@ -390,11 +393,13 @@ def main():
             with salt_log.open("w") as output:
                 owner_srv=subprocess.Popen([
                     "sudo","-n","runuser","-u",KERNEL,"--",
-                    "/usr/bin/env","PATH="+pathenv.get("PATH","/usr/bin:/bin"),
-                    "HOME="+pathenv.get("HOME","/tmp"),
+                    sys.executable,str(stage/"native_env_launcher.py"),
                     "saltcorn","serve","--port","3108","--noscheduler"
                 ],cwd=str(stage),env=pathenv,stdout=output,
-                  stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
+                  stderr=subprocess.STDOUT,stdin=subprocess.PIPE,text=True)
+                owner_srv.stdin.write(json.dumps(cli_env(pathenv))+"\n")
+                owner_srv.stdin.flush()
+                owner_srv.stdin.close()
             if not wait_port(salt_base,"/auth/login",timeout=100):
                 raise RuntimeError("REAL_SALTCORN_SERVER_NOT_READY "+
                                    salt_log.read_text()[-800:])
