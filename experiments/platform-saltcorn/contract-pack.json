@@ -1,0 +1,118 @@
+{
+  "tables": [
+    {
+      "name": "s1_contracts",
+      "description": "OpenAILCAP S1 contract low-code schema probe; not production model",
+      "min_role_read": 100,
+      "min_role_write": 1,
+      "fields": [
+        {
+          "name": "contract_no",
+          "label": "Contract Number",
+          "type": "String",
+          "required": true,
+          "is_unique": true,
+          "attributes": {}
+        },
+        {
+          "name": "title",
+          "label": "Title",
+          "type": "String",
+          "required": true,
+          "attributes": {}
+        },
+        {
+          "name": "amount_minor",
+          "label": "Amount in CNY cents (integer)",
+          "type": "Integer",
+          "required": true,
+          "attributes": {
+            "min": 0
+          }
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "String",
+          "required": true,
+          "attributes": {}
+        }
+      ]
+    },
+    {
+      "name": "s1_approvals",
+      "description": "OpenAILCAP S1 contract-approval 1:N schema probe",
+      "min_role_read": 1,
+      "min_role_write": 1,
+      "fields": [
+        {
+          "name": "contract_ref",
+          "label": "Contract",
+          "type": "Key",
+          "reftable_name": "s1_contracts",
+          "required": true,
+          "attributes": {
+            "summary_field": "contract_no"
+          }
+        },
+        {
+          "name": "approver",
+          "label": "Approver",
+          "type": "String",
+          "required": true,
+          "attributes": {}
+        },
+        {
+          "name": "action",
+          "label": "Action",
+          "type": "String",
+          "required": true,
+          "attributes": {}
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "s1_contract_list",
+      "table": "s1_contracts",
+      "viewtemplate": "List",
+      "min_role": 100,
+      "configuration": {
+        "columns": [
+          {
+            "type": "Field",
+            "field_name": "contract_no",
+            "state_field": "on"
+          },
+          {
+            "type": "Field",
+            "field_name": "title",
+            "state_field": "on"
+          },
+          {
+            "type": "Field",
+            "field_name": "amount_minor",
+            "state_field": "on"
+          },
+          {
+            "type": "Field",
+            "field_name": "status",
+            "state_field": "on"
+          }
+        ]
+      }
+    }
+  ],
+  "plugins": [],
+  "pages": [],
+  "page_groups": [],
+  "roles": [],
+  "library": [],
+  "triggers": [],
+  "tags": [],
+  "models": [],
+  "model_instances": [],
+  "event_logs": [],
+  "code_pages": []
+}

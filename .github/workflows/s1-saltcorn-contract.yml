@@ -1,0 +1,58 @@
+name: S1 Saltcorn native contract Pack reality check
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-saltcorn-contract.yml'
+      - 'experiments/platform-saltcorn/contract-pack.json'
+      - 'experiments/platform-saltcorn/seed-contract.js'
+      - 'experiments/platform-saltcorn/contract_verify.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual platform at reproducible version
+        run: |
+          set -euo pipefail
+          timeout 600s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          saltcorn --version
+      - name: Install native Pack schema and populate via native Table API
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-contract.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$SALTCORN_SESSION_SECRET" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 180s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f experiments/platform-saltcorn/contract-pack.json
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/seed-contract.js
+          test -s "$SQLITE_FILEPATH"
+      - name: Serve actual low-code views and REST API
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/saltcorn-contract-server.log" 2>&1 &
+          ready=0
+          for i in $(seq 1 80); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ready=1;break;fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ];then tail -n 70 "$RUNNER_TEMP/saltcorn-contract-server.log";exit 1;fi
+      - name: Independently assert native resource metadata and real web execution
+        run: python3 experiments/platform-saltcorn/contract_verify.py --db "$SQLITE_FILEPATH" --output /tmp/s1-saltcorn-contract.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-saltcorn-contract-native-pack
+          path: /tmp/s1-saltcorn-contract.json
+          if-no-files-found: warn
