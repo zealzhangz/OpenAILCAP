@@ -39,10 +39,12 @@
 
 ## 实际 CI 结果（2026-11-22 UTC+8）
 
-- 本 PR 当前 head `560f93540b6fd0abd6a5753fbed48c3a919a12ef` 上的 [Actions #44960158202](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44960158202) **completed/success**，Job **137016972416**；Artifact **14729067688** 含原始 B9/P0-A JSON 与 CLI/Chromium/SQL 日志。
+- 本次代码验证基线 `560f93540b6fd0abd6a5753fbed48c3a919a12ef` 上的 [Actions #44960158202](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44960158202) **completed/success**，Job **137016972416**；Artifact **14729067688** 含原始 B9/P0-A JSON 与 CLI/Chromium/SQL 日志。
 - 同批 **B9 36/36 + P0A-01—06 6/6 = 42/42 局部运行检查通过**；另外严格 Pack 编译器 **25/25**、B2 **18/18**、B5 **40/40** 单元回归通过；**0 模型调用**。
 - 真实 Plugin UID（本次 CI 观察值 995）读取权威 DB/config、UPDATE 均被 OS 拒绝；限权工具读取 HTTP 200，而 Model 写、发布与跨 app-b 访问各 HTTP 403；三次被拒操作由独立 SQL Oracle 验证无额外事件、回执或版本变化。
-- Agent 与独立 Plugin OS 进程持有同一个旧修订并发写 View title：本次观测 Agent 200、Plugin 409；物理 revision 5→6，只有 1 个新 receipt/事件；获胜原 changeId 重放 200/replayed=true，没有新事件；当前发布仍为 v1，Native 浏览器仍显示原有已发布合同，app-b 未变。**两种竞态获胜顺序并未都覆盖**，不得由本次调度顺序得出公平性或冲突自动合并结论。
+- Agent 与独立 Plugin OS 进程持有同一个旧修订并发写 View title：本次观测 Agent 200、Plugin 409；物理 revision 5→6，只有 1 个新 receipt/事件；获胜原 changeId 重放 200/replayed=true，没有新事件；当前发布仍为 v1，Native 浏览器仍显示原有已发布合同，app-b 未变。Agent HTTP 请求本次由可信 CI Controller 发起，不等于独立非 root Agent UID；**两种竞态获胜顺序并未都覆盖**，不得由本次调度顺序得出公平性或冲突自动合并结论。
 - `G1 NOT_PASSED`、冻结 `W 0/24`、`TC 0/18 FULL PASS` 保持。尤其 W06/W07 的近似局部场景不能代替完整契约及正式 Plugin 安装/第三方运行边界。
 
 原始证据可直接从 [CI Artifact #14729067688](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44960158202/artifacts/14729067688) 复核，避免用本文文字代替日志和独立物理 Oracle。
+
+- [G1 冻结账本审计 Actions #44960359634](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44960359634) completed/success：42 个冻结 ID、局部证据引用存在性及门禁状态满足校验器；该审计**不测试** 42 个冻结用例业务行为。
