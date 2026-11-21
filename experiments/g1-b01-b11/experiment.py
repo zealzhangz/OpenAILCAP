@@ -459,6 +459,32 @@ def main():
                               "value"]["status"]=="Approved",
                           {"approvalStates":transitions,
                            "businessOwner":"B2 Kernel ONLY"})
+                    # B11-45..48: authoritative transactional event-time outbox.
+                    src_code,source0=pull_events()
+                    check("B11-45-real-B2-record-writes-emit-4-atomic-outbox-events",
+                          src_code==200 and source0["head"]==4 and
+                          [e["seq"] for e in source0["events"]]==[1,2,3,4] and
+                          [e["cells"]["status"] for e in source0["events"]]==[
+                              "Draft","PendingLevel1","PendingLevel2","Approved"],
+                          {"eventTimeStatuses":[e["cells"]["status"]
+                                                for e in source0["events"]]})
+                    denied=pull_events(token="not-a-valid-token")
+                    check("B11-46-unauthorized-projection-pull-rejected",
+                          denied[0]==401 and
+                          denied[1]["error"]=="PROJECTION_TOKEN_REQUIRED",
+                          {"http":401})
+                    forbidden=b2("release.read",projection_token,{})
+                    check("B11-47-projection-bearer-not-valid-as-B5-tool-token",
+                          forbidden[0]==401,
+                          {"b5ReleaseReadHttp":401,
+                           "nativeReceivesToken":False})
+                    invalid=api_json(
+                        core_base+"/v4/apps/app-a/projection/pull","POST",
+                        {"after":-1,"limit":101},projection_token)
+                    check("B11-48-outbox-invalid-cursor-limit-rejected",
+                          invalid[0]==422 and
+                          invalid[1]["error"]=="PROJECTION_CURSOR_INVALID",
+                          {"http":422})
                     v1native=native_materialize("v1",v1)
                     feed1,applied1,native1_rows=sync_native(v1native["db"])
                     v1native["oracle"]=physical_native(v1native["db"])
