@@ -66,7 +66,9 @@ def main():
     return 0
 
 if __name__=="__main__":
-    try:exit(main())
-    except BaseException:
+    try:
+        code=main()
+    except Exception:
         print(json.dumps({"status":"FAIL","error":"SANDBOX_RUNTIME_EXCEPTION"}))
-        raise SystemExit(7)
+        raise SystemExit(7) from None
+    raise SystemExit(code)
