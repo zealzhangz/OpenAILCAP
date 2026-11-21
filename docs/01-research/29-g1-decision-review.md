@@ -99,3 +99,12 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **新的研究判断**：Domain Schema + 派生 Manifest 并非只能停留在概念模型，可以在 4 类最小对象上保持可执行的引用/运行/发布闭环。这是可证伪的**候选正向证据**，不等于已经与完整 Application IR 进行等能力工程对照并确认胜出。
 
 **G1 仍 NOT_PASSED，G1-B01 OPEN**：B2 是对 C1 机制的独立泛化原型，不是已归并的单内核；Agent 不是 LLM 自主需求理解，UI 只编辑受限 JSON，工作流不具备真实审批人的组织权限，插件沙箱/代码生成/多 DB/生产发布/迁移/上游平台全路径拦截仍缺失。冻结 W01—W24 仍 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一阶段优先对真实 LLM 生成受 Schema 审核的安全工具操作做一次受限实测，并以运行态 Oracle 决定是否通过，而非只看模型输出格式。
+
+
+## 2026-11-21：B3 真实大模型狭窄低代码创建闭环及 G1 再复审
+
+新增 [报告 36](36-s1-b3-real-deepseek-typed-plan-evidence.md)。[Actions #44891826332](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332) completed/success，**DEEPSEEK_KEY 真正发起一次模型 Function Calling 请求**，`actual_model_requests=1`，非离线假冒；B3 在线 24/24、离线 24/24，B3 18 项提议审查与 B2 18 项回归也全部通过；原始 Artifact 14702700418。模型提议的四类合同 Schema 由严格服务器端引用/类型/金额语义验证，实际独立 Agent HTTP 工具提交，物理 SQLite app revision/hash 正确；真 Chromium 与 Agent 交替编辑双向 409，Agent 发布被 403，模拟受权人工发布 v1，金额 100000001 分二级/100000000 分一级审批与运行 View 验证。PR #5 squash 合并 SHA `8e7951eadfd634bc2334995d4d49256b6938bd3e`，并保留首次离线拒绝旧 B2 三列 View 基线的 [负对照 #44891660938](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891660938)。
+
+**正向判断**：AI 模型与 Schema/Manifest 低代码元数据内核可以通过“模型仅提议→独立验证→可信工具执行→真实运行结果独立裁判”融合，固定合同资源的最小闭环已有真实模型证据。**但是**提示词已提供固定资源 ID、字段和类型、阈值/单位等强约束，模型不需要自主发现平台能力；后续 Agent View 再修改由确定性执行器生成，人工发布由测试 Chromium 模拟而非真正授权审批。没有自主需求消歧、多轮自动规划、生成自定义代码/构建测试、生产部署、插件沙箱或完整成熟可视化设计器。B2/B3 是研究用独立内核，未与上游低代码平台合并。
+
+**门禁维持**：S1 IN_PROGRESS / G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**；原冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一必要试验转向能力缺口触发的受限代码开发闭环（能构建/测试/失败不发布），并进行 Domain Schema + Manifest 与 Global Application IR 的等能力对照，而不再重复固定合同的模型规划调用。
