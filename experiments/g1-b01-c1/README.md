@@ -50,3 +50,8 @@ python3 run_suite.py ./c1-observations.json
 4. 下一轮必须在 Saltcorn 原生 /field/:id、Field.update/Pack/插件的真实写入路径验证；若不能确保强制治理，则禁用自动编辑和发布。
 
 完整 G1-B01 验收仍以 [W01—W24](../../docs/01-research/31-g1-b01-acceptance-matrix.md) 为准；本目录只提供**C1 机制级前置验证**。
+
+
+## 2026-11-21：C1 CI 首次独立核查
+
+[Run #44886944054](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054) completed/success；Job 136794151797，**31/31 unittest 执行通过，零失败/零错误**；[Artifact #14699494263](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054/artifacts/14699494263) 包含 JSON 观察和原始 unittest log。31 次执行来自 18 个不同测试方法定义（共享父类测试在 HttpPreflight 中再次运行），不能计为 31 个互异业务场景。PR #1 跨应用幂等键隔离测试已合并至 main。完整证据与限制见 [报告 32](../../docs/01-research/32-g1-b01-c1-real-ci-evidence.md)。没有使用 DeepSeek API。Saltcorn 原生 Web/插件仍 NOT_RUN，G1-B01 未关闭。
