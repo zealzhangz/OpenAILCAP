@@ -159,9 +159,9 @@ def main():
         for path in (authority,runtime):
             path.mkdir(mode=0o700)
         ready.mkdir(mode=0o755)
-        execute(["sudo","-n","chown","-R",KERN+":"+KERN,authority])
-        execute(["sudo","-n","chown","-R",RUNT+":"+RUNT,runtime])
-        execute(["sudo","-n","chown","-R",KERN+":"+KERN,ready])
+        # Create private config under the CI controller first, then chown
+        # to the kernel UID. A 0700 kernel-owned directory cannot be
+        # traversed by the test controller (that is the safety property).
         db=authority/"authority.sqlite"
         config=authority/"kernel-config.json"
         readyfile=ready/"kernel-ready.json"
@@ -179,7 +179,9 @@ def main():
             "runtimeToken":token_runtime,"appBPublisherToken":token_appb
         }),encoding="utf-8")
         config.chmod(0o600)
-        execute(["sudo","-n","chown",KERN+":"+KERN,config])
+        execute(["sudo","-n","chown","-R",KERN+":"+KERN,authority])
+        execute(["sudo","-n","chown","-R",RUNT+":"+RUNT,runtime])
+        execute(["sudo","-n","chown","-R",KERN+":"+KERN,ready])
         salt_session=secrets.token_urlsafe(45)
         admin_password=secrets.token_urlsafe(33)
         salt_env=os.environ.copy()
