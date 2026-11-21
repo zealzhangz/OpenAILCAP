@@ -1,0 +1,63 @@
+name: S1 Saltcorn real low-code runtime smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-saltcorn-runtime.yml'
+      - 'experiments/platform-saltcorn/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-platform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned reference platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 600s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          saltcorn --version
+      - name: Initialize actual SQLite schema and fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-saltcorn.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$SALTCORN_SESSION_SECRET" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 180s saltcorn reset-schema -f
+          timeout 180s saltcorn fixtures
+          test -s "$SQLITE_FILEPATH"
+      - name: Start real HTTP runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/saltcorn-server.log" 2>&1 &
+          ok=0
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Saltcorn server did not start"
+            tail -n 70 "$RUNNER_TEMP/saltcorn-server.log"
+            exit 1
+          fi
+      - name: Verify actual DB metadata, HTTP API and rendered view
+        run: |
+          python3 experiments/platform-saltcorn/smoke.py --db "$SQLITE_FILEPATH" --base-url http://127.0.0.1:3100 --output /tmp/s1-saltcorn-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-saltcorn-real-platform-result
+          path: /tmp/s1-saltcorn-results.json
+          if-no-files-found: warn
