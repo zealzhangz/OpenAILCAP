@@ -1,0 +1,83 @@
+name: S1 B6 real untrusted Docker plugin OS isolation and broker evidence
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b6-plugin-isolation.yml'
+      - 'experiments/g1-b01-b6/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b6-plugin-isolation.yml'
+      - 'experiments/g1-b01-b6/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-plugin-sandbox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Offline source compile and B6 host sandbox-policy unit tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b6/*.py
+          cd experiments/g1-b01-b6
+          python3 -u -m unittest -v test_isolation \
+            2>&1 | tee /tmp/s1-b6-policy.log
+      - name: B2 store transactional regression
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b2
+          python3 -u -m unittest -v test_schema \
+            2>&1 | tee /tmp/s1-b6-b2-regression.log
+      - name: B4 static code and permission regression
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b4
+          python3 -u -m unittest -v test_policy \
+            2>&1 | tee /tmp/s1-b6-b4-regression.log
+      - name: B5 unified typed tool broker regression
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b5
+          python3 -u -m unittest -v test_ir test_broker \
+            2>&1 | tee /tmp/s1-b6-b5-regression.log
+      - name: Pull Docker OS sandbox image and lock current image ID
+        run: |
+          set -euo pipefail
+          timeout 300s docker pull python:3.13-alpine
+          IMAGE_ID="$(docker image inspect python:3.13-alpine --format '{{.Id}}')"
+          [[ "$IMAGE_ID" =~ ^sha256:[a-f0-9]{64}$ ]]
+          echo "S1_B4_IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
+          echo "S1_B6_PINNED_DOCKER_IMAGE|$IMAGE_ID"
+      - name: Install real Chromium and pinned Playwright
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Actual untrusted Docker plugin + host tool relay + browser + SQL oracle
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b6/experiment.py \
+            --output /tmp/s1-b6-evidence.json \
+            2>&1 | tee /tmp/s1-b6-e2e.log
+      - name: Persist failures and successful objective test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b6-real-plugin-os-isolation-evidence
+          path: |
+            /tmp/s1-b6-policy.log
+            /tmp/s1-b6-b2-regression.log
+            /tmp/s1-b6-b4-regression.log
+            /tmp/s1-b6-b5-regression.log
+            /tmp/s1-b6-evidence.json
+            /tmp/s1-b6-e2e.log
+          if-no-files-found: warn
