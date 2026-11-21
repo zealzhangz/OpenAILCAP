@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "name": "status-helper",
+  "appId": "app-a",
+  "capabilities": [
+    "resource.read",
+    "resource.patch"
+  ],
+  "resources": [
+    "field.title"
+  ],
+  "fields": [
+    "status"
+  ],
+  "notes": "Research declaration only; host binds server Principal permissions to this manifest; no plugin sandbox or arbitrary code execution."
+}
