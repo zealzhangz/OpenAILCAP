@@ -49,3 +49,7 @@ R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C
 ## 2026-11-21：S1 真正人工 Chromium 浏览器实验完成
 
 成功 GitHub [Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)（Commit c0683877）运行了一次性 Saltcorn+SQLite、Chromium 真实管理员登录、正常 CSRF 字段向导、两个持旧上下文的浏览器标签页。UI01—UI09 **9/9 PASS**；B 保存字段标签后 A 旧页面保存将 B 变更覆盖，为真实 UI 失效反例。随后 CLI 确定性自动化以错误滞后的外部版本表覆盖浏览器变更，U10—U13 共 **5/5 PASS（含危险负例）**。交付 [浏览器脚本](../../experiments/platform-saltcorn/browser/README.md)、[完整研究报告](19-real-browser-edit-evidence.md)、[独立证据摘要](browser-edit-observations.json)。首次环境失败 Run #44873783039 归因为 Playwright 1.56 不支持 GitHub ubuntu-latest Ubuntu 26.04，固定 Ubuntu 24.04 后通过。未运行真实 LLM/跨应用/审批，G1 不通过。
+
+## 2026-11-21 H03 正向写入协议实验
+
+GitHub [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) 真实 Saltcorn SQLite + Chromium + 统一研究 HTTP 接口：**G01—G22 22/22**（鉴权/CSRF、422、409、内容指纹、跨应用拒绝、重放幂等、两独立 HTTP 并发、故障回滚、审计）及 **D01—D04 4/4**（Saltcorn 原生 Field.update 绕过研究账本，网关实际识别漂移并失败关闭），最后 Saltcorn REST/HTML 重启可用。原始 Artifact 14695407749。仅证明研究接口内的受控写入，不等于生产级原生设计器改造、真实 LLM Agent 或原合同业务全面验收；G1 仍未通过。证据见 [报告 20](20-governed-http-evidence.md)。

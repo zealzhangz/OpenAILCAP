@@ -97,3 +97,7 @@
 ## E21 — 实际浏览器人工字段编辑与旧页面覆盖（S0）
 
 [GitHub Actions #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208) 真正运行 Saltcorn HTTP、Python Playwright+Chromium，创建临时管理员登录、使用 /field/7 表单正常 POST（_csrf/contextEnc 均在请求体内），B 标签页保存 Browser B Saved 后，持旧上下文的 A 再保存 Browser A Stale Save，物理 SQLite 证实 B 的变更丢失。匿名直接访问字段编辑被重定向 /auth/login。共 9 项浏览器断言 PASS，**其中 UI06 是静默覆盖的危险负面证据**。同一平台中浏览器写入未维护研究外部版本账本，下一步模拟 Agent 以过期 revision=0 再次 APPLIED 并覆盖浏览器结果（后置 5/5 PASS，但覆盖危险）。固定上游 [字段路由](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/server/routes/fields.ts) 和 [向导模型](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/saltcorn-data/models/workflow.ts)，研究报告 [19](19-real-browser-edit-evidence.md)。
+
+## E22 — 研究网关对真实低代码元数据的统一版本化 HTTP 写入正向证据（S0，限域）
+
+真实 [GitHub Actions #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) completed/success，Job #136756624531，Artifact #14695407749。22 项受控写入断言与 4 项绕过检测通过：网关自己的真实 Chromium 浏览器和模拟 Bearer Agent 客户端使用同一原子修订/指纹接口，旧浏览器表单、旧 Agent 均得到 HTTP 409；两 HTTP 请求竞争同资源一胜一拒；SQL 错误注入回滚；审计/幂等行为可读回。Saltcorn 原生 Field.update 特意绕过研究接口后，网关识别 OUT_OF_BAND_DRIFT 并拒绝后续读写，真正 Saltcorn REST/HTML 重启读回成功。**限域**：浏览器为自建网关页面，不是 Saltcorn 官方 /field 编辑器；原生编辑器仍可绕过；HTTP Agent 无大模型；直接写 _sc_fields 不可用于生产。详见 [完整报告](20-governed-http-evidence.md) 与 [结果 JSON](governed-http-observations.json)。

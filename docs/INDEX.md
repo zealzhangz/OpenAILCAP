@@ -80,3 +80,11 @@
 - [原始成功 GitHub Actions Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)，Artifact 14694788713
 
 **本轮重大突破**：真实 Chromium 管理员页面已实测字段提交，B 保存后 A 旧表单成功覆盖 B，之后外部 Agent 版本表没有记录人工编辑，再一次错误允许模拟 Agent 覆盖真实浏览器变更。9/9 浏览器与 5/5 后置断言通过，其中两次覆盖是**故意复现的负面结果**。此前 Run #44873783039 因 Ubuntu 26.04 与 Playwright 1.56 不兼容而在浏览器安装前失败，固定 ubuntu-24.04 后成功。**G1 未通过；合同完整 TC 仍 0/18。**
+
+## 2026-11-21：S1 共享受治理 HTTP 编辑接口正向验证
+
+- [真实 Saltcorn SQLite 上的共享编辑协议研究报告 20](01-research/20-governed-http-evidence.md)
+- [22+4 项 GitHub CI 证据摘要](01-research/governed-http-observations.json)；原始 [Actions Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928)，Artifact 14695407749
+- [研究用网关、浏览器及模拟 Agent 验收代码](../experiments/platform-saltcorn/governed/README.md)
+
+**本轮明确的正向结果**：研究网关自建浏览器与模拟 Agent 共用真实 SQLite 的修订/指纹/幂等/审计后，过时 Web 表单与 Agent 请求均返回 HTTP 409，不覆盖最新值；两个 HTTP 并发仅一胜、故障注入能够回滚；Saltcorn 原生 Field.update 绕过网关后，网关能够以 OUT_OF_BAND_DRIFT 失败关闭。**但原生 Saltcorn 编辑器未接入这套网关，Agent 并非 LLM，仍不代表完整人机开发闭环。G1 未通过，合同 18 项完整任务依然 0/18。**

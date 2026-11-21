@@ -1,0 +1,124 @@
+{
+  "study": "S1 Shared Governed HTTP Editing Gateway research on actual Saltcorn SQLite",
+  "date": "2026-11-21",
+  "source_commit": "adcadeef3b836a4fcc7c95c4557f764524692d27",
+  "tested_platform": "@saltcorn/cli@1.7.0-beta.5, native Pack + physical SQLite, Ubuntu 24.04 / Playwright 1.56 Chromium",
+  "ci": {
+    "run": 44874668928,
+    "job": 136756624531,
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928",
+    "status": "completed",
+    "conclusion": "success",
+    "artifact": {
+      "id": 14695407749,
+      "name": "s1-governed-http-shared-editing"
+    }
+  },
+  "raw_evidence": "Two complete original JSON results in GitHub Actions artifact; this is a curated, non-exhaustive transcription corroborated against job stdout",
+  "main": {
+    "cases": [
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11",
+      "G12",
+      "G13",
+      "G14",
+      "G15",
+      "G16",
+      "G17",
+      "G18",
+      "G19",
+      "G20",
+      "G21",
+      "G22"
+    ],
+    "passed": 22,
+    "total": 22,
+    "result": "PASS"
+  },
+  "native_bypass": {
+    "cases": [
+      "D01",
+      "D02",
+      "D03",
+      "D04"
+    ],
+    "passed": 4,
+    "total": 4,
+    "result": "PASS"
+  },
+  "native_runtime_reopen": {
+    "contract_api_http": 200,
+    "contract_view_http": 200,
+    "stdout_marker": "NATIVE_SALTCORN_REOPEN_REST_AND_HTML_PASS"
+  },
+  "observed": {
+    "http_unauthenticated": 401,
+    "readonly_write": 403,
+    "other_app": 403,
+    "invalid_label": 422,
+    "browser_post_saved_http": 200,
+    "browser_stale_http": 409,
+    "browser_stale_write_preserved": "Browser Governed Title",
+    "browser_csrf_missing_http": 403,
+    "agent_outdated_http": 409,
+    "agent_outdated_error": "VERSION_CONFLICT",
+    "agent_separate_resource": "Automated Status",
+    "browser_title_still": "Browser Governed Title",
+    "idempotent_replay": true,
+    "reused_id_conflict_http": 409,
+    "same_revision_concurrent_http_statuses": [
+      200,
+      409
+    ],
+    "concurrent_status_resource_revision": 2,
+    "fault_injection_http": 500,
+    "after_rollback_title_revision": 1,
+    "fault_injection_success_change_id_persisted": false,
+    "audit": {
+      "APPLIED": 4,
+      "VERSION_CONFLICT": 3,
+      "actors_in_success": [
+        "human",
+        "agent"
+      ]
+    },
+    "native_bypass_final_title": "Native Outside Gateway",
+    "native_read_http": 409,
+    "native_write_http": 409,
+    "native_error": "OUT_OF_BAND_DRIFT",
+    "native_guard_revision": 2,
+    "native_failed_change_id_persisted": false
+  },
+  "classification": {
+    "positive_research_claim": "Two clients explicitly using one lab-owned HTTP gateway shared an atomic versioned resource editing contract",
+    "negative_research_claim": "Actual Saltcorn native Field.update still bypasses the lab gateway; fingerprint drift detection must fail closed",
+    "blocked_claims": [
+      "Saltcorn native /field editor integrated with gateway",
+      "Production-ready low-code runtime cache consistency",
+      "Real LLM Agent and tool delegation",
+      "Plugin and multi-app security assurance",
+      "Full contract business benchmark tasks completed",
+      "Application IR superiority established"
+    ],
+    "actual_llm_agent": false,
+    "actual_native_browser_editor_modified": false,
+    "browser_operated_lab_owned_governed_ui": true,
+    "real_saltcorn_sqlite_metadata": true,
+    "prod_security_cleared": false
+  },
+  "stage": {
+    "phase": "S1",
+    "G1": "NOT_PASSED",
+    "full_contract_tasks_passed": 0,
+    "full_contract_tasks_total": 18
+  }
+}

@@ -77,3 +77,9 @@ OpenAILCAP 必须同时允许人工编辑、AI 通过配置工具修改、AI 创
 [Saltcorn Chromium 实际编辑证据](19-real-browser-edit-evidence.md)（[Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)）：本次首次采用真正的管理员浏览器页面而不是 CLI 模拟人工。两标签页打开同一旧 title 编辑向导，B 正常保存后 A 持旧表单提交，数据库静默变成 A 的值；模拟 Agent 仅维护自己的版本账本，仍按旧 revision=0 接受写入并再次覆盖人工值。
 
 **候选 ADR 的技术结论提升为必须满足的强约束**：统一受治理写入并非仅 AI Agent 侧的功能。真实 Web 设计器必须以相同 revision/指纹令牌提交变更，并在服务端通过原子事务校验；对于旧版本即使是管理员，也需返回明确冲突，而非仅检查角色与 CSRF。已验证 Saltcorn 字段编辑路由有真实权限与 CSRF，但不能把它们误认为并发一致性机制。该 ADR 仍是 S1 候选，**不是已经建成的 OpenAILCAP 统一写入 API**。还需通过带真实登录会话的安全版 API、插件路径与开发 Agent 的独立验收后才能决策。
+
+## 2026-11-21 ADR-S1-001 正向机制补充
+
+最新 [真实 HTTP 治理研究](20-governed-http-evidence.md)、[Actions #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928)：一个**仅限研究网关自己的浏览器和模拟 Agent 客户端**的统一原子版本/指纹写入协议，已完成旧 Web/Agent 409、非冲突保留、独立并发一胜一拒、幂等审计、事务回滚，22/22。原生 Saltcorn Field.update 仍可绕开网关，但外部指纹漂移可触发网关 409 失败关闭，4/4。
+
+**候选 ADR 判断不变，但已有正向可复现性证据**：优先验证共享领域命令与事务性版本控制，不允许将实验 direct SQL 写 Saltcorn _sc_fields 的办法作为生产实现。正式接入必须在 Saltcorn/候选内核的受支持扩展点完成缓存/钩子/Schema 一致性，并纳入真实原生 Web、Agent 与插件全部写入口；G1 和正式 ADR 选型仍待完成。

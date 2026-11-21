@@ -111,3 +111,9 @@ H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑
 ## 2026-11-21 H03 真实 Chromium 浏览器编辑负例
 
 [GitHub Actions #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208) 取得首次**真正浏览器人工操作**（登录、CSRF、字段向导）的一手证据：同一会话两标签页 A/B 同时打开旧 Title，B 先保存 Browser B Saved，A 后提交过时上下文，数据库最终 Browser A Stale Save，B 的改动丢失。随后模拟 Agent 使用未被浏览器修改的实验 CAS 版本表，再将字段覆盖成 Agent Overwrites Browser，数据库与 HTTP 读回证实。**H03 已真实证伪“未经治理的旧页面/Agent 侧版本表足以保障多轮编辑”**，但并未完成可靠人机协作的正向证明；真实 LLM Agent、可信共享写入 API、租户、审计和原子 CAS 对 Web 路由仍待验证。H03 和 G1 都保持未通过。
+
+## 2026-11-21 H03 正向受治理写入证据（但 H03 未完成）
+
+[Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) 确认真正 Saltcorn SQLite 中两类**自愿接入研究网关**的编辑客户端（自建 Chromium 页面、确定性模拟 Agent HTTP）能够共用原子 revision/内容指纹/幂等与实验审计：旧 Web 表单、旧 Agent 均得到 409，非冲突修改保留，并发同资源一胜一拒，错误注入无部分提交。**D01—D04 负对照**：Saltcorn 自身 Field.update 能绕过研究网关，但内容指纹漂移会触发网关失败关闭，避免继续用旧账本误写。
+
+这为“受治理领域命令接口”提供**有限正向可行性证据**，并不证明“所有人工/Agent/插件实际写入口已统一”；网关页面是研究 UI，非原生 Saltcorn 编辑器；模拟 Agent 不是模型。**H03 平台级及真实 AI/人工交替目标仍未通过**，H01 的 Application IR vs 分域模型没有因本实验得到最终结论。G1 未通过。完整 [源码/报告](../01-research/20-governed-http-evidence.md)。

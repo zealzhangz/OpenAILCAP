@@ -59,3 +59,7 @@ CI 只上传不含密钥或数据库文件的结构化结果。若安装失败�
 ## 2026-11-21 真实浏览器字段编辑实测
 
 新增 [browser/](browser/README.md) Playwright + Chromium 实验，GitHub [Actions Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208) 成功，9/9 实际人工 Web 字段向导与 5/5 后置模拟 Agent 检查符合预注册预期。**危险反例**：同一字段 B 页面先保存，A 旧页面后提交将 B 标签覆盖；随后基于独立旧版本账本的模拟 Agent 再次覆盖人工结果。真实登录/CSRF/匿名拒绝均有一手日志。Agent 是 CLI 确定性脚本，不是真正 LLM。CI 初次因 Ubuntu 26.04 与 Playwright 不兼容失败，改固定 Ubuntu 24.04 后通过。G1 未通过。
+
+## 2026-11-21 真实 SQLite 的共享 HTTP 编辑协议正向研究
+
+新增 [governed/](governed/README.md)，[CI #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) completed/success，主流程 22/22、原生绕过漂移检测 4/4。研究网关自带的 Chromium HTML 页面和模拟 Agent Bearer HTTP 客户端共用真实 Saltcorn SQLite 的事务/版本/指纹/幂等/审计，旧页面 409、Agent 旧上下文 409、并发一胜一拒，失败可回滚。Saltcorn 原生 Field.update 绕过后，网关用指纹发现未登记变更并失败关闭。**研究页不是 Saltcorn 自带 /field 编辑器，Agent 不是真实 LLM；实验 direct SQL 内表更新不用于生产，G1 未通过。** 详见 [报告 20](../../docs/01-research/20-governed-http-evidence.md)。

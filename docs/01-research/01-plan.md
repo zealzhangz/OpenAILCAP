@@ -67,3 +67,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：Web 人工设计器实证推进
 
 新增 [真实 Chromium 两标签页字段编辑](19-real-browser-edit-evidence.md)，Run [#44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208) completed/success。Playwright 在真实 Web 登录会话下打开两个持旧上下文的字段向导，分别提交，SQLite 显示 B 先保存后 A 旧页面覆盖 B；一次性 Web 管理员、CSRF、6 次真实 POST 及未认证跳转均有日志。模拟 Agent 再依据未更新的研究账本改写同一字段，真实数据库再次发生覆盖。**人工部分已是真实浏览器操作**，Agent 仍是确定性 CLI，不能误称 AI 协作验证通过。原 Run [#44873783039](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873783039) 因 Playwright 不支持 GitHub ubuntu-latest 26.04 在安装阶段失败，修订 ubuntu-24.04 后完成，已归档失败根因。
+
+## 2026-11-21：受治理 HTTP 编辑接口的正向研究闭环
+
+在此前真实 Saltcorn 浏览器旧表单丢更新、外部版本表被绕过两类负例之后，本轮新增共享 HTTP 命令原型：[源码](../../experiments/platform-saltcorn/governed/README.md)，[GitHub CI #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) completed/success。研究网关自建 Chromium 页面与确定性 Bearer Agent 共用 Saltcorn 真实 SQLite 修订及指纹，在独立数据库上 **G01—G22 22/22**，原生绕过时 **D01—D04 4/4**。数据库事务回滚、并发一胜一拒、409 版本冲突、审计/幂等和原生环境重启读回已有证据。具体 HTTP 结果以 [报告 20](20-governed-http-evidence.md) 为准；研究直接更新 _sc_fields 只可用于实验，不是生产适配方案。下一步优先真实 Agent 工具/合同审批，不再重复单字段版控小试。**G1 仍未通过。**
