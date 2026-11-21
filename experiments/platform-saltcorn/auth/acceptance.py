@@ -42,6 +42,24 @@ def http_post(ctx,base,path,body):
     response=ctx.request.post(base+path,data=json.dumps(body),
                               headers={"Content-Type":"application/json"},timeout=20000)
     content=response.text()
+    # Scrubbed diagnostics: never print Cookie, Authorization, CSRF or raw HTML.
+    kind="unknown"
+    err=None
+    keys=[]
+    try:
+        obj=json.loads(content)
+        kind="json"
+        if isinstance(obj,dict):
+            keys=list(obj.keys())[:10]
+            err=str(obj.get("error",""))[:180] if "error" in obj else None
+    except ValueError:
+        kind="html" if "<html" in content.lower() or "<!doctype" in content.lower() else "non-json"
+    print("S1_NATIVE_HTTP_DIAGNOSTIC|"+json.dumps({
+        "path":path,"http":response.status,
+        "final_path":response.url.replace(base,""),
+        "content_type":response.headers.get("content-type",""),
+        "response_kind":kind,"json_keys":keys,"error_code":err
+    }),flush=True)
     return response.status,content[:600]
 
 def run(a,record):
