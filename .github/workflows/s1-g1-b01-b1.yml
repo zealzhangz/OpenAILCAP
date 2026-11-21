@@ -1,0 +1,51 @@
+name: S1 G1-B01 B1 real human editor plus Agent and Plugin processes (no model)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-g1-b01-b1.yml'
+      - 'experiments/g1-b01-c1/**'
+  push:
+    paths:
+      - '.github/workflows/s1-g1-b01-b1.yml'
+      - 'experiments/g1-b01-c1/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-owned-editor-same-mutation-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned Chromium and Playwright - no model API
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Compile all B1 Python files and rerun existing C1 baseline
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-c1/*.py
+          cd experiments/g1-b01-c1
+          python3 -u run_suite.py /tmp/s1-b1-c1-regression.json \
+            2>&1 | tee /tmp/s1-b1-c1-regression.log
+      - name: Real Chromium UI + actual Agent/Plugin subprocess shared SQLite acceptance
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-c1/browser_acceptance.py \
+            --output /tmp/s1-b1-browser-agent-plugin.json \
+            2>&1 | tee /tmp/s1-b1-browser-agent-plugin.log
+      - name: Upload independent observations (not W01-W24 gate pass)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-g1-b01-b1-real-browser-agent-plugin
+          path: |
+            /tmp/s1-b1-c1-regression.json
+            /tmp/s1-b1-c1-regression.log
+            /tmp/s1-b1-browser-agent-plugin.json
+            /tmp/s1-b1-browser-agent-plugin.log
+          if-no-files-found: warn
