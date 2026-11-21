@@ -91,3 +91,8 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：三项核心 S1 AI 机制均取得真实平台限域证据
 
 工具选择：[报告 25](25-deepseek-real-tool-call.md)；模式选择：[报告 26](26-deepseek-mode-route-evidence.md)；真实浏览器/AI 交替编辑：[报告 27](27-real-deepseek-human-roundtrip-evidence.md)。最新 [Actions #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152) 8/8 单元 + 16/16 真实平台，通过一次 583 Tokens DeepSeek 调用读取 H1 的真实元数据并生成受限 status Patch，H2 浏览器继续修改后仍保留 AI 状态，旧 Patch 拒绝。三项虽都有**小范围正向实验**，但现有低代码功能、代码触发器和 CAS 都由研究人员预写；并未证明 AI 自主生成应用/代码，原生编辑器仍绕过版本门禁。后续优先集中剩余 S1 1.1—1.5 综合交付、候选 ADR 与正式 G1 决策，谨慎将完整 PoC 留到 S3。G1 NOT_PASSED。
+
+
+## 2026-11-21：C2 第三方原生浏览器安全路径第一次真实插桩
+
+C1 之后新增 [C2 真实 Saltcorn 字段路由研究](33-g1-b01-c2-native-route-evidence.md) 与 [Run #44887680474](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474)：依托真实 Chromium、受签名的字段初始 label 上下文和研究修改后的原生 `fieldFlow.onDone` 检查，B 先保存，A 旧表单最终 POST 409，8/8 浏览器断言通过；但是另一个真正原生 CLI Field.update 绕过了 Web 补丁（危险负对照 1/1）。临时修改 npm 编译路由并不原子，不是平台可维护方案。因此 S1 的架构结论进一步收敛：**不能只治理 Agent 或浏览器，需要所有实际写入口强制经过同一可信核心**。G1-B01 仍 OPEN。
