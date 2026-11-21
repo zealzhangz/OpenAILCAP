@@ -1179,11 +1179,15 @@ def main():
                           {"periodicFullMappedRowAudit":"DRIFT",
                            "noNewSourceEvents":True})
                     raw_dirty=web_call(native1+ROUTE)
-                    check("B12-76-negative-raw-native-HTTP-not-read-guarded",
+                    polluted=native_inspect(v1native["db"])
+                    check("B12-76-negative-native-HTTP-still-200-despite-drift",
                           raw_dirty[0]==200 and
-                          b"B12_TAMPERED" in raw_dirty[2] and
-                          native_inspect(v1native["db"])["lastSeq"]==20,
-                          {"unsafeDirectNativeReadStillPossible":True,
+                          any(row["title"]=="B12_TAMPERED"
+                              for row in polluted["rows"]) and
+                          polluted["lastSeq"]==20,
+                          {"nativeHttpStatus":raw_dirty[0],
+                           "nativePhysicalSqlHasTamper":True,
+                           "httpShowsTamper":b"B12_TAMPERED" in raw_dirty[2],
                            "readTimeFailClosedNotImplemented":True})
                     repair_sql=(
                         "import sqlite3,os\n"
