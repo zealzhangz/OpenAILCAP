@@ -148,6 +148,14 @@ def main():
         root=Path(rootstr);root.chmod(0o755)
         stage=root/"source";stage.mkdir(mode=0o755)
         private=root/"private";private.mkdir(mode=0o700)
+        # Give the untrusted native Saltcorn CLI a writable HOME so a
+        # failure cannot be misattributed to a missing npm cache/config path.
+        # The real DB path remains deliberately inaccessible via 0700 DAC.
+        pluginhome=root/"plugin-home";pluginhome.mkdir(mode=0o700)
+        home_setup=subprocess.run([
+            "sudo","-n","chown",PLUGIN+":"+PLUGIN,str(pluginhome)
+        ],capture_output=True,text=True,check=False)
+        if home_setup.returncode:raise RuntimeError("PLUGIN_HOME_CHOWN_FAILED")
         ready=root/"ready";ready.mkdir(mode=0o755)
         db=private/"native-saltcorn.sqlite"
         config=private/"gateway-config.json"
@@ -188,7 +196,7 @@ def main():
                           # Even with Saltcorn auth secret known, actual DAC
                           # must deny native CLI direct SQLite access.
                           "SALTCORN_SESSION_SECRET":salt_secret,
-                          "SALTCORN_NWORKERS":"1","HOME":str(root)})
+                          "SALTCORN_NWORKERS":"1","HOME":str(pluginhome)})
         owner_srv=None;gateway_srv=None
         try:
             def owner_native(args,timeout=110):
@@ -475,7 +483,7 @@ def main():
                     except subprocess.TimeoutExpired:proc.terminate()
             subprocess.run(["sudo","-n","chown","-R",
                             str(os.getuid())+":"+str(os.getgid()),
-                            str(private),str(ready)],
+                            str(private),str(ready),str(pluginhome)],
                            text=True,capture_output=True,timeout=10,check=False)
             result["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in result["checks"]),
