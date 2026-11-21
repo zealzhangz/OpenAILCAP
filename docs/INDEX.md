@@ -149,3 +149,11 @@
 - [G1 综合评审与条件性继续建议](01-research/29-g1-decision-review.md)：六类交付物逐项映射和五项 P0 阻断，明确 Gate Status **NOT_PASSED**、研究建议 **CONDITIONAL GO（只允许 S2 范围预研准备，不代表正式进入 S2）**。
 
 **本轮没有新增 CI、外部模型调用或平台运行。** 前序真实证据的边界保持不变：模型路由 6/6、Saltcorn 20/20；真实 Chromium/DeepSeek 顺序编辑 8/8+16/16；原生 Web 编辑路径的 CAS 绕过风险未解除，完整合同冻结用例仍 0/18 FULL PASS。下一优先事项是全渠道强制治理写路径的可证伪设计和真实 PoC，不能通过增加文档绕过 G1。
+
+## 2026-11-21：S1 G1-B01 全渠道强制写入机制的可证伪契约
+
+- [统一写入命令/权限/CAS/幂等/漂移隔离/发布门禁规范](01-research/30-g1-b01-unified-write-contract.md)：逐一枚举 Saltcorn 原生浏览器、Field.update/CLI、Pack、Agent、插件和数据库维护路径；明确不能用仅限 Agent 的外部账本替代全渠道治理。
+- [24 项独立验收场景与对照组](01-research/31-g1-b01-acceptance-matrix.md)：明确真实原生浏览器旧表单、真实 Plugin、真实两进程、跨应用、缓存热读回、远端未知结果和无模型人工模式的可证伪 PASS/FAIL 标准。
+- [机器可读预注册用例基线](01-research/g1-b01-acceptance-cases.json)：W01—W24 全部标记 `NOT_RUN`，供后续 CI 在真实运行后生成独立 observations；不冒称已修复 Saltcorn 原生编辑器。
+
+**严格限制**：本轮是设计规范与验收协议交付，**没有新增真正运行的全写入者 PoC 或 CI**，未使用 DeepSeek API。此前原生 Web stale-form 覆盖及直写漂移风险仍存在；G1-B01 **未关闭**，G1 继续 **NOT_PASSED**，冻结合同验收仍 **0/18 FULL PASS**。
