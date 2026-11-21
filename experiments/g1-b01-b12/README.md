@@ -55,3 +55,12 @@ python3 experiments/g1-b01-b12/experiment.py --output /tmp/s1-b12-evidence.json
 ```
 
 下一步 B13：优先**受信 Consumer 最小权限身份 + 受控 IPC**，并验证**真实 HTTP 读取前 fail-closed**，配合源签名/派生重建与完整审计，再讨论企业行级权限与多租户隔离。
+
+
+## 已完成实测（2026-11-21）
+
+- [报告 45](../../docs/01-research/45-s1-b12-autonomous-consumer-crash-recovery-native-drift-evidence.md)；[最终 CI #44910951780](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910951780) **completed / success**，Job **136866440843**，[原始 Artifact #14709752514](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910951780/artifacts/14709752514)：B12 **22/22** 单测、B11 **28/28**、B10 **34/34**、B2 **18/18**、B5 **40/40** 回归，真实 B11 62 + B12 新增 17 = **79/79 E2E PASS**，0 次 DeepSeek。
+- 真正独立 daemon 在 Native cursor8 启动，自动消费第三份 B2 合同到12；**SIGKILL** 后 B2 继续创建第四份合同，Native cursor 保持12，新 daemon 重启自动追赶至16；真实 HTTP proxy **503** 时 B2 创建第五份合同，Native cursor 保持16，恢复后自动追赶至20。5 行、20 Receipt、真实 Saltcorn HTTP 与 Chromium 均有第五份合同。
+- **真实负对照修正**：Saltcorn UID 直接 SQL 篡改第五份合同后，后台 Consumer 检测 `DERIVED_DRIFT`；但原生 HTTP **仍返回200**，本次页面显示**缓存旧标题**，并未显示污染标题（`httpShowsTamper=false`）。因此**没有读取前完整性拦截**，不能把缓存旧值当作安全保障。人工恢复 Native SQL 后 daemon 才恢复正常，**未实现自动修复**。
+- [PR #14](https://github.com/zealzhangz/OpenAILCAP/pull/14) 已合并 main，SHA `8ce7324d85aa1d06a8269bc6351d43a95678b06d`。初次 [CI #44910619739](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910619739) 模块导入失败，第二次 [#44910775406](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910775406) 暴露真实 HTTP 缓存差异，均保留原始失败证据并按根因修复。**仅最终 #44910951780 作为全绿完成证据**。
+- 正式冻结门禁依旧：S1 IN_PROGRESS、G1 NOT_PASSED、G1-B01 OPEN；W01—W24 0/24 FULL PASS，TC01—TC18 0/18 FULL PASS。Consumer 是 sudo-capable CI Runner 的研究进程，不是正式最小权限生产服务。
