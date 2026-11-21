@@ -184,3 +184,11 @@
 - [PR #3](https://github.com/zealzhangz/OpenAILCAP/pull/3) 已合并，主线提交 `a0eff9d11ce4c96a0fed8bb53aac8afa0364b82a`；另有 [独立 C1 回归运行 #44888692722](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44888692722) completed/success。
 - 本轮在**自研最小 Web（不是 Saltcorn 原生）**的真实 Chromium 页面中验证多标签页旧版本 409；外部 Agent、Plugin 工具进程通过同一 C1 Store.apply 写入；Plugin 直接 HTTP 越权字段 403，两个独立 OS 进程竞争得到 [200,409]，真实 SQLite 最后 revision=5 / audit=5 / receipt=5，跨应用无串写。
 - **边界**：Plugin 是受控 Manifest+Token 的实验进程，**没有真正沙箱**；Agent 无 LLM；Web 只编辑两个字段，非成熟低代码设计器；未强制治理 Saltcorn CLI、直接 DB 及发布路径。**G1-B01 仍 OPEN，W01—W24 0/24 FULL PASS，合同 TC01—TC18 0/18 FULL PASS，G1 NOT_PASSED**。
+
+
+## 2026-11-21：S1 B2 领域 Schema + Manifest 真实业务运行闭环
+
+- [研究报告 35：B2 DataModel / Form / View / Workflow / Manifest 实际运行证据](01-research/35-s1-b2-schema-runtime-manifest-evidence.md)，[可复现实验源码](../experiments/g1-b01-b2/README.md)，[CI 工作流](../.github/workflows/s1-b2-schema-runtime.yml)。
+- [真实 GitHub Actions #44889712124](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44889712124) completed/success：**18/18 SQLite 模型单测 PASS + 27/27 真正 Chromium + 独立 Agent 子进程集成检查 PASS**，原始 [Artifact #14700803450](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44889712124/artifacts/14700803450)，Job 136802678273。
+- [PR #4](https://github.com/zealzhangz/OpenAILCAP/pull/4) 已合并 main，SHA `3ed689c12ea2b466a25c0af6e38cb51bc8b4e2bf`。模型→表单→视图→审批 Workflow 四类真实资源经 app-level CAS、hash Manifest 与引用校验，Agent 旧草稿 409、人类旧标签页 409；真运行态数据完成 100000001 分二级和 100000000 分一级审批；v1/v2 不可变发布与回滚指针以及草稿 SQL 漂移隔离均有数据库/浏览器证据。
+- **限制**：B2 是独立泛化机制实验，不直接复用 C1 Store.apply 代码；Agent 只是确定性工具而非大模型自主开发，界面只是 JSON Schema 编辑器；没有生产部署、插件沙箱和通用迁移。B2 27 项与冻结 W01—W24 不同口径。**S1/G1 NOT_PASSED，W01—W24 0/24 FULL PASS，合同 TC01—TC18 0/18 FULL PASS**。
