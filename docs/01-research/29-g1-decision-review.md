@@ -130,3 +130,14 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **统一工具入口安全边界**：新 v3 Broker 能真实控制 Browser Session/Agent/Plugin OS 进程的类型化开发工具权限、旧版本 CAS、跨应用与代码构建/模拟发布；Agent 验证真实 Docker 432 用例成功不代表获得发布权，Plugin 只许 View，未授权工具/直通 v2 Bearer 被阻止。然而**B5-28 特权 SQL 负对照验证 G1-B01 未关闭**：可信试验进程直接 SQLite UPDATE 已验收 Code Artifact 源码后，写入本身成功；受信运行接口能够在调用时检出 `ARTIFACT_HASH_DRIFT` 并返回 409，但并未阻止数据库管理员级别旁路。缺少真正的插件 OS 权限隔离和底层受治理内核所有入口覆盖。
 
 **G1 正式决定不变**：S1 IN_PROGRESS；**G1 NOT_PASSED，G1-B01 PARTIALLY VALIDATED / OPEN**，冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一 P0：最小权限插件容器/宿主 DB 与 Docker Socket 隔离 + 原生 CLI/Pack 旁路治理；对 W11/W16/W20/W24 运行原冻结验收口径（不以 B5 子用例替代），并单独设计真正 IR-native vs Domain-native 的等能力执行内核基准（而非只比较 IR→Domain 编译）。
+
+
+## 2026-11-21：B6 真正 OS 沙箱插件与宿主写边界 P0 再评审
+
+[报告 39](39-s1-b6-real-plugin-docker-isolation-evidence.md)、[最终 CI #44896786049](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44896786049) completed/success，Job 136824055360 / Artifact 14704775846；B6 插件隔离安全单测 **25/25**，既有 B2 **18/18**、B4 **27/27**、B5 **40/40** 回归，真实 Docker/HTTP Broker/Chromium/SQLite **32/32**，0 次外部模型。PR #8 已合并 `main`，SHA `f18e9341be4af086bb1b1d69341e8789ecfdad58`。
+
+**正向实证的新信息**：此前 B5 的插件虽作为单独进程运行，但真正的宿主 SQLite 权限可绕过。B6 改为**真实无网络、非 root、禁止特权、只读、只挂载两份插件请求/源码的 Docker OS 容器**，执行一般 Python/SQLite/socket 进攻性测试，实际结果：宿主 DB 既不能 `sqlite3 mode=rw` 连接，也不能 `os.open(O_RDONLY/O_RDWR)`；宿主 Secret world-readable 文件 `O_RDONLY`、Docker Socket、外部 TCP、容器工作目录写入一律 DENIED；独立可信 SQL 表明没有未经授权的资源/审计副作用。插件不接触 HTTP Bearer，只能通过宿主 JSON 提议，由可信 Host Relay 以随机受权主体调现有 B5 v3 Broker。合法 View 变更可成功、Agent/浏览器交替编辑旧版 409、发布 Manifest 后合同实测与 B4 独立 Docker 432 Oracle 仍可工作。特意模拟丢失一次 HTTP 回执后同 changeId 重放，真实审计/收据无双写，但不等同正式 W20 远端未知副作用验收。
+
+**仍然存在同一阻断风险**：B6-32 再次让**具 DB 文件权限的可信宿主**直接 `UPDATE extension_artifacts.source`，物理写入确实成功，随后已发布风险运行只在 hash drift 时 409；因此不存在无条件“所有主体都无法直写 DB”的证据。Docker 内的研究插件尚非 Saltcorn/NocoBase/ToolJet 的真实原生插件，宿主原生 Field/CLI/Pack 与任何多节点写路径未被强制接入 OS 沙箱。仍需基于系统权限实际验证 DB 仅被可信核心进程持有、其他插件/本机 CLI 无权直接访问，并覆盖原生编辑器/导入、应用+代码统一快照与回滚、外部未知结果。
+
+**正式决策不变**：S1 IN_PROGRESS，G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。本轮 32/32 实验项不替代正式门禁。下一个 P0 是真正隔离**宿主低代码原生写路径**和证明最终权威数据库只可由不可绕过的 Domain Kernel 访问，不能再仅增加外围 HTTP 拦截。
