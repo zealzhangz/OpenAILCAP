@@ -33,6 +33,7 @@ sys.path.insert(0,str(ROOT/"g1-b01-b2"))
 sys.path.insert(0,str(ROOT/"platform-saltcorn"/"browser"))
 from schema_core import sha
 from projector import compile_release,check_compiled,ProjectionRejected
+from p0a_browser_suite import run_suite
 
 KERN="ailcapb9kern"
 RUNT="ailcapb9run"
@@ -779,9 +780,19 @@ def main():
                           {"replayHTTP":replay_http,
                            "noAdditionalReceipt":True,
                            "nativeStillPublishedV1":True})
+                    next_round = run_suite(
+                        context=context, base=base, token_agent=token_agent,
+                        plugin_tool=plugin_tool, http=http,
+                        physical=kernel_physical,
+                        make_mutation=make_mutation, check=check,
+                        native_page=page_again,
+                        native_physical=native_physical,
+                        native_db=restored["db"],
+                        expected_native_columns=first["physical"]["viewColumns"])
+                    evidence["p0a_web"]=next_round
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":6,
+                        "originalB9Checks":36,"additionalChecks":15,
                         "pluginDockerSandboxValidated":False,
                         "nativePackFullDiffApprovalValidated":False,
                         "formalWOrTCFullPass":False}
@@ -816,7 +827,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":42,
+                "expected":51,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -824,7 +835,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==42 and all(
+    return 0 if len(evidence["checks"])==51 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
