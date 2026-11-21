@@ -50,3 +50,12 @@ python3 experiment.py --mode offline --output /tmp/s1-b3-offline.json
 该实验输入为固定领域合同需求，并给模型明确可用字段、资源 ID 和受限工具契约，因而只支持此狭窄案例；不是任意自然语言开发、自动需求消歧、Agent 自主决策、动态代码生成或失败自主修复。B2 实验只有 JSON 编辑器、固定合同执行器和 SQLite 快照发布，不是 Vue/React 低代码拖拽引擎、真正自定义代码构建、正式企业 RBAC 或插件隔离。
 
 成功时可确认 **“真实 LLM 可以提出被安全审核并执行的受限低代码配置计划”**，而不能宣称完整 AI 自动创建企业应用、G1/W01–W24 或 TC01–TC18 全部 PASS。失败时保留原始运行/拒绝证据，不通过扩大允许范围来掩盖失败。
+
+
+## 2026-11-21 真实 CI 结果（已经执行）
+
+- [研究报告 36](../../docs/01-research/36-s1-b3-real-deepseek-typed-plan-evidence.md) 与 [真实模型 Run #44891826332](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332)：**completed/success**。真实模型 **1 次请求、1 次受限 Function Calling**，`S1_B3_RESULT {passed: 24, attempted:24, expected:24, real_model:true}`。
+- 同次运行离线第一道闸：**B3 18/18 adversarial、B2 18/18 regression、真实 Chromium 离线 E2E 24/24**。先前完全离线成功 [#44891709859](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891709859) 同样无模型调用。
+- 可信工具真实独立进程依模型通过校验的四项元数据计划提交，物理 SQL 验证 appRevision=4、Manifest digest 一致；人工在 Chromium 编辑后 Agent 旧快照 409，重新读取后更新 View；Agent 发布 403，模拟授权人工点击发布；金额 100000001/100000000 分的两级/一级真实审批路径和已发布 View 均通过。原始 [Artifact #14702700418](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332/artifacts/14702700418)。
+- 首次 B3 离线 [#44891660938](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891660938) 发现 B2 原人写参考 View 漏掉 title 列，验证器按本轮标准正确拒绝；已只修正**离线人写计划**，没有修改真实模型输出或降低 Oracle，随后离线成功才执行一次实际 API。
+- [PR #5](https://github.com/zealzhangz/OpenAILCAP/pull/5) squash 合并 main commit `8e7951eadfd634bc2334995d4d49256b6938bd3e`。**G1 仍 NOT_PASSED，正式 W01–W24/TC01–TC18 未按完整口径通过。**
