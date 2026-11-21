@@ -50,3 +50,12 @@
 - 真实 SQLite Schema 的研究 Gateway `_sc_fields` 更新不调用官方 `Field.update`，其模型缓存、事件与表约束副作用并不等价于 Saltcorn Native Update，不能用于生产。
 - Linux DAC 对 root、同 UID、`sudo`、Docker Socket 没有保护；B7 已独立证实。
 - 未验证所有原生 Pack 转换、Web 路由、真实第三方 Plugin 安装和企业授权；未达到冻结 W01—W24 或 TC01—TC18 的全套验收，G1-B01 **OPEN**，S1 **IN_PROGRESS / G1 NOT_PASSED**。
+
+
+## 2026-11-21 最终真实 CI 与架构证据（已合并）
+
+- [报告 41](../../docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md)，[成功 GitHub Actions #44899334319](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44899334319) completed/success，Job **136831743808**，[原始 Artifact #14704953422](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44899334319/artifacts/14704953422)：**15/15 B8 单测 + 18/18 B2 回归 + 40/40 B5 回归 + 24/24 真 Saltcorn/Chromium/Linux UID/SQLite 集成**；零模型调用。
+- 官方 CLI `reset-schema / install-pack / Table.insertRow` 真实成功。真正不同 Linux UID 997 的原生 `saltcorn run-js Field.update` 与 `saltcorn install-pack` 均 **exit 1 / permissionError=true**，直接 SQLite 文件读写、SQL UPDATE 和私有配置读取均被拒绝、原生 DB 未改变；合法受限原生 HTTP Tool 客户端经 Gateway 成功修改同一个真实 Saltcorn 字段，版本/回执正确，旧版 409。
+- **真实危险反例 B8-20 与 B8-23**：在同一 DB owner UID 999 下，未修改的官方 Saltcorn Server 的**真实 Chromium /field/:id 设计器**能成功修改字段，且研究 CAS ledger 不增长；**同 UID 的官方 Saltcorn CLI Field.update** 也能直接修改。外围 Gateway 仅事后发现 `OUT_OF_BAND_DRIFT` HTTP **409**，不能阻止已发生物理修改。**B8 24/24 检查包含这些不安全行为的成功复现，绝不代表 G1-B01 安全通过。**
+- 保留早期 CI 安装/权限失败：Runner 直接 `Path.exists` 不允许访问内核 0700 目录；将文件检查/物理 SQLite 全部移到 DB Owner UID 后通过。Saltcorn CLI 经 `sudo/runuser` 需要恢复指定 SQLite 环境，已新增 stdin-only [native_env_launcher.py](native_env_launcher.py) 防止将随机 Session Secret 作为公开命令参数。
+- [PR #10](https://github.com/zealzhangz/OpenAILCAP/pull/10) 已合并 main，SHA `92a06863c91d8a59c80ca93ef95b2a87c4ca4f4e`。冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**，G1 NOT_PASSED。下一 B9 研究真实独立权威 Domain Kernel + Saltcorn 可删除派生应用投影，阻止 Native Web/CLI 从任何路径触达权威 Schema/Manifest。
