@@ -183,5 +183,6 @@ def complete_isolation(probes):
             probes.get("containerUid")==65534 and
             all(probes.get(k)=="DENIED" for k in (
                 "dockerSocket","hostSqliteRwConnect","hostDbFileWrite",
+                "hostDbFileRead",
                 "hostSentinelRead","containerPluginFileWrite","internetTcp"
             )) and probes.get("hostSecretInherited") is False)
