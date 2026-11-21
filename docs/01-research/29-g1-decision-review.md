@@ -90,3 +90,12 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 新增 [实测报告 34](34-g1-b01-b1-browser-agent-plugin-evidence.md) 与 [真实 GitHub Actions #44888692681](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44888692681)，completed/success；B1 自研两字段浏览器的 18/18 独立端到端断言通过，既有 C1 31/31 执行实例回归通过。真实 HTML/Session/CSRF、两个 Chromium 持旧页面、双向 Web↔Agent 409、Plugin 独立工具进程服务器端字段级 403、Agent/Plugin 双 OS 进程同版本竞争一胜一拒、应用隔离及独立物理 SQLite/审计/回执核验都取得证据。PR #3 已合并（`a0eff9d11ce4c96a0fed8bb53aac8afa0364b82a`），Artifact 14701406504。第一次 Run #44888560840 的 CSP/Playwright unsafe-eval 测试脚本失败修复时**没有放宽 CSP**。
 
 **评审决策不改变**：B1 是**我们控制的最小两字段研究 Web**，不是第三方 Saltcorn 原生设计器、成熟低代码 Designer 或真实插件沙箱；Agent 为无 LLM 的固定 tool 客户端。生产动态插件隔离、DB 旁路治理、跨域 Schema/Manifest 引用、版本发布、自动代码生成与回滚等未完成。**G1-B01 PARTIALLY VALIDATED / OPEN；G1 继续 NOT_PASSED；W01—W24 0/24 FULL PASS；TC01—TC18 0/18 FULL PASS**。下一 PoC 重点应由 label 编辑扩展至真实 DataModel/Form/View/Workflow 与不可变发布闭包，而不是重复狭窄 CAS 断言。
+
+
+## 2026-11-21：B2 Schema + Manifest 真实运行证据与 G1 再复审
+
+[研究报告 35](35-s1-b2-schema-runtime-manifest-evidence.md) 与 [Actions #44889712124](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44889712124) confirmed completed/success：**18 项 SQLite 引擎单测 + 27 项真正 Chromium/独立 Agent 工具进程的业务端到端检查全部通过**，Artifact 14700803450。PR #4 已合并 main。新验证包含 4 类受限元数据资源 DataModel/Form/View/Workflow、全应用 Manifest hash/revision、真实 HTTP 人工↔Agent 旧草稿双向 409、跨资源删除与断引用 422、Agent 发布 403、物理表单记录、100000001 分二级与 100000000 分一级审批、版本 v1/v2 发布/rollback、旁路 SQL 后草稿 QUARANTINED 同时旧已验证运行态可读。未使用 DeepSeek API。
+
+**新的研究判断**：Domain Schema + 派生 Manifest 并非只能停留在概念模型，可以在 4 类最小对象上保持可执行的引用/运行/发布闭环。这是可证伪的**候选正向证据**，不等于已经与完整 Application IR 进行等能力工程对照并确认胜出。
+
+**G1 仍 NOT_PASSED，G1-B01 OPEN**：B2 是对 C1 机制的独立泛化原型，不是已归并的单内核；Agent 不是 LLM 自主需求理解，UI 只编辑受限 JSON，工作流不具备真实审批人的组织权限，插件沙箱/代码生成/多 DB/生产发布/迁移/上游平台全路径拦截仍缺失。冻结 W01—W24 仍 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一阶段优先对真实 LLM 生成受 Schema 审核的安全工具操作做一次受限实测，并以运行态 Oracle 决定是否通过，而非只看模型输出格式。
