@@ -36,6 +36,7 @@ from schema_core import sha
 from projector import compile_release,check_compiled
 sys.path.insert(0,str(ROOT/"g1-b01-b10"))
 from router import ROUTE
+sys.path.insert(0,str(ROOT/"g1-b01-b11"))
 from projection_source import digest
 
 KERNEL="ailcapb12kern"
