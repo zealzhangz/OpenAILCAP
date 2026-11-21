@@ -1654,7 +1654,7 @@ def main():
                     public_path.chmod(0o444)
                     check("B14-107-real-Kernel-UID-Ed25519-private-key-0600",
                           len(bytes.fromhex(public_hex))==32 and
-                          key_path.stat().st_mode&0o777==0o600 and
+                          run(["sudo","-n","stat","-c","%a",key_path]).stdout.strip()=="600" and
                           denied_read("ailcapb13cons",key_path) and
                           denied_read(SALT,key_path) and
                           denied_read(ROUTER,key_path),
