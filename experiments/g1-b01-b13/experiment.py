@@ -1610,15 +1610,6 @@ def main():
                         "formalG1Passed":False
                     }
 
-                        "v1Manifest":v1["manifestHash"],
-                        "v2Manifest":v2["manifestHash"],
-                        "routerEpoch":3,
-                        "activeVersion":1,
-                        "actualNativeV2Crashed":True,
-                        "authoritativeWorkflowStatus":"Approved",
-                        "businessDataNotMirroredToNative":False,
-                        "w17W24FullPass":False
-                    }
                 finally:
                     context.close()
                     browser.close()
