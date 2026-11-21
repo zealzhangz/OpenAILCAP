@@ -50,3 +50,13 @@ Router 在发送 HTML **之前**：
 - **正式状态**：S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 PARTIALLY VALIDATED / OPEN；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。专项全绿也不能升级冻结门禁。
 
 下一步 B14：解决**Consumer 事件来源认证**与**Saltcorn UID 无法伪造读前校验结果**两项 P0，优先验证独立签名/验签与物理 SQL 受信读者，再考虑高可用和更多业务模型。
+
+
+## 已完成实测（2026-11-21）
+
+- [报告 46](../../docs/01-research/46-s1-b13-four-uid-native-ipc-read-guard-negative-evidence.md)；[最终 GitHub Actions #44917605505](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505) **completed/success**，Job **136886465940**，[Artifact #14711934942](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505/artifacts/14711934942)：B13 **22/22**、B12 **22/22**、B11 **28/28**、B10 **34/34**、B2 **18/18**、B5 **40/40** 单元/契约，合计 **164/164**；真实 B11 62 + B12 17 + B13 25 = **104/104 E2E PASS**；**0 次 DeepSeek**。
+- **真实身份隔离**：四 UID Kernel999 / Saltcorn997 / Router995 / Consumer994；Consumer 无 sudo，无法直接读两套 SQLite 或 Router Token；Saltcorn 无法读 Consumer/Router B2 Token；双组分离的真实 0660 AF_UNIX Socket + SO_PEERCRED，Consumer 只允许 audit/checkpoint/apply，Router 只允许 snapshot，双方无法连接对方 Socket。
+- **真实读前守护**：B2/Native 对照匹配时 Guarded Router HTTP200 且 Chromium 可见；无 sudo Consumer 自动消费第六份合同；终止 Consumer 后第七份合同源 Head28/Native Cursor24，**Guard503 / Native 原生直连200**；重启追赶后 Guard200；Native SQL 真实污染导致 **Guard503 / Native 原生直连200**；人工修复后 Guard200。
+- **P0 负面**：合法 Consumer UID 自行伪造 `seq=29` 合同事件及合法 SHA256 `eventHash`，**Native IPC 真实接受并提交**，Native Cursor28→29、B2 Head仍28；Guard 独立对照返回503。说明 **Consumer 身份验证不能代替 B2 权威来源签名**；Native 数据已被污染，Saltcorn UID 仍可伪造 Snapshot，Native 直连仍是旁路。**104/104 是专项测试通过，不是安全验收通过**。
+- [PR #15](https://github.com/zealzhangz/OpenAILCAP/pull/15) 已合并 main，SHA `712ab9cc3dcf1ef2f94745c9f4aa75fca238eee0`。初次 [CI #44917208014](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917208014) 为 Python 缩进错误；第二次 [#44917393338](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917393338) 全部 104 E2E 通过但临时目录清理权限错误；最终 [#44917605505](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505) 全绿且完整清理。
+- 正式门禁保持：S1 **IN_PROGRESS**、G1 **NOT_PASSED**、G1-B01 **PARTIALLY VALIDATED / OPEN**；W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B14 优先权威事件签名/验签与独立于 Saltcorn UID 的读前物理 SQL 证明。
