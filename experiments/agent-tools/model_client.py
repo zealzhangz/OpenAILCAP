@@ -10,6 +10,7 @@ import os
 import secrets
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 from broker import ToolError
 
@@ -33,7 +34,9 @@ def actual_model_probe(broker, session_key, contract_no):
     payload={"model":model,"messages":[
         {"role":"system","content":"你是受限的低代码业务检查 Agent。只能发起白名单只读函数调用，绝不可批准合同或执行代码。"},
         {"role":"user","content":prompt}],
-        "tools":tools,"tool_choice":"required","temperature":0}
+        "tools":tools,"tool_choice":"required",
+        "thinking":{"type":"disabled"},"temperature":0,
+        "max_tokens":256,"stream":False}
     try:
         req=Request(api_url,data=json.dumps(payload,ensure_ascii=False).encode("utf-8"),
                     headers={"Content-Type":"application/json",
@@ -41,6 +44,9 @@ def actual_model_probe(broker, session_key, contract_no):
                     method="POST")
         with urlopen(req,timeout=35) as res:
             response=json.load(res)
+    except HTTPError as exc:
+        # No response body or Authorization headers in public CI logs.
+        raise ToolError("MODEL_HTTP_STATUS_" + str(exc.code))
     except Exception:
         raise ToolError("MODEL_INFERENCE_FAILED")
     if not isinstance(response,dict) or not response.get("choices"):
@@ -66,7 +72,9 @@ def actual_model_probe(broker, session_key, contract_no):
                               call_id="llm-"+secrets.token_hex(12))
         observations.append({"tool":original_name,"arguments_validated":True,
                              "result":output})
+    usage=response.get("usage") if isinstance(response.get("usage"),dict) else {}
     return {"model_inference_executed":True,"model_id":model,
+            "usage_tokens":{k:usage[k] for k in ("prompt_tokens","completion_tokens","total_tokens") if isinstance(usage.get(k),int)},
             "tool_calls_executed":len(observations),
             "no_mutating_tools_exposed":True,
             "observations":observations,
