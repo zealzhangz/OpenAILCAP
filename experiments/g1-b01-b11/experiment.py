@@ -35,6 +35,7 @@ from schema_core import sha
 from projector import compile_release,check_compiled
 sys.path.insert(0,str(ROOT/"g1-b01-b10"))
 from router import ROUTE
+from projection_source import digest
 
 KERNEL="ailcapb11kern"
 SALT="ailcapb11salt"
@@ -488,6 +489,35 @@ def main():
                     v1native=native_materialize("v1",v1)
                     feed1,applied1,native1_rows=sync_native(v1native["db"])
                     v1native["oracle"]=physical_native(v1native["db"])
+                    check("B11-49-native-v1-source-outbox-exactly-4-events",
+                          applied1["applied"]==4 and
+                          native1_rows["lastSeq"]==4 and
+                          native1_rows["receipts"]==4 and
+                          native1_rows["mappings"]==1 and
+                          native1_rows["rows"][0]["title"]==
+                          "B2 authority-only contract",
+                          {"cursor":4,"nativeRows":1,
+                           "actualSource":"B2 outbox"})
+                    replay1=native_apply(v1native["db"],{
+                        "app":"app-a","after":0,"events":feed1["events"]})
+                    check("B11-50-native-v1-replay-same-events-no-duplicate-rows",
+                          replay1["applied"]==0 and
+                          replay1["replayed"]==4 and
+                          native_inspect(v1native["db"])["mappings"]==1,
+                          {"replayed":4,"applied":0})
+                    tampered=copy.deepcopy(feed1["events"])
+                    tampered[0]["cells"]["title"]="TAMPERED"
+                    tampered[0]["eventHash"]=digest({
+                        k:v for k,v in tampered[0].items()
+                        if k!="eventHash"})
+                    tamper_result=native_apply(v1native["db"],{
+                        "app":"app-a","after":0,"events":tampered},
+                        allow_fail=True)
+                    check("B11-51-native-replayed-sequence-hash-conflict-rejected",
+                          tamper_result["error"]=="REPLAY_HASH_CONFLICT" and
+                          native_inspect(v1native["db"])["lastSeq"]==4,
+                          {"error":"REPLAY_HASH_CONFLICT",
+                           "cursorUnaffected":4})
                     check("B11-09-real-native-v1-physical-Oracle-and-test-record",
                           v1native["oracle"]["viewColumns"]==[
                               "contract_no","amount_minor","status"] and
