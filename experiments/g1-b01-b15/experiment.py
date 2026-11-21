@@ -2270,6 +2270,10 @@ def main():
                                       wait_until="domcontentloaded",timeout=3000)
                     except Exception:
                         browser_direct_blocked=True
+                    # Chrome error page navigation may still be in flight;
+                    # open a fresh page before verifying guarded recovery.
+                    b15_page.close()
+                    b15_page=context.new_page()
                     b15_page.goto(b15_url+ROUTE,
                                   wait_until="domcontentloaded")
                     check("B15-139-real-Chromium-direct-native-denied-guard-works",
