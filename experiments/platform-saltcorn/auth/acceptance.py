@@ -38,9 +38,12 @@ def approvals(path,contract_id):
 def requests(path,contract_id):
     return dbread(path,"SELECT request_id,actor_id,actor_role,action FROM s1_bench_action_requests WHERE contract_ref=? ORDER BY id",(contract_id,))
 
-def http_post(ctx,base,path,body):
+def http_post(ctx,base,path,body,csrf=None):
+    headers={"Content-Type":"application/json"}
+    if csrf is not None:
+        headers["X-CSRF-Token"]=csrf
     response=ctx.request.post(base+path,data=json.dumps(body),
-                              headers={"Content-Type":"application/json"},timeout=20000)
+                              headers=headers,timeout=20000)
     content=response.text()
     # Scrubbed diagnostics: never print Cookie, Authorization, CSRF or raw HTML.
     kind="unknown"
@@ -76,6 +79,7 @@ def run(a,record):
     with sync_playwright() as p:
         browser=p.chromium.launch(headless=True,args=["--no-sandbox"])
         contexts={}
+        csrf_by_role={}
         for role,(email,pwvar) in IDENTITIES.items():
             ctx=browser.new_context()
             page=ctx.new_page()
@@ -89,6 +93,13 @@ def run(a,record):
             success=not page.url.endswith("/auth/login") and "/auth/login?" not in page.url
             record("AUTH03-login-"+role,success and has_csrf,
                    {"login_redirect_path":page.url.replace(base,""),"csrf_present":has_csrf})
+            # An authenticated session has its own CSRF token, which is
+            # obtained from the standard Saltcorn page after login.
+            page.goto(base+"/auth/login",wait_until="domcontentloaded")
+            csrf_input=page.locator('form[action="/auth/login"] input[name="_csrf"]')
+            if csrf_input.count()!=1:
+                raise AssertionError("No CSRF token on authenticated Saltcorn page")
+            csrf_by_role[role]=csrf_input.input_value()
             contexts[role]=ctx
 
         bad=browser.new_context()
@@ -99,6 +110,21 @@ def run(a,record):
         record("AUTH04-anonymous-native-api-denied",code==401,
                {"http":code,"physical_request_count":len(requests(a.db,contract(a.db,"S1-AUTH-HIGH-1")["id"]))})
         bad.close()
+        # Negative control: a login cookie with missing CSRF is not enough
+        # to perform a native API write even if redirect handling returns 200.
+        negative=contract(a.db,"S1-AUTH-HIGH-FORGED")
+        ncode,nbody=http_post(contexts["viewer"],base,
+           "/api/s1_bench_action_requests/",{
+             "request_id":"s1-csrf-missing",
+             "contract_ref":negative["id"],
+             "action":"submit","actor_role":"viewer",
+             "actor_id":str(people["viewer"]["id"])
+           })
+        record("AUTH04b-authenticated-api-missing-csrf-fails-closed",
+               "<html" in nbody.lower() and
+               len(requests(a.db,negative["id"]))==0,
+               {"followed_redirect_status":ncode,"no_native_write":True,
+                "was_html_not_api_json":"<html" in nbody.lower()})
         count=0
         def send(role,number,action,*,claimed_role=None,actor_id=None,request_id=None):
             nonlocal count
@@ -113,7 +139,8 @@ def run(a,record):
                 "occurred_at":"2026-11-21T00:00:00Z",
                 "reason":"authenticated native Saltcorn research"
             }
-            return http_post(contexts[role],base,"/api/s1_bench_action_requests/",jsonbody)
+            return http_post(contexts[role],base,"/api/s1_bench_action_requests/",jsonbody,
+                             csrf_by_role[role])
 
         high="S1-AUTH-HIGH-1"
         normal="S1-AUTH-NORMAL-1"
@@ -179,13 +206,14 @@ def run(a,record):
         direct_code,direct_response=http_post(
             contexts["viewer"],base,
             f"/api/s1_bench_contracts/{contract(a.db,high)['id']}",
-            {"status":"Approved"})
+            {"status":"Approved"},csrf_by_role["viewer"])
         record("AUTH17-viewer-direct-business-table-update-denied",
                direct_code==401 and contract(a.db,high)["status"]=="Approved",
                {"http":direct_code,"actual_status":contract(a.db,high)["status"]})
         code,body=http_post(contexts["creator"],base,"/api/s1_bench_approvals/",{
             "contract_ref":contract(a.db,high)["id"],"approver_id":"forged",
-            "actor_role":"approver2","action":"approve","occurred_at":"2026-11-21T00:00:00Z"})
+            "actor_role":"approver2","action":"approve","occurred_at":"2026-11-21T00:00:00Z"},
+            csrf_by_role["creator"])
         record("AUTH18-native-approval-table-direct-insert-denied",
                code==401 and len(approvals(a.db,contract(a.db,high)["id"]))==2,
                {"http":code,"approval_count":len(approvals(a.db,contract(a.db,high)["id"]))})
@@ -244,8 +272,9 @@ def main():
     evidence["summary"]={"total":len(evidence["cases"]),
                          "passed":sum(x["status"]=="PASS" for x in evidence["cases"])}
     Path(a.output).write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    # 1 + 4 fixtures + 4 logins + AUTH04 through AUTH19 (16) + 4 SQL rows + 2 = 27.
-    return 0 if len(evidence["cases"])==27 and all(x["status"]=="PASS" for x in evidence["cases"]) else 1
+    # 1 + 4 fixtures + 4 logins + 1 anonymous + 1 CSRF negative +
+    # AUTH05..19 (15) + 4 physical DB checks + 2 metadata checks = 28.
+    return 0 if len(evidence["cases"])==28 and all(x["status"]=="PASS" for x in evidence["cases"]) else 1
 
 if __name__=="__main__":
     raise SystemExit(main())
