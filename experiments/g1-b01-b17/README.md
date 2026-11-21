@@ -1,6 +1,6 @@
 # B17：有界 Native 只读适配与公开快照渲染对照
 
-状态：待真实 CI。此实验承接 B16 的只读启动失败，不预先决定技术选型。
+状态：真实 CI 完成。此实验承接 B16 的只读启动失败，不预先决定技术选型。
 
 ## 预注册范围
 
@@ -50,3 +50,7 @@ python3 -m unittest -v test_snapshot_web
 # 真实 UID/E2E 请按专用 CI 安装依赖及用户后执行：
 python3 -u compare.py --output /tmp/s1-b17-evidence/b17/results.json
 ```
+
+## 最终验证
+
+Actions #44958544226 成功：36项单元/契约、18项B16回归、26项B17修订后研究检查。原生文本保真仍失败（标题为空），未计作通过。两条路线的限定只读列表均可运行；快照路线仍缺权威源新鲜度保证。详见[报告50](../../docs/01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md)，包含两次失败和判据修订。
