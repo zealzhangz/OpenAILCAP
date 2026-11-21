@@ -153,3 +153,7 @@
 [报告 24](24-durable-agent-calls-evidence.md)、[CI #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363)：增加 SQLite 持久调用占位+唯一 call_id，29/29 安全与崩溃单元（较上轮 +8）、29/29 真实 Saltcorn 集成均通过。重点反证：仅靠进程内 self.calls 无法在重启后阻止同 ID 再次执行；本轮用持久唯一占位对该风险做了研究性修补，未知远端结果保留待核验，审批 POST 不自动重试。
 
 **G1 仍 NOT_PASSED**，冻结 TC01—TC18 完整通过保持 0/18。不能把仅在本地 SQLite 账本中保证同 ID 不重试当作跨平台/多节点 exactly-once；相同业务的新 call_id 仍可能重复。真正 LLM 推理、正式委托同意、平台原生审批事务/幂等、企业 RBAC、金额 SQL decimal(12,2) 和完整应用自主开发仍是阻断项。
+
+## 2026-11-21：真实 DeepSeek Function Calling 最小验证结果（修正此前模型 NOT_RUN 状态）
+
+[报告 25](25-deepseek-real-tool-call.md)、[Actions #44882955824](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44882955824) completed/success，用户提供 GitHub Secret `DEEPSEEK_KEY`，使用 DeepSeek 官方 `deepseek-flash`（non-thinking）、单次 HTTPS Chat Completions 推理。真实模型返回 **contract.read 和 contract.route** 两个工具调用，均通过类型化 Broker 参数校验并在真实 Saltcorn 数据上执行；集成 30/30 PASS，原有安全单元 29/29 PASS。**“真实 LLM 只读工具调用”不再是未验证项。** 该结论只覆盖一次最小真实模型验证，不覆盖 AI 自主创建应用、配置/代码路径智能选择、多轮人机编辑或写操作的真实人工授权。G1 **仍 NOT_PASSED**，冻结合同完整 18 项仍 0/18 PASS。后续应从“真实模型连通性”转向**开发任务的正确工具选择和执行结果**，无需重复付费连通测试。
