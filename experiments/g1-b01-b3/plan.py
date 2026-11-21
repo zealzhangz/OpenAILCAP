@@ -112,6 +112,10 @@ def reviewed_offline_plan():
     """Human-written baseline. It MUST NOT be presented as AI output."""
     defs=json.loads((HERE.parent/"g1-b01-b2"/"contract_spec.json").read_text(
         encoding="utf-8"))
+    # B3 requirement explicitly asks for the contract title in the ledger.
+    # The earlier B2 baseline view omitted this column; improve ONLY the
+    # labelled human-written B3 preflight, never the real-model output.
+    defs["view.contracts"]["columns"]=["contract_no","title","amount_minor","status"]
     return {"operations":[{"resourceId":k,"definition":defs[k]} for k in RESOURCE_IDS]}
 
 
