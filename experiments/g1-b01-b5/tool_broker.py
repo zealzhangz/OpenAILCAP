@@ -21,7 +21,7 @@ from registry import ExtensionRegistry
 TOOLS={
     "metadata.upsert","app.publish","app.rollback",
     "code.verify","code.stage","code.publish","code.rollback",
-    "release.read","risk.score"
+    "release.read","draft.read","risk.score"
 }
 
 @dataclass(frozen=True)
@@ -93,6 +93,9 @@ class ToolBroker:
             self._shape(args,("expectedExtensionVersion","targetVersion"))
             return self.registry.rollback(actor,app,args["expectedExtensionVersion"],
                                           args["targetVersion"])
+        if tool=="draft.read":
+            self._shape(args,())
+            return self.store.draft(actor,app)
         if tool=="release.read":
             self._shape(args,())
             return self.store.release(actor,app)
