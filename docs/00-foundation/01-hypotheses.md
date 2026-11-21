@@ -95,3 +95,9 @@ H01/H03 的受限内存模型分别以 Unified IR 和分域 Schema + Manifest �
 H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑测试，重启、并发冲突、失败回滚、强制读状态漂移检查均通过；这仍不等同真实低代码平台的 AI/人工协作闭环。H06 中的隔离断言只验证假设 actor 来源可信时的 SQL app_id/ACL 范围，**不能标记 H06 安全验证通过**。
 
 新的重大外部证据：ToolJet CE Code Mode 服务端是 stub，真正服务端属于 EE 子模块，本次无法审查；NocoBase v3 LICENSE.txt 存在与平台型产品潜在冲突的附加授权条款。见 [深度研究与风险报告](../01-research/07-persistence-and-license.md)。
+
+## 2026-11-21 真正第三方低代码资源多轮编辑研究（H01/H03 更新）
+
+[Saltcorn @ 1.7.0-beta.5 实际运行研究](../01-research/16-saltcorn-roundtrip-evidence.md)，[GitHub Actions #44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761) 在实际第三方 SQLite 资源上复现了三种路径。A）人工预编写的 Field.update 和独立程序化 Field.update 串行修改不同标签都保留；B）使用人工变更前的完整 Pack 作为自动化写入时，目标仅修改视图列，却把人工标签和先前自动化标签恢复旧值，**真实证伪了“无保护全量恢复可作默认 AI 编辑工具”的集成假设**；C）非原子先读后写可在顺序冲突时抛出 STALE_BASE，但不具备并发 CAS 保证。
+
+**H01/H03 仍不能判定平台级通过**：没有真实可视设计器会话、真实模型规划及 Agent 工具调用、原子事务 CAS 或真实并发修改。优先排除默认全量导入方案，研究精确 Patch + 服务端原子基线验证。不能预先决定统一 Application IR 是否必要。[候选 ADR](../01-research/17-provisional-adr-guarded-editing.md) 记录证据、风险和迁移门槛。

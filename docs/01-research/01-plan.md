@@ -55,3 +55,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：真实低代码参考平台纵向切片
 
 新增 Saltcorn MIT 作为第五个低资源、便于研究真实元数据到运行态的参考平台，并在 GitHub Actions 上实际运行：[Run #44869777036](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869777036) 7/7，原生 fixture 表/视图/REST；[Run #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796) 9/9，以 Pack 配置合同/审批关联和列表、真实 SQLite 插入、REST 与页面渲染。详细见 [报告 14](14-saltcorn-real-platform.md)、[报告 15](15-native-contract-platform-evidence.md)。这一进展确证了真实第三方运行时可复现，但尚不满足原始合同 decimal(12,2)、审批、AI 自动配置及双向编辑，18 项正式业务验收保持 NOT_RUN。后续必须深测二次变更、版本冲突和真实 Agent 接手。
+
+## 2026-11-21：针对 H01/H03 的原生编辑写入协议对照
+
+已从 [Saltcorn 真实合同 Pack](15-native-contract-platform-evidence.md) 进一步执行同一合同资源上的三阶段研究：[GitHub Actions #44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761) completed/success。非冲突局部 Field.update 能保留双方修改；旧完整 Pack 在仅需修改视图时却把无关人工标签和另一轮自动化标签还原，形成真实负对照；非原子旧基线检查可拒绝顺序冲突但不能支持真实并发。已生成 [源码+实测报告](16-saltcorn-roundtrip-evidence.md) 与 [候选 ADR](17-provisional-adr-guarded-editing.md)。**浏览器 UI 人工编辑、真实 LLM Agent、原子 CAS 和真实并发仍待验证，G1 未通过。**

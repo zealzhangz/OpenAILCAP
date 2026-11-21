@@ -37,3 +37,7 @@ R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C
 ## 2026-11-21：正式业务场景基准预注册
 
 为后续真实平台和自研平台的同条件实验固定了 [合同业务规范](../../experiments/contract-benchmark/spec.json)：12 项金额边界、12 项审批转移预期和 18 项平台级验收任务。Oracle 仅校验规范一致性，所有平台任务现为 NOT_RUN。参见 [验收协议](10-contract-benchmark.md)。真实平台安装被 NocoBase v3 默认模板仓库 E530 阻断，没有新增平台级通过项。
+
+## 2026-11-21：真实 Saltcorn 多轮编辑协议对照（阶段 S1）
+
+独立工作流 [#44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761) 已实际执行 A/B/C 和 C-HTTP 四组验证，18/18 次断言符合预期，四份 JSON 作为 GitHub Artifact 14694023138 上传。最重要的是 B 路径：恢复基于旧上下文的完整 Pack 会覆盖人工已保存的 title.label，属于显著**负面证据**；A 仅证实不同字段的串行 Field.update 不相互影响；C 仅证实应用层旧基线检测能拒绝一例顺序冲突，**不是原子 CAS**。实验没有真正调用大模型或浏览器人工编辑。见 [实测报告](16-saltcorn-roundtrip-evidence.md) 和 [源码工程](../../experiments/platform-saltcorn/roundtrip/README.md)。

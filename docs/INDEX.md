@@ -54,3 +54,12 @@
 - [两次运行日志的结构化核查摘录（非原始 Artifact）](01-research/saltcorn-runtime-observations.json)
 
 **重要更新**：第三方可运行低代码参考平台已从 0 增加到 1；总计 16/16 项平台运行时检查由独立 GitHub Actions 实际执行成功。合同原生 Pack 已实现模型/页面最小纵向切片，但金额类型与冻结合同基准存在差异，审批/AI/人机交互未执行，所以 18 项正式合同平台任务仍 0/18 PASS。**G1 仍未通过**。
+
+## 2026-11-21：S1 真实平台多轮编辑负对照与候选 ADR
+
+- [真实 Saltcorn 旧 Pack 覆盖人工编辑的实测源码报告](01-research/16-saltcorn-roundtrip-evidence.md)
+- [A/B/C 实验的 GitHub Actions 机器可读证据摘录](01-research/saltcorn-roundtrip-observations.json)（原始 Run [#44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761)，Artifact 14694023138）
+- [候选 ADR：Agent 默认修改工具不得使用未经保护的全量恢复接口](01-research/17-provisional-adr-guarded-editing.md)
+- [可重复运行的 Saltcorn A/B/C 对照测试代码](../experiments/platform-saltcorn/roundtrip/README.md)
+
+**本轮事实**：18 次数据库/HTTP 断言均符合预注册预期，其中 B 路径证明了危险的静默覆盖，属于负面结果而非 H03 通过。程序化人工/自动化均由原生 CLI 脚本执行，尚未涉及真正可视编辑器或 LLM Agent。**G1 未通过**。

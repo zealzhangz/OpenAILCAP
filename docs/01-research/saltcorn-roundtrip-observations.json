@@ -1,0 +1,210 @@
+{
+  "study": "S1 real Saltcorn native editing roundtrip and stale full Pack study",
+  "evidence_type": "structured excerpt of publicly viewable GitHub Actions log; original artifacts remain on GitHub",
+  "analyzed_upstream": "saltcorn/saltcorn@515254bee5a98df70530cc59846b1df02d5db350",
+  "executed_cli_version": "1.7.0-beta.5",
+  "executed_node": "24.22.3",
+  "source_commit": "7dac04298955a52d04eb9a1a3ed29be50a12e626",
+  "github_actions": {
+    "run_id": 44871169761,
+    "job_id": 136745819984,
+    "conclusion": "success",
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761",
+    "artifact": {
+      "id": 14694023138,
+      "name": "s1-real-saltcorn-human-automation-roundtrip"
+    }
+  },
+  "actors": {
+    "manual": "pre-authored user-edit script via privileged native Saltcorn Field.update, not actual browser editor",
+    "automation": "deterministic CLI/script, no LLM Agent"
+  },
+  "phases": [
+    {
+      "phase": "A",
+      "method": "scoped native Field.update from independent sequential operations",
+      "checks": [
+        {
+          "id": "A1",
+          "status": "PASS",
+          "actual": "Human Reviewed Title",
+          "expected": "Human Reviewed Title",
+          "property": "title.label"
+        },
+        {
+          "id": "A2",
+          "status": "PASS",
+          "actual": "Automated Status",
+          "expected": "Automated Status",
+          "property": "status.label"
+        },
+        {
+          "id": "A3",
+          "status": "PASS",
+          "actual": [
+            "contract_no",
+            "title",
+            "amount_minor",
+            "status"
+          ],
+          "property": "visible_view_columns"
+        },
+        {
+          "id": "A4",
+          "status": "PASS",
+          "actual": true,
+          "property": "contract_row_preserved"
+        }
+      ]
+    },
+    {
+      "phase": "B",
+      "method": "full stale native Pack import with only view-column change intended",
+      "checks": [
+        {
+          "id": "B1",
+          "status": "PASS",
+          "actual": "Title",
+          "expected": "Title",
+          "property": "title.label",
+          "semantic": "UNSAFE_LOST_MANUAL_EDIT"
+        },
+        {
+          "id": "B2",
+          "status": "PASS",
+          "actual": "Status",
+          "expected": "Status",
+          "property": "status.label",
+          "semantic": "UNSAFE_LOST_OTHER_AUTOMATION_EDIT"
+        },
+        {
+          "id": "B3",
+          "status": "PASS",
+          "actual": [
+            "contract_no",
+            "title",
+            "status"
+          ],
+          "property": "visible_view_columns"
+        },
+        {
+          "id": "B4",
+          "status": "PASS",
+          "actual": true,
+          "property": "contract_row_preserved"
+        }
+      ]
+    },
+    {
+      "phase": "C",
+      "method": "application-side non-atomic read-before-write stale check",
+      "expected_error": "STALE_BASE",
+      "error_observed": true,
+      "checks": [
+        {
+          "id": "C1",
+          "status": "PASS",
+          "actual": "Human Reviewed Title",
+          "property": "title.label"
+        },
+        {
+          "id": "C2",
+          "status": "PASS",
+          "actual": "Status",
+          "property": "status.label"
+        },
+        {
+          "id": "C3",
+          "status": "PASS",
+          "actual": [
+            "contract_no",
+            "title",
+            "status"
+          ],
+          "property": "visible_view_columns"
+        },
+        {
+          "id": "C4",
+          "status": "PASS",
+          "actual": true,
+          "property": "contract_row_preserved"
+        }
+      ]
+    },
+    {
+      "phase": "C_HTTP",
+      "method": "server restart then real HTTP API + rendered UI readback",
+      "checks": [
+        {
+          "id": "C1",
+          "status": "PASS",
+          "actual": "Human Reviewed Title",
+          "property": "title.label"
+        },
+        {
+          "id": "C2",
+          "status": "PASS",
+          "actual": "Status",
+          "property": "status.label"
+        },
+        {
+          "id": "C3",
+          "status": "PASS",
+          "actual": [
+            "contract_no",
+            "title",
+            "status"
+          ],
+          "property": "visible_view_columns"
+        },
+        {
+          "id": "C4",
+          "status": "PASS",
+          "actual": true,
+          "property": "contract_row_preserved"
+        },
+        {
+          "id": "C5",
+          "status": "PASS",
+          "http": 200,
+          "actual": true,
+          "property": "api_returns_contract"
+        },
+        {
+          "id": "C6",
+          "status": "PASS",
+          "http": 200,
+          "actual": true,
+          "property": "html_renders_contract"
+        }
+      ]
+    }
+  ],
+  "count": {
+    "assertion_executions": 18,
+    "passed": 18,
+    "distinct_case_ids": 14
+  },
+  "architecture_verdict": {
+    "full_restore_as_default_AI_edit_tool": "REJECTED_BY_REAL_NEGATIVE_CONTROL",
+    "nonoverlap_scoped_native_edits": "SEQUENTIAL_POSITIVE_CONTROL",
+    "guarded_preflight": "DEMONSTRATED_BUT_NONATOMIC_TOCTOU",
+    "atomic_server_CAS": "NOT_TESTED",
+    "real_LLM_agent": "NOT_TESTED",
+    "actual_human_browser_designer": "NOT_TESTED",
+    "H03": "NOT_PASSED",
+    "G1": "NOT_PASSED"
+  },
+  "contract_benchmark": {
+    "total": 18,
+    "passed": 0,
+    "description": "Frozen full contract tasks not completed by this experiment"
+  },
+  "limitations": [
+    "The native import tool is a privileged snapshot-restore facility, not Saltcorn's ordinary visual editing workflow",
+    "Observed silent overwrite is intentionally an expected negative result; CI success is not a software safety verdict",
+    "No live simultaneous edits; all operations run sequentially",
+    "The guarded check is a non-atomic read-before-write, vulnerable to TOCTOU",
+    "CLI npm version is fixed, but published tarball digest not pinned to the inspected source SHA"
+  ]
+}
