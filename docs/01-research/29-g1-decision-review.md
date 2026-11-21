@@ -108,3 +108,14 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **正向判断**：AI 模型与 Schema/Manifest 低代码元数据内核可以通过“模型仅提议→独立验证→可信工具执行→真实运行结果独立裁判”融合，固定合同资源的最小闭环已有真实模型证据。**但是**提示词已提供固定资源 ID、字段和类型、阈值/单位等强约束，模型不需要自主发现平台能力；后续 Agent View 再修改由确定性执行器生成，人工发布由测试 Chromium 模拟而非真正授权审批。没有自主需求消歧、多轮自动规划、生成自定义代码/构建测试、生产部署、插件沙箱或完整成熟可视化设计器。B2/B3 是研究用独立内核，未与上游低代码平台合并。
 
 **门禁维持**：S1 IN_PROGRESS / G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**；原冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一必要试验转向能力缺口触发的受限代码开发闭环（能构建/测试/失败不发布），并进行 Domain Schema + Manifest 与 Global Application IR 的等能力对照，而不再重复固定合同的模型规划调用。
+
+
+## 2026-11-21：B4 真模型自定义代码 / 沙箱构建 / B2 绑定发布再评审
+
+新增 [报告 37](37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md)，[真实 Actions #44894074280](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280) **completed/success**，Job 136815855851 / Artifact 14702827817；首次完全离线 CI [#44893945547](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44893945547) 已通过，随后**只进行一次真实 DeepSeek Function Calling**，生成了与人写离线样例不同 SHA 的单纯函数 Python 风险评分源码。B4 安全/提议单测 **27/27**，B2 回归 **18/18**，真实 Docker/Chromium 离线 **27/27** 和真正 DeepSeek 在线 **27/27** 全通过；每份合格源码在 `--network=none` 等受限 Docker 内接受 **432** 项业务 Oracle。
+
+新工程观察：B2 原有低代码只能表达金额阈值审批，当缺少供应商信用/合作年限风险评分能力时，模型提出自定义源码，可信 Controller AST 检验并在 Docker 实测，错误代码不会 Stage/Publish。实际 SQLite 基于 B2 已发布 Manifest v1 内容哈希绑定独立 Code Artifact/Release；真实 Chromium 合同高风险 95、低风险 0；Agent Stage/Publish 403；可信发布故障原子回滚；模拟人工增加代码注释形成 v2 并可回滚；修改 B2 已发布 v2 后旧代码执行 **409 B2_RELEASE_CHANGED**，回滚 B2 v1 后恢复。PR #6 已合并 `main`：`5dd3224893a87e1e7a77f91000c38fa023a98d07`。
+
+**架构价值**：固定合同领域 **低代码 + 受限真实 AI 代码生成 + 隔离构建/测试 + 引用一致性运行与回滚** 已有可复现的正向证据。但该自定义代码仅一种纯函数，模型没有自主工程工作区、一般第三方依赖、Maven/npm 编译、无限扩展 API、生产插件隔离、真实人类审批或多轮失败自动修复。B4 仍在 B2 的研究 Companion Registry 旁工作，尚未整合为任意低代码平台底层不可绕过的单一 Domain Kernel，更不是 B2 与全局 IR 的严格等能力架构优劣对照。
+
+**正式门禁维持**：S1 IN_PROGRESS，G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 G1-B01 W01—W24 **0/24 FULL PASS**，合同 TC01—TC18 **0/18 FULL PASS**。下一步优先在等能力条件对照 Domain Schema + Manifest 与统一 Application IR，并设计真实插件权限/代码扩展的跨入口强制治理；不建议再次为了重复相同固定纯函数验证而付费调用模型。
