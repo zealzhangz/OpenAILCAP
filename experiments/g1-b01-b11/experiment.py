@@ -900,6 +900,29 @@ def main():
                            "nativeWorkflowNotProjected":True,
                            "routeJournalVolatile":True,
                            "noFormalG1Pass":True})
+                    restored_native=native_inspect(v1native["db"])
+                    final_html=web_call(route_base+ROUTE)
+                    check("B11-61-UI-rollback-keeps-both-latest-authoritative-contracts",
+                          restored_native["lastSeq"]==8 and
+                          len(restored_native["rows"])==2 and
+                          all(r["status"]=="Approved"
+                              for r in restored_native["rows"]) and
+                          marker2.encode() in final_html[2] and
+                          final_html[1]["X-OpenAILCAP-Release"]=="1",
+                          {"activeViewRelease":1,"businessCursor":8,
+                           "businessFactsNotRolledBack":True})
+                    final_source=pull_events(after=0)[1]
+                    final_core=physical_core()
+                    check("B11-62-independent-SQL-outbox-and-two-approved-records",
+                          final_source["head"]==8 and
+                          len(final_source["events"])==8 and
+                          len(final_core["app-a"]["records"])==2 and
+                          all(r["value"]["status"]=="Approved"
+                              for r in final_core["app-a"]["records"]) and
+                          final_core["app-b"]==init["app-b"],
+                          {"sourceEvents":8,"authorityRows":2,
+                           "appBunchanged":True,
+                           "nativeBusinessDataFromB2":True})
                     data["final"]={
                         "v1Manifest":v1["manifestHash"],
                         "v2Manifest":v2["manifestHash"],
@@ -938,12 +961,12 @@ def main():
             data["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in data["checks"]),
                 "attempted":len(data["checks"]),
-                "expected":44,"modelCalls":0,"formalG1Passed":False
+                "expected":62,"modelCalls":0,"formalG1Passed":False
             }
             Path(opts.output).write_text(
                 json.dumps(data,ensure_ascii=False,indent=2)+"\n")
             print("S1_B11_RESULT "+json.dumps(data["summary"]),flush=True)
-    return 0 if len(data["checks"])==44 and all(
+    return 0 if len(data["checks"])==62 and all(
         x["status"]=="PASS" for x in data["checks"]) else 1
 
 
