@@ -99,7 +99,7 @@ class BrokerUnit(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.g.grant(secrets.token_urlsafe(25),self.agent,{"sql.admin"})
     def test_readonly_release_needs_actual_publication(self):
-        self.reject(404,"RELEASE_NOT_FOUND",self.rt,"app-a",
+        self.reject(404,"NOT_PUBLISHED",self.rt,"app-a",
                     "release.read",{})
 
 if __name__=="__main__":unittest.main()
