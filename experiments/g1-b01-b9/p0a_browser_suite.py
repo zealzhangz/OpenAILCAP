@@ -39,7 +39,7 @@ def run_suite(*, context, base, token_agent, plugin_tool, http, physical,
     def revision(page, expected):
         page.wait_for_function(
             "n => document.getElementById('revision').textContent === String(n)",
-            expected, timeout=12000)
+            arg=expected, timeout=12000)
 
     def refresh(page, expected):
         page.locator("#reload").click()
