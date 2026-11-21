@@ -10,6 +10,7 @@ not equivalent to Saltcorn; runtime switch uses sequential local processes.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import copy
 import json
 import os
@@ -35,6 +36,7 @@ from projector import compile_release,check_compiled,ProjectionRejected
 
 KERN="ailcapb9kern"
 RUNT="ailcapb9run"
+PLUG="ailcapb9plug"
 
 
 def execute(args,cwd=None,env=None,stdin=None,timeout=125,strict=True):
@@ -129,11 +131,12 @@ def main():
               json.dumps(observed,ensure_ascii=False),flush=True)
         if not ok:raise AssertionError(cid)
 
-    uids=[pwd.getpwnam(x).pw_uid for x in (KERN,RUNT)]
+    uids=[pwd.getpwnam(x).pw_uid for x in (KERN,RUNT,PLUG)]
     check("B9-01-distinct-real-Linux-OS-owners",
-          len(set(uids))==2 and all(u>0 for u in uids)
+          len(set(uids))==3 and all(u>0 for u in uids)
           and os.geteuid() not in uids,
-          {"kernelUid":uids[0],"saltcornUid":uids[1]})
+          {"kernelUid":uids[0],"saltcornUid":uids[1],
+           "pluginUid":uids[2]})
     with tempfile.TemporaryDirectory(prefix="s1-b9-derive-") as tmp:
         home=Path(tmp);home.chmod(0o755)
         stage=home/"public-source";stage.mkdir(mode=0o755)
@@ -144,7 +147,7 @@ def main():
             "g1-b01-b7":("physical_sql_oracle.py",),
             "g1-b01-b8":(),
             "g1-b01-b9":("kernel_service.py","native_oracle.py",
-                         "native_env_launcher.py"),
+                         "native_env_launcher.py","plugin_client.py"),
             "platform-saltcorn":("contract-pack.json","seed-contract.js")
         }.items():
             dst=stage/directory;dst.mkdir(mode=0o755)
@@ -172,12 +175,14 @@ def main():
 
         password=secrets.token_urlsafe(38)
         token_agent=secrets.token_urlsafe(38)
+        token_plugin=secrets.token_urlsafe(38)
         token_publisher=secrets.token_urlsafe(38)
         token_runtime=secrets.token_urlsafe(38)
         token_appb=secrets.token_urlsafe(38)
         config.write_text(json.dumps({
             "dbPath":str(db),"humanPassword":password,
-            "agentToken":token_agent,"publisherToken":token_publisher,
+            "agentToken":token_agent,"pluginToken":token_plugin,
+            "publisherToken":token_publisher,
             "runtimeToken":token_runtime,"appBPublisherToken":token_appb
         }),encoding="utf-8")
         config.chmod(0o600)
@@ -275,7 +280,7 @@ def main():
                 diagnostic=salt_log.read_text(errors="replace")[-2400:]
                 for private_value in (
                     salt_session,admin_password,password,
-                    token_agent,token_runtime,token_publisher,token_appb
+                    token_agent,token_plugin,token_runtime,token_publisher,token_appb
                 ):
                     diagnostic=diagnostic.replace(
                         private_value,"[REDACTED]")
@@ -300,6 +305,22 @@ def main():
                                      "_EXPECTED_"+str(expect)+
                                      "_BODY_"+str(res[1])[:350])
             return res[1]
+
+        def plugin(payload):
+            """One low-privilege OS process per call; grant passed on stdin."""
+            p=execute([
+                "sudo","-n","runuser","-u",PLUG,"--",sys.executable,
+                str(stage/"g1-b01-b9"/"plugin_client.py")
+            ],cwd=stage,stdin=json.dumps(payload,ensure_ascii=False)+"\n",
+              timeout=25)
+            out=single(p.stdout,"S1_P0A_PLUGIN")
+            if out["uid"]!=uids[2]:
+                raise AssertionError("PLUGIN_UID_NOT_SEPARATE")
+            return out
+
+        def plugin_tool(app,tool,payload):
+            return plugin({"kind":"tool","base":base,"token":token_plugin,
+                           "app":app,"tool":tool,"args":payload})
 
         def make_mutation(snap,rid,definition,cid):
             old=snap["resources"].get(rid)
@@ -378,10 +399,10 @@ def main():
                   {"missingToken":401,"crossAppToken":403})
             check("B9-07-runtime-process-not-given-kernel-publisher-credentials",
                   all(x not in salt_env.values() for x in (
-                      token_agent,token_runtime,token_publisher,password,
+                      token_agent,token_plugin,token_runtime,token_publisher,password,
                       token_appb)) and
                   all(v not in str(stage) for v in (
-                      token_agent,token_runtime,token_publisher)),
+                      token_agent,token_plugin,token_runtime,token_publisher)),
                   {"separateUid":True,"noAuthorityCredentialsInRuntimeEnv":True})
             specs=json.loads(
                 (ROOT/"g1-b01-b2"/"contract_spec.json").read_text())
@@ -658,6 +679,112 @@ def main():
                           {"authorityRevision":5,
                            "activeSourceReleaseVersion":1,
                            "disposableRuntime":True})
+                    # P0-A: all probes use the very same live B9 authority
+                    # and Saltcorn v1; no independent service or test reset.
+                    plugin_probe=plugin({
+                        "kind":"probe","authorityDb":str(db),
+                        "authorityConfig":str(config)})
+                    check("P0A-01-plugin-UID-physical-DAC-denial",
+                          all(plugin_probe[k]=="DENIED" for k in (
+                              "authorityRead","authorityWrite",
+                              "authoritySQLWrite","authorityConfigRead")),
+                          plugin_probe)
+                    before_three=kernel_physical()
+                    plugin_draft=plugin_tool("app-a","draft.read",{})
+                    check("P0A-02-plugin-reads-same-authority",
+                          plugin_draft["status"]==200 and
+                          plugin_draft["body"]["appRevision"]==5 and
+                          plugin_draft["body"]["publishedVersion"]==1,
+                          {"readHTTP":plugin_draft["status"],"revision":5})
+                    denied_model=plugin_tool("app-a","metadata.upsert",{
+                        "command":make_mutation(
+                            plugin_draft["body"],"model.contracts",
+                            plugin_draft["body"]["resources"][
+                                "model.contracts"]["definition"],
+                            "p0a-plugin-should-not-edit-model")})
+                    denied_publish=plugin_tool("app-a","app.publish",{
+                        "command":{}})
+                    denied_cross=plugin_tool("app-b","draft.read",{})
+                    check("P0A-03-plugin-least-privilege-and-cross-app",
+                          denied_model["status"]==403 and
+                          denied_publish["status"]==403 and
+                          denied_cross["status"]==403 and
+                          kernel_physical()==before_three,
+                          {"modelWrite":denied_model["status"],
+                           "publish":denied_publish["status"],
+                           "crossApp":denied_cross["status"],
+                           "noSqlEffects":True})
+                    concurrent=broker("app-a","draft.read",token_agent,{})
+                    agent_def=copy.deepcopy(concurrent["resources"][
+                        "view.contracts"]["definition"])
+                    plugin_def=copy.deepcopy(agent_def)
+                    agent_def["title"]="P0A Agent Revision"
+                    plugin_def["title"]="P0A Plugin Revision"
+                    agent_change=make_mutation(
+                        concurrent,"view.contracts",agent_def,
+                        "p0a-agent-view-race")
+                    plugin_change=make_mutation(
+                        concurrent,"view.contracts",plugin_def,
+                        "p0a-plugin-view-race")
+                    with ThreadPoolExecutor(max_workers=2) as pool:
+                        future_agent=pool.submit(
+                            http,base,"app-a","metadata.upsert",
+                            token_agent,{"command":agent_change})
+                        future_plugin=pool.submit(
+                            plugin_tool,"app-a","metadata.upsert",
+                            {"command":plugin_change})
+                        agent_result=future_agent.result()
+                        plugin_result=future_plugin.result()
+                    statuses=sorted([agent_result[0],plugin_result["status"]])
+                    winner=(agent_def if agent_result[0]==200 else plugin_def)
+                    after_three=kernel_physical()
+                    check("P0A-04-agent-plugin-race-one-CAS-winner",
+                          statuses==[200,409] and
+                          after_three["app-a"]["resources"][
+                              "view.contracts"]["title"]==winner["title"],
+                          {"agentHTTP":agent_result[0],
+                           "pluginHTTP":plugin_result["status"],
+                           "oneWinner":statuses==[200,409]})
+                    check("P0A-05-physical-one-receipt-release-unchanged",
+                          after_three["app-a"]["revision"]==6 and
+                          after_three["app-a"]["receipts"]==
+                              before_three["app-a"]["receipts"]+1 and
+                          len(after_three["app-a"]["events"])==
+                              len(before_three["app-a"]["events"])+1 and
+                          after_three["app-a"]["publishedVersion"]==1 and
+                          after_three["app-a"]["releases"]==2 and
+                          after_three["app-a"]["resourceHashesValid"] and
+                          after_three["app-a"]["releaseHashesValid"] and
+                          after_three["app-a"]["manifestMatches"] and
+                          after_three["app-b"]==before_three["app-b"],
+                          {"revision":after_three["app-a"]["revision"],
+                           "receiptDelta":after_three["app-a"]["receipts"]-
+                               before_three["app-a"]["receipts"],
+                           "publishedVersion":1,"appBUnchanged":True})
+                    if agent_result[0]==200:
+                        replay_http,replay_body=http(
+                            base,"app-a","metadata.upsert",token_agent,
+                            {"command":agent_change})
+                    else:
+                        replay=plugin_tool("app-a","metadata.upsert",
+                                           {"command":plugin_change})
+                        replay_http,replay_body=replay["status"],replay["body"]
+                    page_again.reload(wait_until="domcontentloaded")
+                    check("P0A-06-idempotent-replay-native-still-old-release",
+                          replay_http==200 and replay_body.get("replayed") is True
+                          and kernel_physical()==after_three and
+                          native_physical(restored["db"])["viewColumns"]==
+                              first["physical"]["viewColumns"] and
+                          "HT-2026-000001" in page_again.content(),
+                          {"replayHTTP":replay_http,
+                           "noAdditionalReceipt":True,
+                           "nativeStillPublishedV1":True})
+                    evidence["p0a"]={
+                        "scope":"same B9 kernel, plugin UID, Agent and Native",
+                        "originalB9Checks":36,"additionalChecks":6,
+                        "pluginDockerSandboxValidated":False,
+                        "nativePackFullDiffApprovalValidated":False,
+                        "formalWOrTCFullPass":False}
                     evidence["final"]={
                         "v1ManifestHash":pub1["manifestHash"],
                         "v2ManifestHash":pub2["manifestHash"],
@@ -689,7 +816,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":36,
+                "expected":42,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -697,7 +824,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==36 and all(
+    return 0 if len(evidence["checks"])==42 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
