@@ -83,3 +83,10 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 新增 [报告 33](33-g1-b01-c2-native-route-evidence.md)，[真实 Actions #44887680474](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474)，Artifact 14699859357。经一次性修改已安装 Saltcorn 1.7.0-beta.5 编译后的原生 /field 路由，在真正 Chromium 管理员两标签页的**顺序旧表单场景**中，B 成功保存原生字段，A 使用旧表单第三次 POST 得到明确 HTTP **409**，物理标签保留 B；新标签页仍可继续保存。浏览器 8/8 符合预期。然而真正原生 `saltcorn run-js` 的 `Field.update` **依然绕过浏览器保护**，独立 SQLite 物理读回确认 1/1 危险负对照。该临时补丁只做写前比较，不具备同事务 compare-and-swap，严禁视为生产修复。
 
 结论：**G1-B01 OPEN / G1 NOT_PASSED**。 C2 已确认原生顺序 409 在研究版本可实现，同时反证“只修补浏览器路由”能满足全渠道强制一致性。W01—W24 原冻结验收仍 0/24 FULL PASS，不把带漏洞的通过当系统安全。后续优先真正统一模型层强制写入，或 C1 自研最小人工设计器，必须包含插件/CLI/Pack/Agent 等路径。
+
+
+## 2026-11-21：B1 真实人工编辑器 + Agent/Plugin 统一命令实验复审
+
+新增 [实测报告 34](34-g1-b01-b1-browser-agent-plugin-evidence.md) 与 [真实 GitHub Actions #44888692681](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44888692681)，completed/success；B1 自研两字段浏览器的 18/18 独立端到端断言通过，既有 C1 31/31 执行实例回归通过。真实 HTML/Session/CSRF、两个 Chromium 持旧页面、双向 Web↔Agent 409、Plugin 独立工具进程服务器端字段级 403、Agent/Plugin 双 OS 进程同版本竞争一胜一拒、应用隔离及独立物理 SQLite/审计/回执核验都取得证据。PR #3 已合并（`a0eff9d11ce4c96a0fed8bb53aac8afa0364b82a`），Artifact 14701406504。第一次 Run #44888560840 的 CSP/Playwright unsafe-eval 测试脚本失败修复时**没有放宽 CSP**。
+
+**评审决策不改变**：B1 是**我们控制的最小两字段研究 Web**，不是第三方 Saltcorn 原生设计器、成熟低代码 Designer 或真实插件沙箱；Agent 为无 LLM 的固定 tool 客户端。生产动态插件隔离、DB 旁路治理、跨域 Schema/Manifest 引用、版本发布、自动代码生成与回滚等未完成。**G1-B01 PARTIALLY VALIDATED / OPEN；G1 继续 NOT_PASSED；W01—W24 0/24 FULL PASS；TC01—TC18 0/18 FULL PASS**。下一 PoC 重点应由 label 编辑扩展至真实 DataModel/Form/View/Workflow 与不可变发布闭包，而不是重复狭窄 CAS 断言。
