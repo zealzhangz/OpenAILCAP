@@ -1,0 +1,94 @@
+name: S1 G1-B01 C2 native Saltcorn guarded-stale-edit counterexample (research only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-g1-b01-c2.yml'
+      - 'experiments/g1-b01-c2/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-route-study:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install exact actual Saltcorn CLI and Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+          python3 -m py_compile experiments/g1-b01-c2/*.py
+      - name: Inspect native compiled route before instrumentation
+        run: |
+          set -euo pipefail
+          python3 experiments/g1-b01-c2/inspect_route.py > /tmp/s1-c2-route-probe.txt
+          grep -q 'Field.findOne({ id: context.id' /tmp/s1-c2-route-probe.txt
+      - name: Prepare isolated native metadata and authenticated temporary admin
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-c2-native.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          export S1_ADMIN_PASSWORD="$(openssl rand -hex 28)"
+          export S1_C2_GUARD_SECRET="$(openssl rand -hex 32)"
+          for var in SALTCORN_SESSION_SECRET S1_ADMIN_PASSWORD S1_C2_GUARD_SECRET; do
+            echo "::add-mask::$(printenv "$var")"
+            echo "$var=$(printenv "$var")" >> "$GITHUB_ENV"
+          done
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 120s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f experiments/platform-saltcorn/contract-pack.json
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/seed-contract.js
+          timeout 120s saltcorn create-user --admin --email s1-research-admin@example.invalid \
+            --password "$S1_ADMIN_PASSWORD" > "$RUNNER_TEMP/c2-admin.log" 2>&1
+          test -s "$SQLITE_FILEPATH"
+      - name: Inject disposable signed baseline check into official compiled /field route
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-c2/patch_native.py
+      - name: Start real installed Saltcorn (route instrumentation active)
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/s1-c2-server.log" 2>&1 &
+          ready=0
+          for i in $(seq 1 80); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/auth/login; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$ready" != "1" ]];then
+            tail -n 75 "$RUNNER_TEMP/s1-c2-server.log"; exit 1
+          fi
+      - name: Real Chromium native two-tab stale submission receives explicit 409
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-c2/native_browser.py \
+            --db "$SQLITE_FILEPATH" --output /tmp/s1-c2-native-browser.json
+      - name: Negative control - real native CLI Field.update bypasses patched web route
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/governed/native-out-of-band.js \
+            > "$RUNNER_TEMP/s1-c2-native-bypass.log" 2>&1
+          grep '^S1_NATIVE_BYPASS|' "$RUNNER_TEMP/s1-c2-native-bypass.log"
+          python3 experiments/g1-b01-c2/verify_bypass.py \
+            --db "$SQLITE_FILEPATH" --output /tmp/s1-c2-native-bypass.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-c2-unofficial-native-route-evidence
+          path: |
+            /tmp/s1-c2-route-probe.txt
+            /tmp/s1-c2-native-browser.json
+            /tmp/s1-c2-native-bypass.json
+          if-no-files-found: warn
