@@ -62,3 +62,13 @@
 若两条代表的 Manifest 和运行结果一致，只能得出：**在已覆盖的合同/Workflow/纯函数扩展领域，统一 IR 作为设计态源能够无损编译到 Domain Schema + Manifest 内核**。两者的真实差异主要在上游源文档、批量事务和引用管理的设计成本，需要更广泛业务/迁移/并发场景研究。**不能据此把统一 IR 提升为持久化唯一权威源，也不能认为“多个设计资源”在同一个文件中就具备跨资源 ACID。**
 
 未来如需最终抉择，应补齐独立 IR-native Runtime、可编辑插件扩展、完整 Domain Kernel 强制写入的公平对照。S1 G1 **NOT_PASSED**，正式 W01—W24 和 TC01—TC18 仍维持完整通过 0 口径，除非有对应冻结用例的独立原始证据。
+
+
+## 2026-11-21 已完成真实 CI：B5 40/18/27/29 全绿
+
+- [研究报告 38](../../docs/01-research/38-s1-b5-ir-parity-tool-broker-evidence.md)；[GitHub Actions Run #44895248552](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44895248552) **completed/success**，Job **136819389820**，原始 [Artifact #14703169788](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44895248552/artifacts/14703169788)。
+- **B5 IR/Broker 40/40**、**B2 18/18**、**B4 27/27** 单测通过；真正 Chromium/外部 Plugin 进程/Docker/双 App 端到端 **29/29** PASS，0 次模型推理。
+- 两种设计态表示法在同一合同应用数据结构上正向无损编译：Direct Domain canonical JSON **693 字节**，IR canonical JSON **937 字节**，两个独立 App 初始/修改后 B2 Manifest 哈希相同、真实业务审批与代码风险评分同构。**只是本样例的 JSON 大小、不是架构速度/生产维护成本的实测比较。**
+- Agent 实际运行 Docker **432 业务样例**检查，但不能发布；外部 Plugin OS 进程可改受许可 View，不能越权 Model、代码构建/发布或未知 SQL 工具；浏览器人工修改 Form 后，旧 Agent 提交 HTTP **409**；变更成 B2 v2 旧扩展 HTTP **409**，回滚恢复。
+- **重要危险负对照已复现**：真正有特权的测试进程绕开 Broker 直接 SQLite UPDATE `extension_artifacts.source`，物理修改发生；扩展运行时基于 Artifact SHA 发现漂移并返回 409、另一 App 仍可工作。**这不意味着旁路已被阻止**，正式 G1-B01/W11/W16 继续 OPEN。
+- [PR #7](https://github.com/zealzhangz/OpenAILCAP/pull/7) 已合并主线，提交 `e8106e6214c0b75ad232c7d12a0a7a4aad794916`。本轮没有执行独立 IR-native Kernel 或真实插件容器沙箱，所以 G1 **NOT_PASSED**。
