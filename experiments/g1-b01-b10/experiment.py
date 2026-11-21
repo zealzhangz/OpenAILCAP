@@ -732,7 +732,8 @@ def main():
                     except subprocess.TimeoutExpired:proc.terminate()
             run(["sudo","-n","chown","-R",
                  str(os.getuid())+":"+str(os.getgid()),
-                 authority,runtime,route_private,ready],
+                 authority,runtime,route_private,ready,
+                 home/"router-ready"],
                 ok=False,timeout=10)
             data["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in data["checks"]),
