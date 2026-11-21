@@ -119,3 +119,14 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **架构价值**：固定合同领域 **低代码 + 受限真实 AI 代码生成 + 隔离构建/测试 + 引用一致性运行与回滚** 已有可复现的正向证据。但该自定义代码仅一种纯函数，模型没有自主工程工作区、一般第三方依赖、Maven/npm 编译、无限扩展 API、生产插件隔离、真实人类审批或多轮失败自动修复。B4 仍在 B2 的研究 Companion Registry 旁工作，尚未整合为任意低代码平台底层不可绕过的单一 Domain Kernel，更不是 B2 与全局 IR 的严格等能力架构优劣对照。
 
 **正式门禁维持**：S1 IN_PROGRESS，G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 G1-B01 W01—W24 **0/24 FULL PASS**，合同 TC01—TC18 **0/18 FULL PASS**。下一步优先在等能力条件对照 Domain Schema + Manifest 与统一 Application IR，并设计真实插件权限/代码扩展的跨入口强制治理；不建议再次为了重复相同固定纯函数验证而付费调用模型。
+
+
+## 2026-11-21：B5 同内核 IR/Domain 表示法对照与权限工具入口复审
+
+[报告 38](38-s1-b5-ir-parity-tool-broker-evidence.md) / [实际 GitHub Actions #44895248552](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44895248552)：completed/success，B5 **40/40 IR/Broker 单测**、B2 **18/18 回归**、B4 **27/27 回归**、B5 实际 Chromium/Plugin 子进程/Docker/双 App 业务 **29/29** 全绿，原始 Artifact 14703169788，0 次外部模型。PR #7 已合并 `main`，commit `e8106e6214c0b75ad232c7d12a0a7a4aad794916`。
+
+**控制变量后的研究结论**：固定合同 DataModel/Form/View/Workflow + B4 风险扩展用两个独立 App，分别经直接 Domain Schema 和严格统一 IR 投影编译写入完全同一 B2/B4 Runtime；初建及之后受控 View/Form 编辑均得到相同 B2 Manifest hash、业务记录、审批轨迹、风险评分与发布版回滚。Domain 与 IR 的单样例 canonical JSON 分别 **693/937 字节**，创建四种资源都仍需 **4 次 B2 typed commands**；IR 仅作为一份设计态文档**不会自动实现跨资源 ACID 原子更新**。因双方实际上**共用运行内核**，此实验不能作为独立 Domain-native vs IR-native Kernel 的性能、复杂度和工程治理优劣比较。暂定研究设计倾向：Domain Schema 作为可信可执行领域内核、Manifest 发布闭包、统一 IR 作为可选设计态投影/规划协议，待多领域及独立运行引擎试验证伪。
+
+**统一工具入口安全边界**：新 v3 Broker 能真实控制 Browser Session/Agent/Plugin OS 进程的类型化开发工具权限、旧版本 CAS、跨应用与代码构建/模拟发布；Agent 验证真实 Docker 432 用例成功不代表获得发布权，Plugin 只许 View，未授权工具/直通 v2 Bearer 被阻止。然而**B5-28 特权 SQL 负对照验证 G1-B01 未关闭**：可信试验进程直接 SQLite UPDATE 已验收 Code Artifact 源码后，写入本身成功；受信运行接口能够在调用时检出 `ARTIFACT_HASH_DRIFT` 并返回 409，但并未阻止数据库管理员级别旁路。缺少真正的插件 OS 权限隔离和底层受治理内核所有入口覆盖。
+
+**G1 正式决定不变**：S1 IN_PROGRESS；**G1 NOT_PASSED，G1-B01 PARTIALLY VALIDATED / OPEN**，冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一 P0：最小权限插件容器/宿主 DB 与 Docker Socket 隔离 + 原生 CLI/Pack 旁路治理；对 W11/W16/W20/W24 运行原冻结验收口径（不以 B5 子用例替代），并单独设计真正 IR-native vs Domain-native 的等能力执行内核基准（而非只比较 IR→Domain 编译）。
