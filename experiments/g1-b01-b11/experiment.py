@@ -114,7 +114,7 @@ def main():
         "zeroDowntimeProductionValidated":False,
         "runtimeCacheHotUpdateValidated":False,
         "nativeWorkflowParityValidated":False,
-        "businessDataMirroredToNative":False,
+        "businessDataMirroredToNative":True,
         "persistedRouterJournalValidated":False,
         "formalG1Passed":False,
         "modelCalls":0,
@@ -460,14 +460,16 @@ def main():
                           {"approvalStates":transitions,
                            "businessOwner":"B2 Kernel ONLY"})
                     v1native=native_materialize("v1",v1)
+            feed1,applied1,native1_rows=sync_native(v1native["db"])
+            v1native["oracle"]=physical_native(v1native["db"])
                     check("B11-09-real-native-v1-physical-Oracle-and-test-record",
                           v1native["oracle"]["viewColumns"]==[
                               "contract_no","amount_minor","status"] and
                           v1native["oracle"]["businessRows"][0][
                               "contract_no"]==MARKER and
                           v1native["oracle"]["businessRows"][0][
-                              "title"]!="B2 authority-only contract",
-                          {"nativeSource":"independent fixture; NOT data sync",
+                              "title"]=="B2 authority-only contract",
+                          {"nativeSource":"real B2 transactional outbox",
                            "viewColumns":["contract_no",
                                           "amount_minor","status"]})
                     native1=start_native("v1",v1native["db"],3158)
@@ -552,6 +554,8 @@ def main():
                           {"kernelRelease":2,"stillServing":1,
                            "explicitDeploymentLag":True})
                     native2obj=native_materialize("v2",v2)
+                    feed2,applied2,native2_rows=sync_native(native2obj["db"])
+                    native2obj["oracle"]=physical_native(native2obj["db"])
                     native2=start_native("v2",native2obj["db"],3159)
                     check("B11-21-two-independent-actual-Saltcorn-servers-live",
                           MARKER.encode() in web_call(native1+ROUTE)[2] and
@@ -721,10 +725,10 @@ def main():
                     check("B11-43-genuine-native-v1-v2-database-business-rows-are-fixtures",
                           v1native["oracle"]["businessRows"][0]["title"]==
                           v2native_columns_title(native2obj) and
-                          v1native["oracle"]["businessRows"][0]["title"]!=
+                          v1native["oracle"]["businessRows"][0]["title"]==
                           full["app-a"]["records"][0]["value"]["title"],
-                          {"nativeFixtureOwnedByRuntime":True,
-                           "notSyncedFromAuthoritativeB2":True})
+                          {"nativeDataFromB2Outbox":True,
+                           "notFromIndependentSeed":True})
                     check("B11-44-no-false-production-zero-downtime-or-workflow-parity",
                           api_json(route_base+"/_health")[1]["epoch"]==3 and
                           full["app-a"]["records"][0]["value"][
@@ -740,7 +744,7 @@ def main():
                         "activeVersion":1,
                         "actualNativeV2Crashed":True,
                         "authoritativeWorkflowStatus":"Approved",
-                        "businessDataNotMirroredToNative":True,
+                        "businessDataNotMirroredToNative":False,
                         "w17W24FullPass":False
                     }
                 finally:
