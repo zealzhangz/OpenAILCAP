@@ -57,3 +57,11 @@ CI 默认**完全离线**，不能因为模型响应失败就静默替代为 rev
 这是一套**纯函数代码扩展 Spike**。模型不具备通用项目目录写入、Maven/npm 构建、代码仓库提交、浏览器可视代码编辑、复杂函数调用、真实人类审批、自动修复、容器镜像构建/镜像签名、生产隔离/供应链治理。Docker 镜像每次运行以本次解析的不可变 image ID 绑定，但基础标签尚未做长期固定 digest 供应链验证。人工开发和代码审查由测试执行器模拟，不是真实自然人。Artifact 验证回执是受信 Controller 的本地对象，不是跨组织加密签名。
 
 **B4 的所有 PASS 都不自动变成正式第一阶段 G1-B01 W01—W24 / TC01—TC18 的 FULL PASS。G1 保持 NOT_PASSED，除非正式冻结验收和重大架构风险关闭。**
+
+
+## 2026-11-21 已完成实际测试的原始凭据
+
+- [报告 37](../../docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md)；[成功的离线 Actions #44893945547](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44893945547)：**B4 27/27 静态/对抗单测、B2 18/18 回归、B4 27/27 真实 Chromium+Docker E2E PASS**，零模型调用。
+- [真正 DeepSeek 一次代码生成 Actions #44894074280](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280)：**completed/success**；同次离线预检通过后，真实模型 **1 次**函数提议，在线 B4 **27/27 PASS**，有效模型源码 SHA `a6743bd465930afb861302a6fc3bf191c7f2909e019fabad153b7969c77d1d5e`，不同于人工基线 SHA `2c866d1ecf6e4d8f2d5d9edebb30255668ce4b80811ffb116e464663bf4ac087`；原始 Job 136815855851、[Artifact #14702827817](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280/artifacts/14702827817)。
+- 模型代码在真正 `--network=none` Docker 中通过 **432** 个独立边界 Oracle；模型不得访问构建/数据库/发布权限。实际人机混合低代码/代码运行高风险评分 95、低风险评分 0，错误业务逻辑与越权被拒，模拟人工发布的代码 v1/v2 回滚与 B2 发布 Schema 不兼容 409 都可从原始日志复核。
+- [PR #6](https://github.com/zealzhangz/OpenAILCAP/pull/6) 已 Squash 合并 main（`5dd3224893a87e1e7a77f91000c38fa023a98d07`）。本研究**尚未实现**工程级通用代码构建/多次 AI 自修复或正式生产发布；第一阶段 G1 继续 **NOT_PASSED**。
