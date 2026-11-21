@@ -178,12 +178,12 @@ def main():
             "dbPath":str(auth_db),"humanPassword":pass_kernel,
             "agentToken":agent_token,"publisherToken":publisher_token,
             "runtimeToken":runtime_token,
-            "appBPublisherToken":router_read_token
+            "appBPublisherToken":app_b_token,
+            "routerReadToken":router_read_token
         }))
         auth_cfg.chmod(0o600)
         run(["sudo","-n","chown","-R",KERNEL+":"+KERNEL,authority])
         run(["sudo","-n","chown","-R",SALT+":"+SALT,runtime])
-        run(["sudo","-n","chown","-R",ROUTER+":"+ROUTER,route_private])
         run(["sudo","-n","chown","-R",KERNEL+":"+KERNEL,ready])
         # Router currently must use app-a read scope. B10 has a separate
         # short-lived read-only grant, never an admin/publish token.
@@ -342,12 +342,11 @@ def main():
             # Route config is built by the trusted controller before chown.
             route_cfg.write_text(json.dumps({
                 "kernelPort":meta["port"],
-                "kernelReadToken":runtime_token,
+                "kernelReadToken":router_read_token,
                 "adminToken":route_admin_token
             }))
             route_cfg.chmod(0o600)
             run(["sudo","-n","chown","-R",ROUTER+":"+ROUTER,route_private])
-            router_ready.chmod(0o666) if router_ready.exists() else None
             # ready is owner KERNEL; router needs its own readable subdir
             router_out=home/"router-ready"
             router_out.mkdir(mode=0o755)
