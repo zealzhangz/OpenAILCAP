@@ -231,9 +231,13 @@ def main():
                 return single_json(proc.stdout,"S1_B8_TOOL")
             # FIXTURE: the real Saltcorn package with genuine native SQLite.
             reset=owner_native(["saltcorn","reset-schema","-f"],timeout=150)
+            # The runner is deliberately NOT the database owner, so even
+            # Path.exists() must not traverse kernel-private directory.
+            db_exists=owner_native(["/usr/bin/test","-s",str(db)])
             check("B8-02-real-Saltcorn-owner-reset-schema-native",
-                  reset.returncode==0 and db.exists(),
-                  {"officialCliExit":reset.returncode,"actualSqlite":db.exists()})
+                  reset.returncode==0 and db_exists.returncode==0,
+                  {"officialCliExit":reset.returncode,
+                   "existsProvenByOwnerUid":db_exists.returncode==0})
             pack=owner_native(["saltcorn","install-pack","-f",
                                str(stage/"contract-pack.json")],timeout=150)
             seed=owner_native(["saltcorn","run-js","-f",
