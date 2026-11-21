@@ -176,8 +176,7 @@ def main():
                     login.locator("#login").click()
                     login.wait_for_url("**/editor/app-a/field.title",
                                        timeout=12000)
-                    login.locator("#revision").get_by_text("0").wait_for(
-                        timeout=12000)
+                    login.wait_for_function("document.getElementById('revision').textContent === '0'", timeout=12000)
                     record("B1-02-real-session-login",
                            login.locator("#label-current").inner_text() == "Title",
                            {"login": "real-form", "current_label": "Title"})
@@ -187,10 +186,8 @@ def main():
                                wait_until="domcontentloaded")
                     tab_b.goto(base + "/editor/app-a/field.title",
                                wait_until="domcontentloaded")
-                    tab_a.locator("#revision").get_by_text("0").wait_for(
-                        timeout=12000)
-                    tab_b.locator("#revision").get_by_text("0").wait_for(
-                        timeout=12000)
+                    tab_a.wait_for_function("document.getElementById('revision').textContent === '0'", timeout=12000)
+                    tab_b.wait_for_function("document.getElementById('revision').textContent === '0'", timeout=12000)
                     record("B1-03-two-independent-browser-snapshots",
                            tab_a.locator("#label-current").inner_text() == "Title" and
                            tab_b.locator("#label-current").inner_text() == "Title",
@@ -214,8 +211,7 @@ def main():
                            {"db_revision": after_b["revision"],
                             "db_label": after_b["content"]["label"]})
                     save_label(tab_a, "Browser A Stale")
-                    tab_a.locator("#message").get_by_text(
-                        "409 VERSION_CONFLICT").wait_for(timeout=12000)
+                    tab_a.wait_for_function("document.getElementById('message').textContent.includes('409 VERSION_CONFLICT')", timeout=12000)
                     after_a = raw_db(dbfile)
                     record("B1-05-stale-browser-409-no-loss",
                            after_a["content"]["label"] == "Browser B Saved" and
@@ -236,14 +232,12 @@ def main():
                            {"agent_http": agent_result["status"],
                             "db_revision": after_agent["revision"]})
                     save_label(tab_b, "Overwrites Agent", field="status")
-                    tab_b.locator("#message").get_by_text(
-                        "409 VERSION_CONFLICT").wait_for(timeout=12000)
+                    tab_b.wait_for_function("document.getElementById('message').textContent.includes('409 VERSION_CONFLICT')", timeout=12000)
                     record("B1-07-stale-human-after-agent-409",
                            raw_db(dbfile)["content"]["status"] == "AI Reviewed",
                            {"browser_http": 409, "agent_status_preserved": True})
                     tab_a.locator("#reload").click()
-                    tab_a.locator("#revision").get_by_text("2").wait_for(
-                        timeout=12000)
+                    tab_a.wait_for_function("document.getElementById('revision').textContent === '2'", timeout=12000)
                     record("B1-08-human-explicit-refresh-after-agent",
                            tab_a.locator("#status-current").inner_text() ==
                            "AI Reviewed",
@@ -383,8 +377,7 @@ def main():
                     final_db = raw_db(dbfile)
                     final_b = raw_db(dbfile, "app-b")
                     tab_a.locator("#reload").click()
-                    tab_a.locator("#revision").get_by_text("5").wait_for(
-                        timeout=12000)
+                    tab_a.wait_for_function("document.getElementById('revision').textContent === '5'", timeout=12000)
                     record("B1-18-independent-db-and-live-browser-consistent",
                            tab_a.locator("#label-current").inner_text() ==
                            final_db["content"]["label"] and
