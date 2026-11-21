@@ -755,6 +755,63 @@ def main():
                           {"browserHttp":200,
                            "routeVersion":api_json(
                                route_base+"/_health")[1]["activeVersion"]})
+                    # New B2 contract after BOTH native Saltcorn servers started:
+                    # project only new seq5..8, without restarting either server.
+                    marker2="HT-2026-000002"
+                    sub2=required("form.submit",runtime_token,{
+                        "formId":"form.contracts",
+                        "values":{"contract_no":marker2,
+                                  "title":"Real B2 second authority contract",
+                                  "amount_minor":200000002}})
+                    rec2=sub2["recordId"]
+                    statuses2=[]
+                    for act,rev in (("submit",1),("approve",2),("approve",3)):
+                        res=required("workflow.advance",runtime_token,{
+                            "workflowId":"workflow.approval",
+                            "recordId":rec2,"action":act,
+                            "expectedVersion":rev})
+                        statuses2.append(res["status"])
+                    source_more=pull_events(after=4)[1]
+                    check("B11-57-live-second-B2-contract-and-four-new-outbox-events",
+                          statuses2==[
+                              "PendingLevel1","PendingLevel2","Approved"] and
+                          source_more["head"]==8 and
+                          [e["seq"] for e in source_more["events"]]==[
+                              5,6,7,8] and
+                          source_more["events"][-1]["cells"]["status"]==
+                          "Approved",
+                          {"outboxSeq":[5,6,7,8],
+                           "authoritativeNewContract":marker2})
+                    delta1=sync_native(v1native["db"],after=4)
+                    check("B11-58-live-v1-incremental-cursor-4-to-8-no-restart",
+                          delta1[1]["applied"]==4 and
+                          delta1[2]["lastSeq"]==8 and
+                          len(delta1[2]["rows"])==2 and
+                          all(row["status"]=="Approved"
+                              for row in delta1[2]["rows"]),
+                          {"nativeV1Cursor":8,"rows":2})
+                    delta2=sync_native(native2obj["db"],after=4)
+                    check("B11-59-live-v2-incremental-cursor-4-to-8-no-restart",
+                          delta2[1]["applied"]==4 and
+                          delta2[2]["lastSeq"]==8 and
+                          delta2[2]["rows"]==delta1[2]["rows"] and
+                          delta2[2]["receipts"]==8,
+                          {"nativeV2Cursor":8,"rows":2,
+                           "bothNativeRowsEqual":True})
+                    html1=web_call(native1+ROUTE)
+                    html2=web_call(native2+ROUTE)
+                    htmlroute=web_call(route_base+ROUTE)
+                    live_page=context.new_page()
+                    live_page.goto(route_base+ROUTE,
+                                   wait_until="domcontentloaded")
+                    check("B11-60-actual-native-HTTP-and-Chromium-see-new-B2-row",
+                          html1[0]==html2[0]==htmlroute[0]==200 and
+                          all(marker2.encode() in t[2]
+                              for t in (html1,html2,htmlroute)) and
+                          marker2 in live_page.content(),
+                          {"bothRealSaltcornLiveUpdated":True,
+                           "routerVersion":2,
+                           "realChromiumSawNewRecord":True})
                     # Native v2 crash: fail closed; DO NOT route to old v1.
                     proc=native_processes["v2"]
                     os.killpg(proc.pid,signal.SIGTERM)
