@@ -1,0 +1,76 @@
+name: S1 B9 authoritative Domain Kernel plus disposable real Saltcorn projections
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b9-authority-projection.yml'
+      - 'experiments/g1-b01-b9/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b9-authority-projection.yml'
+      - 'experiments/g1-b01-b9/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-authority-and-disposable-native-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Exact official Saltcorn and real Playwright Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: Compile B9 and test strict release-to-pack compiler
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b9/*.py
+          cd experiments/g1-b01-b9
+          python3 -u -m unittest -v test_projector \
+            2>&1 | tee /tmp/s1-b9-projector-unit.log
+      - name: B2 trusted schema/store and B5 ToolBroker regressions
+        run: |
+          set -euo pipefail
+          (cd experiments/g1-b01-b2 && python3 -u -m unittest -v test_schema) \
+            2>&1 | tee /tmp/s1-b9-b2-regression.log
+          (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
+            2>&1 | tee /tmp/s1-b9-b5-regression.log
+      - name: Create separate non-root authority and real Saltcorn runtime OS users
+        run: |
+          set -euo pipefail
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9kern
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9run
+          id ailcapb9kern
+          id ailcapb9run
+          [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
+      - name: Actual immutable B2 v1-v2-v1 + Saltcorn native Web/CLI tamper and rebuild
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b9/experiment.py \
+            --output /tmp/s1-b9-evidence.json \
+            2>&1 | tee /tmp/s1-b9-real-e2e.log
+      - name: Retain actual logs and structured authority/runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b9-authority-projection-rebuild-rollback-evidence
+          path: |
+            /tmp/s1-b9-projector-unit.log
+            /tmp/s1-b9-b2-regression.log
+            /tmp/s1-b9-b5-regression.log
+            /tmp/s1-b9-evidence.json
+            /tmp/s1-b9-real-e2e.log
+          if-no-files-found: warn
