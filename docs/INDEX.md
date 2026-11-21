@@ -238,3 +238,12 @@
 - 三个独立非 root 用户实际为 Kernel UID=999、Native Plugin UID=997、Native Agent UID=995；内核独占 SQLite 私有目录 `0700` 和 DB/配置 `0600`，其他用户的 DB 文件 O_RDONLY/O_RDWR、SQLite ro/rw/SQL UPDATE、内核配置与 /proc 敏感信息均真正 **DENIED**，但授权 Plugin 经 B5 v3 Broker 可编辑 View HTTP 200，Model/SQL/代码发布越权 403、跨 app 403、旧 Agent/浏览器写冲突 409，人工 Chromium 发布 v1 与合同业务 Workflow 保持正常。
 - **明确保留 P0**：同 Kernel UID 的第二进程或 root 仍能够**物理直接写入** SQLite；root 负对照篡改后核心检测 `RESOURCE_DRIFT`，草稿 HTTP 409/QUARANTINED，上次发布 Manifest v1 未损坏。这不能证明 root、Saltcorn 原生 CLI、Pack/插件加载器全部被拦截。B7 内核故意禁用 Docker Build，本轮不再额外验证 B4 通用构建。
 - [PR #9](https://github.com/zealzhangz/OpenAILCAP/pull/9) 已合并 `main`，SHA `8b4cd3e87135efe6744b9614e6673bcff439defb`。**G1-B01 OPEN，冻结 W01—W24 0/24 FULL PASS、TC01—TC18 0/18 FULL PASS，S1 IN_PROGRESS / G1 NOT_PASSED**。
+
+
+## 2026-11-21：S1 B8 真正 Saltcorn 原生 Field.update/Pack/Web 与 Linux 数据库权限对照
+
+- [报告 41：真实 Saltcorn Native CLI/Pack、真实 Chromium 原生 /field/:id、Linux UID 隔离与原生写入绕过反例](01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md)；[完整可运行代码与复现边界](../experiments/g1-b01-b8/README.md)，[实际 CI 工作流](../.github/workflows/s1-b8-native-saltcorn-dac.yml)。
+- [成功 GitHub Actions #44899334319](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44899334319) **completed/success**，Job **136831743808**，[原始 Artifact #14704953422](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44899334319/artifacts/14704953422)：B8 原生路径 **15/15 单测**、B2 **18/18 回归**、B5 **40/40 回归**、真 Saltcorn Native CLI/Pack/Chrome/SQLite **24/24**；无 DeepSeek 调用。
+- 固定 `@saltcorn/cli@1.7.0-beta.5`，官方 `saltcorn reset-schema/install-pack/run-js` 建真实应用。在数据库独占 UID=999/0700 目录前提下，另一真实 UID=997 运行官方 `run-js Field.update`、`install-pack` 均 **exit1 / permissionError**、物理 DB 不变；同 UID=999 则不受此 OS 隔离，真正官方 Saltcorn /field/:id 浏览器及 Native CLI **均成功绕过外围 Gateway**修改 `_sc_fields.title`，受控 CAS revision/receipt **不递增**，外围 Gateway 只在后续 GET/POST 返回 `OUT_OF_BAND_DRIFT 409`。
+- 这是**重要架构否定证据**，不能把 24/24 的“危险反例真实成功”当作平台统一写入安全通过：单靠外围 API CAS + 给 Saltcorn SQLite 加 Linux DAC，**无法约束同数据库所有者 UID 的 Saltcorn 原生 Web/CLI/Pack**。下一方案候选：**唯一权威 Domain Kernel + Saltcorn 仅作可删的、无权威持久化写入权限的派生运行/呈现投影**；需在 B9 真验证缓存、发布/回滚与原生直接写仅影响派生层。
+- [PR #10](https://github.com/zealzhangz/OpenAILCAP/pull/10) 已合并 main，SHA `92a06863c91d8a59c80ca93ef95b2a87c4ca4f4e`；S1 IN_PROGRESS / G1 **NOT_PASSED** / G1-B01 **OPEN**，冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。
