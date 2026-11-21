@@ -34,7 +34,7 @@ def serve(config_path,ready_path):
         raise RuntimeError("KERNEL_CONFIG_NOT_PRIVATE")
     cfg=json.loads(p.read_text(encoding="utf-8"))
     required={"dbPath","humanPassword","agentToken","publisherToken",
-              "runtimeToken","appBPublisherToken"}
+              "runtimeToken","appBPublisherToken","pluginToken"}
     if not isinstance(cfg,dict) or set(cfg)!=required or any(
             not isinstance(cfg[k],str) or len(cfg[k])<24
             for k in required-{"dbPath"}):
@@ -52,10 +52,13 @@ def serve(config_path,ready_path):
     broker=ToolBroker(store,registry)
     human=Actor("b9-human-web","app-a",can_publish=True,can_runtime=True)
     agent=Actor("b9-agent","app-a")
+    plugin=Actor("p0a-native-plugin","app-a",kinds=("view",))
     publisher=Actor("b9-human-approved-release","app-a",can_publish=True)
     runtime=Actor("b9-release-export-reader","app-a",can_runtime=True)
     bp=Actor("b9-app-b-human-approved","app-b",can_publish=True)
     broker.grant(cfg["agentToken"],agent,
+                 {"draft.read","metadata.upsert"})
+    broker.grant(cfg["pluginToken"],plugin,
                  {"draft.read","metadata.upsert"})
     broker.grant(cfg["publisherToken"],publisher,
                  {"draft.read","app.publish","app.rollback","release.read"})

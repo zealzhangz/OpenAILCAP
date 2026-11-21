@@ -46,15 +46,19 @@ jobs:
             2>&1 | tee /tmp/s1-b9-b2-regression.log
           (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
             2>&1 | tee /tmp/s1-b9-b5-regression.log
-      - name: Create separate non-root authority and real Saltcorn runtime OS users
+      - name: Create separate non-root authority, Saltcorn and plugin OS users
         run: |
           set -euo pipefail
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9kern
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9run
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9plug
           id ailcapb9kern
           id ailcapb9run
+          id ailcapb9plug
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
-      - name: Actual immutable B2 v1-v2-v1 + Saltcorn native Web/CLI tamper and rebuild
+          [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
+          [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9plug)" ]]
+      - name: Same-instance authority/native attack, Agent-plugin CAS race and physical oracle
         env:
           DEEPSEEK_KEY: ''
         run: |
