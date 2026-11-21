@@ -74,3 +74,13 @@
 - B9 的任何局部 PASS 不能替代冻结 W01—W24 FULL PASS、TC01—TC18 FULL PASS，也不意味着 G1/B01 已关闭。
 
 下一步如果 B9 受限验证通过，将与 B8 的原生旁路对照一起比较“成熟平台做**权威内核**”和“成熟平台做**可删派生前端/运行组件**”的维护成本，优先扩展跨版本数据迁移、真实业务运行语义与自动发布切换，再评估正式 G1。
+
+
+## 2026-11-21：真实 CI、完成结果和剩余风险
+
+- [完整 B9 报告 42](../../docs/01-research/42-s1-b9-authority-saltcorn-projection-evidence.md)，[GitHub Actions #44904386856](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44904386856) **completed/success**，Job **136846739065**，[Artifact #14707840201](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44904386856/artifacts/14707840201)：**25/25 B9 编译器单测、18/18 B2 回归、40/40 B5 回归、36/36 真实 OS/Saltcorn/Chromium/Authority SQL 集成全通过**，不支付模型费用。
+- 真实内核 UID=999，真实 Saltcorn UID=997；权威 DB 0700/0600，派生用户实际 SQLite R/W/UPDATE **DENIED**。真正官方 Saltcorn reset-schema、install-pack、run-js、serve 和真 Native Chrome 浏览器从 B2 v1 已验证 Manifest 派生出合同 Model/View、查到真实合同。
+- 真 Native Chromium Field 向导 **3 步**能够污染派生字段；Native CLI Field.update **exit 0**，重复安装 Native Pack **exit 0**，但**独立 B2 物理 SQL Oracle 确认权威 Schema、Manifest、版本、回执、审计毫无变化**。污染 SQLite 可实际删除，从同一不可变 v1 重新生成同 SHA Pack 并恢复正确 Native 字段/View。
+- 真 B2 Agent 变更 View + Chromium 人工发布 **v1→v2**，Native Saltcorn View 列真从 3 变 4；经真实 B5 Publisher 带 CAS 执行 **v2→v1 rollback**，重建 Native v1、真正浏览器恢复旧视图，过时回滚 409；App B 完全不变。
+- **严格限制**：Saltcorn 只投影 Model/View，Form/Workflow/B4 Code 不做语义等价承诺；Native 业务行在各副本由测试 fixture 插入，没有生产数据迁移、在线热缓存刷新、代理流量原子切换、零停机或外部副作用补偿。B9 不是生产版，也不是冻结 W24/G1 的正式通过证据。
+- [PR #11](https://github.com/zealzhangz/OpenAILCAP/pull/11) 已合并 main，SHA **aeca8cdd126c58023de77451a5abd3cc6b776e0a**。冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**；G1 NOT_PASSED。
