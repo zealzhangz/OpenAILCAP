@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "gate": "NOT_PASSED",
+  "basis": [
+    "docs/01-research/g1-b01-acceptance-cases.json",
+    "experiments/contract-benchmark/spec.json"
+  ],
+  "cases": {
+    "W01": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "三身份在同一正式内核生成 revision/hash/receipt/audit"
+    },
+    "W02": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/33-g1-b01-c2-native-route-evidence.md"
+      ],
+      "missing_full_acceptance": "原生双标签旧表单在权威写路径原子 409 且物理读回"
+    },
+    "W03": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "完整元数据同字段 Web 先写 Agent 后写拒绝"
+    },
+    "W04": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "完整元数据同字段 Agent 先写 Web 后写拒绝"
+    },
+    "W05": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "跨资源或字段编辑后的显式重读合并保留双方值"
+    },
+    "W06": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "真实受限插件和 Agent 并行同字段唯一提交"
+    },
+    "W07": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+      ],
+      "missing_full_acceptance": "两进程在目标权威数据库事务中一次成功一次 409"
+    },
+    "W08": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+      ],
+      "missing_full_acceptance": "较新变更后原 changeId 返回原始回执且审计零增量"
+    },
+    "W09": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+      ],
+      "missing_full_acceptance": "跨主体和摘要复用 changeId 无任何业务副作用"
+    },
+    "W10": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+      ],
+      "missing_full_acceptance": "目标事务故障注入后物理资源版本与成功回执均回滚"
+    },
+    "W11": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md"
+      ],
+      "missing_full_acceptance": "真实原生 CLI 与 Web 越界只能修改派生库且权威隔离"
+    },
+    "W12": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md"
+      ],
+      "missing_full_acceptance": "真实 Pack 全量差异审批及默认拒绝覆盖权威资源"
+    },
+    "W13": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "模型伪造身份经可信宿主工具实际拒绝"
+    },
+    "W14": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "三写入者只读和跨应用拒绝且敏感内容不泄露"
+    },
+    "W15": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "正式 Web CSRF 与过期撤销 Agent token 联合负例"
+    },
+    "W16": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+      ],
+      "missing_full_acceptance": "真实插件安装运行和数据库旁路无未管理写入"
+    },
+    "W17": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md"
+      ],
+      "missing_full_acceptance": "同进程权威 DB、原生 REST、真实浏览器和缓存一致"
+    },
+    "W18": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/48-s1-b15-host-firewall-atomic-public-snapshot-evidence.md"
+      ],
+      "missing_full_acceptance": "权威签名新鲜度与依赖断裂在发布前阻断"
+    },
+    "W19": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md"
+      ],
+      "missing_full_acceptance": "真实代码构建失败时发布指针和人工资产均保留"
+    },
+    "W20": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+      ],
+      "missing_full_acceptance": "远端未知副作用按原 changeId 查询并明确补偿"
+    },
+    "W21": {
+      "status": "NOT_RUN",
+      "package": "P1-E",
+      "partial_evidence": [
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+      ],
+      "missing_full_acceptance": "同名资源跨应用数据库审计和工具权限全隔离"
+    },
+    "W22": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "模型断线人工仍走正式权威写路径并独立读回"
+    },
+    "W23": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+      ],
+      "missing_full_acceptance": "数据字段与页面流程代码依赖闭包完整校验"
+    },
+    "W24": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md"
+      ],
+      "missing_full_acceptance": "配置流程代码 Runtime 和外部副作用统一回滚"
+    },
+    "TC01": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+      ],
+      "missing_full_acceptance": "同一部署中真实合同主从表及关联约束全旅程"
+    },
+    "TC02": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+      ],
+      "missing_full_acceptance": "浏览器合同录入查询与全部金额精度输入判定"
+    },
+    "TC03": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+      ],
+      "missing_full_acceptance": "三个阈值金额真实审批路由与独立业务读回"
+    },
+    "TC04": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+      ],
+      "missing_full_acceptance": "正确错误角色在真实浏览器审批和无副作用核验"
+    },
+    "TC05": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+      ],
+      "missing_full_acceptance": "完整状态迁移拒绝和历史记录独立验收"
+    },
+    "TC06": {
+      "status": "NOT_RUN",
+      "package": "P1-D",
+      "partial_evidence": [
+        "docs/01-research/36-s1-b3-real-deepseek-typed-plan-evidence.md"
+      ],
+      "missing_full_acceptance": "真实 LLM 一句话自主生成四种资源并运行验证"
+    },
+    "TC07": {
+      "status": "NOT_RUN",
+      "package": "P1-D",
+      "partial_evidence": [
+        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md"
+      ],
+      "missing_full_acceptance": "超配置能力费用计算由真实开发旅程完成"
+    },
+    "TC08": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md"
+      ],
+      "missing_full_acceptance": "HT 编号并发唯一性与未知结果幂等验收"
+    },
+    "TC09": {
+      "status": "NOT_RUN",
+      "package": "P1-D",
+      "partial_evidence": [
+        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md"
+      ],
+      "missing_full_acceptance": "AI 自主生成扩展后真实隔离构建测试与发布"
+    },
+    "TC10": {
+      "status": "NOT_RUN",
+      "package": "P1-D",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "人工按钮背景与 AI 旧上下文文案冲突合并"
+    },
+    "TC11": {
+      "status": "NOT_RUN",
+      "package": "P0-A",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "同一文案人工 Agent 并发唯一成功与冲突"
+    },
+    "TC12": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md"
+      ],
+      "missing_full_acceptance": "人工代码资产与 AI 页面修改跨域依赖和版本一致"
+    },
+    "TC13": {
+      "status": "NOT_RUN",
+      "package": "P1-D",
+      "partial_evidence": [
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+      ],
+      "missing_full_acceptance": "模型断开人工维护完整合同应用并可发布"
+    },
+    "TC14": {
+      "status": "NOT_RUN",
+      "package": "P1-E",
+      "partial_evidence": [
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+      ],
+      "missing_full_acceptance": "真实新插件安装注册发现撤销与 AI 安全调用"
+    },
+    "TC15": {
+      "status": "NOT_RUN",
+      "package": "P1-C",
+      "partial_evidence": [
+        "docs/01-research/38-s1-b5-ir-parity-tool-broker-evidence.md"
+      ],
+      "missing_full_acceptance": "两个合同应用同名资源及主体完整隔离"
+    },
+    "TC16": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md"
+      ],
+      "missing_full_acceptance": "故障发布回滚后用户可见版本与全部资产一致"
+    },
+    "TC17": {
+      "status": "NOT_RUN",
+      "package": "P1-E",
+      "partial_evidence": [
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+      ],
+      "missing_full_acceptance": "真实恶意参数工作区逃逸与凭据读取均拒绝"
+    },
+    "TC18": {
+      "status": "NOT_RUN",
+      "package": "P0-B",
+      "partial_evidence": [
+        "docs/01-research/44-s1-b11-authoritative-business-outbox-native-projection-evidence.md"
+      ],
+      "missing_full_acceptance": "独立验收器对同一完整合同应用逐项判定"
+    }
+  }
+}

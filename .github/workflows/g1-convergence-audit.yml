@@ -1,0 +1,24 @@
+name: G1 frozen acceptance convergence audit
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/g1-convergence-audit.yml'
+      - 'docs/01-research/g1-b01-acceptance-cases.json'
+      - 'docs/01-research/g1-convergence-ledger.json'
+      - 'experiments/contract-benchmark/spec.json'
+      - 'scripts/check_g1_convergence.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check frozen case coverage and evidence links
+        run: python3 scripts/check_g1_convergence.py
