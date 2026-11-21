@@ -1,0 +1,74 @@
+name: S1 B5 controlled Domain Schema vs Application IR, unified tool gateway
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b5-ir-parity-gateway.yml'
+      - 'experiments/g1-b01-b5/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b5-ir-parity-gateway.yml'
+      - 'experiments/g1-b01-b5/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parity-and-write-ingress:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile B2 B4 and B5; run frozen adversarial IR and broker contracts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b2/*.py \
+                                experiments/g1-b01-b4/*.py \
+                                experiments/g1-b01-b5/*.py
+          cd experiments/g1-b01-b5
+          python3 -u -m unittest -v test_ir test_broker \
+            2>&1 | tee /tmp/s1-b5-unit.log
+      - name: Regress existing B2 typed model and cross-reference semantics
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b2
+          python3 -u -m unittest -v test_schema \
+            2>&1 | tee /tmp/s1-b5-b2-regression.log
+      - name: Regress B4 source AST confinement before Docker execution
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b4
+          python3 -u -m unittest -v test_policy \
+            2>&1 | tee /tmp/s1-b5-b4-regression.log
+      - name: Install real Docker base and record image ID; no model API
+        run: |
+          set -euo pipefail
+          timeout 300s docker pull python:3.13-alpine
+          IMAGE_ID="$(docker image inspect python:3.13-alpine --format '{{.Id}}')"
+          [[ "$IMAGE_ID" =~ ^sha256:[a-f0-9]{64}$ ]]
+          echo "S1_B4_IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
+          echo "S1_B5_PINNED_IMAGE|$IMAGE_ID"
+      - name: Install Chromium for actual browser human interaction
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Dual-app A/B with identical runtime and real broker/plugin subprocess
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b5/experiment.py \
+            --output /tmp/s1-b5-evidence.json \
+            2>&1 | tee /tmp/s1-b5-e2e.log
+      - name: Upload raw independent observations including any failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b5-ir-parity-tool-broker-evidence
+          path: |
+            /tmp/s1-b5-unit.log
+            /tmp/s1-b5-b2-regression.log
+            /tmp/s1-b5-b4-regression.log
+            /tmp/s1-b5-evidence.json
+            /tmp/s1-b5-e2e.log
+          if-no-files-found: warn
