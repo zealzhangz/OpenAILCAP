@@ -1478,7 +1478,8 @@ def main():
                             ],cwd=str(stage),stdin=subprocess.DEVNULL,
                               stdout=output,stderr=subprocess.STDOUT)
                     def b13_state():
-                        if not b13_status.exists():return {}
+                        # 0700 Consumer directory is intentionally not
+                        # traversable by the CI runner: read via sudo cat.
                         result=run(["sudo","-n","cat",b13_status],
                                    cwd=stage,ok=False)
                         try:return json.loads(result.stdout)
