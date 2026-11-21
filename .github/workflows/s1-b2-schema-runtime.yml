@@ -1,0 +1,50 @@
+name: S1 B2 typed DataModel Form View Workflow and Manifest (offline)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b2-schema-runtime.yml'
+      - 'experiments/g1-b01-b2/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b2-schema-runtime.yml'
+      - 'experiments/g1-b01-b2/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  schema-graph-and-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile and run independent SQLite application graph tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b2/*.py
+          cd experiments/g1-b01-b2
+          python3 -u -m unittest -v test_schema \
+            2>&1 | tee /tmp/s1-b2-unit.log
+      - name: Install fixed real Chromium and Playwright without any model key
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Real Browser human designer and independent Agent process
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b2/browser_acceptance.py \
+            --output /tmp/s1-b2-browser.json \
+            2>&1 | tee /tmp/s1-b2-browser.log
+      - name: Upload raw logs and machine-readable observations even when failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b2-schema-runtime-evidence
+          path: |
+            /tmp/s1-b2-unit.log
+            /tmp/s1-b2-browser.json
+            /tmp/s1-b2-browser.log
+          if-no-files-found: warn

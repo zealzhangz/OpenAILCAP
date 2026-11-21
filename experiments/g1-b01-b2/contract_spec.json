@@ -1,0 +1,55 @@
+{
+  "model.contracts": {
+    "kind": "model",
+    "table": "contracts",
+    "fields": [
+      {
+        "name": "contract_no",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "amount_minor",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": true
+      }
+    ]
+  },
+  "form.contracts": {
+    "kind": "form",
+    "model": "model.contracts",
+    "title": "合同登记",
+    "fields": [
+      "contract_no",
+      "title",
+      "amount_minor"
+    ]
+  },
+  "view.contracts": {
+    "kind": "view",
+    "model": "model.contracts",
+    "title": "合同台账",
+    "columns": [
+      "contract_no",
+      "amount_minor",
+      "status"
+    ]
+  },
+  "workflow.approval": {
+    "kind": "workflow",
+    "model": "model.contracts",
+    "amountField": "amount_minor",
+    "statusField": "status",
+    "thresholdMinor": 100000000
+  }
+}
