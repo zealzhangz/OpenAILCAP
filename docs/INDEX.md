@@ -270,3 +270,13 @@ undefined
 - v1/v2 两个真实 Saltcorn Native 进程同时在线、View 列分别 3/4，业务行完全来自 B2；运行期间 B2 真正新建并批准**第二份合同**，源 seq5..8 通过增量消费使两套原生 SQLite 都拥有两份 Approved 合同，**无需重启**；两套真实 Native HTTP、Router HTTP 与 Chromium 页面均看见第二份合同。
 - 真实 v2 Native 故障导致 Router **503**，受信 B2 发布指针 v2→v1 回滚并 Router CAS 回滚后，前端恢复 v1，但两份权威合同 **Approved** 状态、Outbox 8 条事件、Native v1 cursor8 都不回退；App B 不变。**这只是 UI/Release 回滚，不是业务事务补偿**。
 - [PR #13](https://github.com/zealzhangz/OpenAILCAP/pull/13) 已合并 main，SHA **68da2ce8cf5cd1312866f68c22314636354ab26b**。仍**不是**通用 CDC/后台自动消费者/企业行级权限与脱敏/跨主机安全签名/全量 Native Form/Workflow/Code/生产高可用。正式 G1-B01 OPEN，冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一 B12 优先真实**持续消费者的崩溃恢复、checkpoint/重放/投影漂移与读取前防污染**。
+
+
+## 2026-11-21：S1 B12 真实后台消费者自动恢复与 Native 派生漂移负对照
+
+- [完整报告 45：B12 真正后台 Consumer SIGKILL/重启、源 HTTP 503 恢复、Saltcorn 派生 SQL 漂移巡检与真实浏览器](01-research/45-s1-b12-autonomous-consumer-crash-recovery-native-drift-evidence.md)；[B12 源码及范围限制](../experiments/g1-b01-b12/README.md)、[CI 工作流](../.github/workflows/s1-b12-background-consumer-recovery.yml)。
+- **最终 [Actions #44910951780](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910951780)** completed/success，Job **136866440843**，[原始 Artifact #14709752514](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910951780/artifacts/14709752514)：B12 Consumer 单测 **22/22**、B11 Outbox 回归 **28/28**、B10 Router **34/34**、B2 Kernel **18/18**、B5 Broker **40/40**，真实 B11 62 + B12 新增 17 = **79/79** E2E，**0 次 DeepSeek**。
+- 在两套真正 Saltcorn Native 已通过 B2 Outbox 物化 2 份 Approved 合同、Native cursor8 后，启动**独立后台 Consumer OS 进程**，读取 Native SQLite **已提交 cursor**，通过独立私有 projectionToken 自动拉取权威 Outbox，再由 Saltcorn UID 原子提交事件。第三份合同在进程运行中自动增量到 cursor12，真实 Native/Router HTTP200；Native UID 无法 O_RDONLY 打开私有 Consumer Token 配置。
+- 真实 **SIGKILL Consumer**（Saltcorn 保持在线），B2 继续创建批准第四份合同，源 seq16 但 Native cursor12；新 Consumer 进程从 Native Receipt/cursor12 自动追赶到16，Native 4 行/16 Receipt，无重复。真实源代理 HTTP **503** 时 B2 继续创建第五份合同，源 seq20、Native cursor16；恢复后 Consumer 自动追赶到20，真实 HTTP 和 Chromium 看见第五份合同，5 行/20 Receipt。
+- **重要真实负面证据**：Saltcorn UID 直接 SQL 污染第五份合同后，Consumer 无新事件仍检测 `DERIVED_DRIFT`，但**真实 Native HTTP 继续返回 200**，本次 HTTP 显示缓存旧标题（`httpShowsTamper=false`），**未实现读取前拒绝污染**；人工恢复 Native SQL 后 Consumer 才恢复 `CAUGHT_UP`，不是自动修复。完整过程源 B2 5 份 Approved、20 Outbox、App B 不变。
+- [PR #14](https://github.com/zealzhangz/OpenAILCAP/pull/14) 已合并 main，SHA **8ce7324d85aa1d06a8269bc6351d43a95678b06d**。Consumer 目前由 sudo-capable CI Runner 启动，**不具备正式独立 Consumer OS 身份/受控 IPC**；未验证生产网络分区、断电、HA、真实租户 ACL、读取前完整性防护或全量 Native Workflow。正式 S1 **IN_PROGRESS** / G1 **NOT_PASSED** / G1-B01 **OPEN**；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。B13 优先独立 Consumer UID/受控 IPC + Router 读前真实防污染。
