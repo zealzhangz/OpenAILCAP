@@ -76,3 +76,10 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 [报告 32](32-g1-b01-c1-real-ci-evidence.md) 与 [Actions #44886944054](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054) 已确认：独立 Python 3.13 / SQLite / localhost HTTP C1 受治理写入服务的 **31/31 unittest 实际执行通过**，包含同一数据库真实双进程版本竞争、幂等回执、三类测试身份的共用 HTTP 路径、物理回滚、旁路 SQL 漂移隔离、CSRF/只读/跨应用拒绝。CI Artifact 14699494263，PR #1 已合并。31 次测试执行包括继承测试重复运行，只有 18 个独立测试方法定义，不能直接折算为原生平台 24 项验收。
 
 **阻断项 G1-B01 仍 OPEN**：C1 不使用 Saltcorn 原生 Field.update/原生浏览器设计器，不包含真正插件运行，不修复此前原生 stale-form 覆盖事实。冻结 W01—W24 **0/24 完整 PASS**、TC01—TC18 **0/18 完整 PASS**。正式门禁仍 **NOT_PASSED**。下一次应进入 C2 原生真实写入接入的正反测试；不可用付费模型成功调用代替编辑安全性证明。
+
+
+## 2026-11-21：C2 原生字段编辑器正向保护与 CLI 旁路负对照
+
+新增 [报告 33](33-g1-b01-c2-native-route-evidence.md)，[真实 Actions #44887680474](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474)，Artifact 14699859357。经一次性修改已安装 Saltcorn 1.7.0-beta.5 编译后的原生 /field 路由，在真正 Chromium 管理员两标签页的**顺序旧表单场景**中，B 成功保存原生字段，A 使用旧表单第三次 POST 得到明确 HTTP **409**，物理标签保留 B；新标签页仍可继续保存。浏览器 8/8 符合预期。然而真正原生 `saltcorn run-js` 的 `Field.update` **依然绕过浏览器保护**，独立 SQLite 物理读回确认 1/1 危险负对照。该临时补丁只做写前比较，不具备同事务 compare-and-swap，严禁视为生产修复。
+
+结论：**G1-B01 OPEN / G1 NOT_PASSED**。 C2 已确认原生顺序 409 在研究版本可实现，同时反证“只修补浏览器路由”能满足全渠道强制一致性。W01—W24 原冻结验收仍 0/24 FULL PASS，不把带漏洞的通过当系统安全。后续优先真正统一模型层强制写入，或 C1 自研最小人工设计器，必须包含插件/CLI/Pack/Agent 等路径。
