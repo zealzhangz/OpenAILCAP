@@ -1,6 +1,6 @@
 # G1 P0-A 第二轮：真实人工 Web 与 Agent / Plugin 的同实例冲突验证（预注册）
 
-状态：**提交时未验证**；以本 PR CI 和原始物理 Oracle 作为唯一运行结果，不因完成代码自动升级冻结验收。
+状态：**真实 GitHub CI 已验证新增局部检查**；不因 51/51 自动升级冻结 W/TC 验收。
 
 ## 问题与实验位置
 
@@ -35,3 +35,15 @@ GitHub Actions `.github/workflows/s1-b9-authority-projection.yml`，Ubuntu 24.04
 出现任意丢失人工写入、未经授权修改、数据库审计不一致、两旧版本写入均成功、生产数据越界、以及 Native 派生草稿混入正式发布页面，应保留失败日志并保持 No-Go。验证后只在**可重现同实例执行**和独立审计范围内确认局部证据。
 
 下一步仍应优先真正“授权命令改变后，重新验证来源并原子投影到运行时/浏览器无重启展示”、真实插件沙箱、Pack 全量 diff 审批，再进入 P0-B 全链签名发布，不得另起相互独立的演示工程。
+
+## 2026-11-22 实测结论（不可覆盖上述预注册限制）
+
+- 本轮有效代码 SHA **`95a42f967df76818f3688da3de47201f8f241576`**，真实 [Actions #44961031777](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44961031777) **completed/success**；Job **137019654309**，原始日志/独立 SQL JSON [Artifact #14729203935](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44961031777/artifacts/14729203935)。
+- 同一 Ubuntu/3 UID/B2 Kernel/SQLite/Saltcorn Native 进程内 **B9 36/36、P0A-01—06 6/6、P0A-07—15 9/9，合计 51/51 局部运行检查通过**；25/25 Pack 编译器、18/18 B2、40/40 B5 回归通过；大模型调用 **0**。
+- **P0A-07**：真 Chromium 两标签 Web POST B=200、旧 A=409；权威 SQL revision 6→7，成功回执仅增加 1，未丢 B。
+- **P0A-08/09**：真实 HTTP 在 Web→Agent 与 Agent→Web 两种顺序返回过时版本 409，独立 SQL title 保留先赢的一方。**P0A-10**：不同字段操作也必须先 409，经显式重读/合并后 title + columns 才同时保留；没有把潜在非冲突写默默自动合并。
+- **P0A-11/12**：不调用模型的浏览器独立修改成功；后来更高 revision 产生后原 Agent changeId 仍 200/replayed，跨主体或修改请求摘要重用均 409，独立物理数据库及审计不变。
+- **P0A-13/14**：真实 Cookie 浏览器缺 CSRF / 错 CSRF 为 JSON 403；Plugin 欺骗 actorId/role/appId 为 422；两者都验证无物理副作用。
+- **P0A-15**：相较进入本轮时，真实权威 SQL 恰好 6 次业务变更、6 条成功回执/审计，revision 6→12；发布指针仍 v1，真实 Native 页面原有合同无重启可读、未发布配置不泄漏，app-b 无副作用。
+- **历史失败如实保留**：早期 [Actions #44961020893](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44961020893) 因 Playwright `wait_for_function` API 的 arg 传参方式失败；后续调整为关键字 `arg=...`，上述有效代码实跑成功。失败是测试代码使用错误，非 409 安全性成功/失败结论。
+- **正式裁定：G1 NOT_PASSED，W 0/24，TC 0/18 FULL PASS**。本轮不是 Saltcorn Native 原生 Web stale-form 已改造，也没有 Native v2/v3 的无重启原子发布、真实插件沙箱撤销、完整 W15 Token 过期、生产身份管理或同 UID/root 越权防护证明。下一实验仍按 P0-A 的 Native/Pack/Plugin 不可绕过边界收敛。
