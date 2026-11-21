@@ -1,0 +1,33 @@
+name: S1 SQLite Persistence Spike
+on:
+  push:
+    paths:
+      - 'experiments/sqlite-roundtrip/**'
+      - '.github/workflows/stage1-sqlite.yml'
+  pull_request:
+    paths:
+      - 'experiments/sqlite-roundtrip/**'
+      - '.github/workflows/stage1-sqlite.yml'
+permissions:
+  contents: read
+jobs:
+  sqlite-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Execute SQLite and multiprocessing regression cases
+        working-directory: experiments/sqlite-roundtrip
+        run: python3 -Wd -m unittest discover -s tests -v
+      - name: Generate independent machine-readable results
+        working-directory: experiments/sqlite-roundtrip
+        run: python3 run_experiment.py --output results-ci.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sqlite-roundtrip-results
+          path: experiments/sqlite-roundtrip/results-ci.json
+          if-no-files-found: warn

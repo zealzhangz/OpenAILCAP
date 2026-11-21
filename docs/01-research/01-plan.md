@@ -40,3 +40,7 @@
 ## 2026-11-21 实施进展补充
 
 WP2 已完成 ToolJet MCP Code mode 文件写入保护的首条源码调用链（[文档](04-tooljet-sync-trace.md)）；WP5 已完成 H01/H03 的可执行**模型层** A/B Spike（[报告](05-roundtrip-results.md)，[代码与结果](../../experiments/roundtrip/README.md)）。28 项 Python 单测通过，负对照覆盖缺陷复现。尚未部署任何第三方低代码系统、未执行其测试套件，**G1 尚未达到真实运行验证条件**。
+
+## 2026-11-21 第二次推进
+
+WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控制器/服务为 stub，EE 子模块实际源码无法在本次取得；同时追踪了常规 AppVersion 持久化对象。NocoBase 方面读取插件定义、Agent Runner 的隔离/策略、凭据管理和 LICENSE.txt。WP5 已在真实 SQLite 文件数据库上执行 23 项回归与故障注入测试。见 [综合报告](07-persistence-and-license.md) 与 [实验代码](../../experiments/sqlite-roundtrip/README.md)。未完成真实第三方平台安装和场景复现，G1 尚未通过。

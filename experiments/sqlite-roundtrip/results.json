@@ -1,0 +1,166 @@
+{
+  "experiment": "OpenAILCAP S1 H01/H03 persistent SQLite governed-edit spike",
+  "scope": "SQLite file-backed application resource model, NOT a real low-code platform",
+  "environment": {
+    "python": "3.13.5",
+    "sqlite": "3.46.1",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "github_sha": null
+  },
+  "summary": {
+    "total": 23,
+    "passed": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_ms": 1041.294,
+    "status": "PASS"
+  },
+  "tests": [
+    {
+      "test_id": "test_store.PersistentStoreTests.test_01_manual_ai_nonoverlap_same_resource",
+      "status": "PASS",
+      "duration_ms": 19.373,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_02_manual_ai_overlap_refused",
+      "status": "PASS",
+      "duration_ms": 19.161,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_03_persists_after_reopening_database",
+      "status": "PASS",
+      "duration_ms": 15.404,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_04_same_revision_content_drift_is_refused",
+      "status": "PASS",
+      "duration_ms": 15.204,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_05_bad_ref_delete_is_atomic",
+      "status": "PASS",
+      "duration_ms": 13.382,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_06_failure_injection_undoes_sql_writes",
+      "status": "PASS",
+      "duration_ms": 15.262,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_07_rollback_creates_new_monotonic_revision",
+      "status": "PASS",
+      "duration_ms": 15.909,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_08_idempotent_retry_after_reopen",
+      "status": "PASS",
+      "duration_ms": 15.494,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_09_untrusted_base_rejected",
+      "status": "PASS",
+      "duration_ms": 13.837,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_10_readonly_cannot_write",
+      "status": "PASS",
+      "duration_ms": 12.941,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_11_cross_app_read_refused",
+      "status": "PASS",
+      "duration_ms": 13.705,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_12_cross_app_write_refused",
+      "status": "PASS",
+      "duration_ms": 16.185,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_13_cross_app_base_rejected_even_owner",
+      "status": "PASS",
+      "duration_ms": 14.178,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_14_both_apps_same_resource_id_independent",
+      "status": "PASS",
+      "duration_ms": 14.563,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_15_parallel_disjoint_updates_separate_connections",
+      "status": "PASS",
+      "duration_ms": 19.462,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_16_parallel_overlap_one_rejected",
+      "status": "PASS",
+      "duration_ms": 22.052,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_17_unknown_plugin_extension_is_preserved",
+      "status": "PASS",
+      "duration_ms": 16.508,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_18_manual_code_survives_ai_edit",
+      "status": "PASS",
+      "duration_ms": 18.086,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_19_unknown_ref_create_rejected",
+      "status": "PASS",
+      "duration_ms": 15.014,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_20_combined_delete_and_rewire_allowed",
+      "status": "PASS",
+      "duration_ms": 15.805,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_21_crashed_process_uncommitted_sql_rolls_back",
+      "status": "PASS",
+      "duration_ms": 678.54,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_22_manual_updates_work_without_llm",
+      "status": "PASS",
+      "duration_ms": 18.396,
+      "error": null
+    },
+    {
+      "test_id": "test_store.PersistentStoreTests.test_23_idempotent_replay_must_fail_on_db_drift",
+      "status": "PASS",
+      "duration_ms": 20.702,
+      "error": null
+    }
+  ],
+  "limitations": [
+    "No API gateway authentication; actor is supplied by trusted caller",
+    "No actual low-code editor / server deployment",
+    "No actual AI model or untrusted code execution",
+    "SQLite process-transaction durability only; no distributed transactions",
+    "No production workload or performance benchmark"
+  ]
+}

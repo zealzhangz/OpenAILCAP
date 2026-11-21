@@ -57,3 +57,15 @@
 ## E11 — OpenAILCAP 自主模型级实测（S0，但范围受限）
 
 运行了 [内存模拟对照实验](../../experiments/roundtrip/README.md)，A/B 各 10/10 场景通过，28 项单元测试通过；[机器可读结果](../../experiments/roundtrip/results.json)。实验证明的是本仓库**模拟模型**，不是 ToolJet/NocoBase 运行时，也不是实际 AI Agent。见 [实验报告](05-roundtrip-results.md)。
+
+## E12 — ToolJet CE/EE Code Mode 证据断点（S1）
+
+[Code Mode CE Controller](https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/server/src/modules/code-mode-source/controller.ts) 无真实路由；[CE Service](https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/server/src/modules/code-mode-source/service.ts) 对非 visual buildMode 拒绝。server/ee 在固定 commit 是指向 ToolJet/ee-server 的子模块，未能获取其完整源码。因此不得宣称公开 CE 包含 Code Mode 闭环。
+
+## E13 — NocoBase Runner 隔离策略和许可证（S1）
+
+[runner isolation.ts](https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/packages/app/agent-runner/src/core/isolation.ts) 明确仅对确定性构建步骤进行 none/user 隔离，container 暂不支持；Agent 编码沙箱由适配器负责。[LICENSE.txt](https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/LICENSE.txt) 第 4.2、5.4 与 7.3—7.5 条存在平台型产品的额外限制，不能仅用 Apache-2.0 摘要作为复用依据。
+
+## E14 — OpenAILCAP SQLite 文件数据库试验（S0，范围受限）
+
+[实验代码与 23 项测试](../../experiments/sqlite-roundtrip/README.md) 在 Python 3.13.5 / SQLite 3.46.1 实际运行，文件持久化、事务回滚、另起进程不提交退出、模拟 A/B 应用分区等 23/23 通过。[结果 JSON](../../experiments/sqlite-roundtrip/results.json) 与 [原始测试日志](../../experiments/sqlite-roundtrip/test-output.txt) 同库保存。没有真正鉴权、平台运行时和 AI Agent；不得把逻辑隔离测试误认为生产安全验证。详见 [深度报告](07-persistence-and-license.md)。

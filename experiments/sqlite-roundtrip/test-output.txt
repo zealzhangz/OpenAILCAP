@@ -1,0 +1,28 @@
+test_01_manual_ai_nonoverlap_same_resource (test_store.PersistentStoreTests.test_01_manual_ai_nonoverlap_same_resource) ... ok
+test_02_manual_ai_overlap_refused (test_store.PersistentStoreTests.test_02_manual_ai_overlap_refused) ... ok
+test_03_persists_after_reopening_database (test_store.PersistentStoreTests.test_03_persists_after_reopening_database) ... ok
+test_04_same_revision_content_drift_is_refused (test_store.PersistentStoreTests.test_04_same_revision_content_drift_is_refused) ... ok
+test_05_bad_ref_delete_is_atomic (test_store.PersistentStoreTests.test_05_bad_ref_delete_is_atomic) ... ok
+test_06_failure_injection_undoes_sql_writes (test_store.PersistentStoreTests.test_06_failure_injection_undoes_sql_writes) ... ok
+test_07_rollback_creates_new_monotonic_revision (test_store.PersistentStoreTests.test_07_rollback_creates_new_monotonic_revision) ... ok
+test_08_idempotent_retry_after_reopen (test_store.PersistentStoreTests.test_08_idempotent_retry_after_reopen) ... ok
+test_09_untrusted_base_rejected (test_store.PersistentStoreTests.test_09_untrusted_base_rejected) ... ok
+test_10_readonly_cannot_write (test_store.PersistentStoreTests.test_10_readonly_cannot_write) ... ok
+test_11_cross_app_read_refused (test_store.PersistentStoreTests.test_11_cross_app_read_refused) ... ok
+test_12_cross_app_write_refused (test_store.PersistentStoreTests.test_12_cross_app_write_refused) ... ok
+test_13_cross_app_base_rejected_even_owner (test_store.PersistentStoreTests.test_13_cross_app_base_rejected_even_owner) ... ok
+test_14_both_apps_same_resource_id_independent (test_store.PersistentStoreTests.test_14_both_apps_same_resource_id_independent) ... ok
+test_15_parallel_disjoint_updates_separate_connections (test_store.PersistentStoreTests.test_15_parallel_disjoint_updates_separate_connections) ... ok
+test_16_parallel_overlap_one_rejected (test_store.PersistentStoreTests.test_16_parallel_overlap_one_rejected) ... ok
+test_17_unknown_plugin_extension_is_preserved (test_store.PersistentStoreTests.test_17_unknown_plugin_extension_is_preserved) ... ok
+test_18_manual_code_survives_ai_edit (test_store.PersistentStoreTests.test_18_manual_code_survives_ai_edit) ... ok
+test_19_unknown_ref_create_rejected (test_store.PersistentStoreTests.test_19_unknown_ref_create_rejected) ... ok
+test_20_combined_delete_and_rewire_allowed (test_store.PersistentStoreTests.test_20_combined_delete_and_rewire_allowed) ... ok
+test_21_crashed_process_uncommitted_sql_rolls_back (test_store.PersistentStoreTests.test_21_crashed_process_uncommitted_sql_rolls_back) ... ok
+test_22_manual_updates_work_without_llm (test_store.PersistentStoreTests.test_22_manual_updates_work_without_llm) ... ok
+test_23_idempotent_replay_must_fail_on_db_drift (test_store.PersistentStoreTests.test_23_idempotent_replay_must_fail_on_db_drift) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 1.040s
+
+OK

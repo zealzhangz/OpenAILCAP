@@ -29,3 +29,7 @@
 C 组（H01/H03）已完成模型级 C01—C10：Unified IR 10/10、分域 Schema + Manifest 10/10；含防御性单测共 28/28 通过。复现了旧快照整页覆盖导致人工样式丢失的负对照。具体命令、机器可读结果和暴露的可信基线问题见 [实验报告](05-roundtrip-results.md) 与 [实验工程](../../experiments/roundtrip/README.md)。
 
 R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C 的真实低代码运行时版本也未执行。不能宣称 G1 或 G3 通过。
+
+## 2026-11-21 SQLite 持久化实验回填
+
+新增了独立的 [SQLite 文件数据库与事务测试](../../experiments/sqlite-roundtrip/README.md)：23 项独立测试全部通过，覆盖并发写事务、异常退出后恢复、乐观冲突、重复命令、版本回退以及模拟的 app_id/ACL 拒绝。它不是平台级实验；真实用户认证、Agent 编码执行、部署及第三方平台安装尚未执行。G1/G3 未通过。参考 [研究报告](07-persistence-and-license.md)。
