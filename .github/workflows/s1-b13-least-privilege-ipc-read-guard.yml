@@ -1,0 +1,89 @@
+name: S1 B13 real 4-UID native IPC and read-time B2 guard
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b13-least-privilege-ipc-read-guard.yml'
+      - 'experiments/g1-b01-b13/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b13-least-privilege-ipc-read-guard.yml'
+      - 'experiments/g1-b01-b13/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  four-uid-native-saltcorn-ipc-and-read-guard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual Saltcorn CLI and Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: B13 strict IPC/guard units and B12 B11 B10 B2 B5 regressions
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b13/*.py
+          (cd experiments/g1-b01-b13 && python3 -u -m unittest -v test_ipc_guard) \
+            2>&1 | tee /tmp/s1-b13-units.log
+          (cd experiments/g1-b01-b12 && python3 -u -m unittest -v test_consumer) \
+            2>&1 | tee /tmp/s1-b13-b12-regression.log
+          (cd experiments/g1-b01-b11 && python3 -u -m unittest -v test_projection) \
+            2>&1 | tee /tmp/s1-b13-b11-regression.log
+          (cd experiments/g1-b01-b10 && python3 -u -m unittest -v test_router) \
+            2>&1 | tee /tmp/s1-b13-b10-regression.log
+          (cd experiments/g1-b01-b2 && python3 -u -m unittest -v test_schema) \
+            2>&1 | tee /tmp/s1-b13-b2-regression.log
+          (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
+            2>&1 | tee /tmp/s1-b13-b5-regression.log
+      - name: Create 4 genuine nonroot UIDs and disjoint Unix IPC groups
+        run: |
+          set -euo pipefail
+          sudo -n groupadd --system ailcapb13pipe
+          sudo -n groupadd --system ailcapb13guard
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb13kern
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb13pipe,ailcapb13guard ailcapb13salt
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb13guard ailcapb13route
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb13pipe ailcapb13cons
+          for u in ailcapb13kern ailcapb13salt ailcapb13route ailcapb13cons; do id "$u"; done
+          [[ "$(id -u ailcapb13kern)" != "$(id -u ailcapb13salt)" ]]
+          [[ "$(id -u ailcapb13salt)" != "$(id -u ailcapb13route)" ]]
+          [[ "$(id -u ailcapb13route)" != "$(id -u ailcapb13cons)" ]]
+      - name: Real B2 SQLite + two Saltcorn HTTP + OS peercred IPC + unprivileged consumer + read guard Chromium
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b13/experiment.py \
+            --output /tmp/s1-b13-evidence.json \
+            2>&1 | tee /tmp/s1-b13-e2e.log
+      - name: Upload full real native OS IPC and negative control evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b13-four-uid-native-ipc-read-guard-evidence
+          path: |
+            /tmp/s1-b13-units.log
+            /tmp/s1-b13-b12-regression.log
+            /tmp/s1-b13-b11-regression.log
+            /tmp/s1-b13-b10-regression.log
+            /tmp/s1-b13-b2-regression.log
+            /tmp/s1-b13-b5-regression.log
+            /tmp/s1-b13-evidence.json
+            /tmp/s1-b13-e2e.log
+          if-no-files-found: warn
