@@ -1,0 +1,41 @@
+name: S1 G1-B01 C1 unified write research preflight (offline)
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-g1-b01-c1.yml'
+      - 'experiments/g1-b01-c1/**'
+  pull_request:
+    paths:
+      - '.github/workflows/s1-g1-b01-c1.yml'
+      - 'experiments/g1-b01-c1/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  standalone-c1-guarded-editing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile research C1 service and tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-c1/*.py
+      - name: Real SQLite separate-process and loopback HTTP tests (NO model)
+        working-directory: experiments/g1-b01-c1
+        run: |
+          set -euo pipefail
+          python3 -u run_suite.py /tmp/s1-g1-b01-c1-observations.json \
+            2>&1 | tee /tmp/s1-g1-b01-c1-unittest.log
+      - name: Upload offline preflight observations and test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-g1-b01-c1-offline-test-evidence
+          path: |
+            /tmp/s1-g1-b01-c1-observations.json
+            /tmp/s1-g1-b01-c1-unittest.log
+          if-no-files-found: warn
