@@ -1611,11 +1611,450 @@ def main():
                            "B2AuthoritativeHead":28,
                            "nativeCursor":29,"guardHTTP":503,
                            "sourceEventHashesNotSignatures":True})
+                    # B14: start from the verified B13 negative control.
+                    # CI controller (not Consumer) explicitly resets the
+                    # disposable Native projection, then replays ALL 28
+                    # B2 outbox events with Kernel-generated Ed25519 proofs.
+                    os.killpg(unprivileged_consumer.pid,signal.SIGTERM)
+                    unprivileged_consumer.wait(timeout=7)
+                    # Terminate actual broker child, not just sudo wrapper.
+                    run(["sudo","-n","kill","-TERM",str(ipc_info["pid"])],
+                        cwd=stage)
+                    for _ in range(70):
+                        if not consumer_socket.exists():break
+                        time.sleep(.08)
+                    check("B14-105-old-unsigned-apply-broker-actually-closed",
+                          not consumer_socket.exists(),
+                          {"oldNativeUnsignedIPC":"CLOSED"})
+                    reset_sql=(
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "with c:\n"
+                        " c.execute('DELETE FROM b11_projection_receipts')\n"
+                        " c.execute('DELETE FROM b11_record_map')\n"
+                        " c.execute('DELETE FROM s1_contracts')\n"
+                        " c.execute(\"UPDATE b11_projection_cursor SET last_seq=0 "
+                        "WHERE app='app-a'\")\n"
+                    )
+                    native_command([sys.executable,"-c",reset_sql],
+                                   v1native["db"])
+                    clean=native_inspect(v1native["db"])
+                    check("B14-106-disposable-native-reset-clears-forged-seq29",
+                          clean["lastSeq"]==0 and clean["receipts"]==0 and
+                          not clean["rows"],
+                          {"nativeCursor":0,"forgedRowRemoved":True})
+                    key_path=authority/"b14-private-ed25519.raw"
+                    keygen=run(["sudo","-n","runuser","-u",KERNEL,"--",
+                        sys.executable,str(stage/"g1-b01-b14"/"signed_source.py"),
+                        "--generate-key",key_path],cwd=stage)
+                    public_hex=keygen.stdout.strip().split(
+                        "S1_B14_PUBLIC_KEY|")[-1]
+                    public_path=stage/"b14-pinned-public-key.hex"
+                    public_path.write_text(public_hex)
+                    public_path.chmod(0o444)
+                    check("B14-107-real-Kernel-UID-Ed25519-private-key-0600",
+                          len(bytes.fromhex(public_hex))==32 and
+                          key_path.stat().st_mode&0o777==0o600 and
+                          denied_read("ailcapb13cons",key_path) and
+                          denied_read(SALT,key_path) and
+                          denied_read(ROUTER,key_path),
+                          {"kernelUid":uids[KERNEL],"privateMode":"0600",
+                           "consumerNativeRouterPrivateRead":"DENIED"})
+                    source_cfg=authority/"b14-signed-source.json"
+                    signed_token=secrets.token_urlsafe(36)
+                    run(["sudo","-n","tee",source_cfg],cwd=stage,
+                        stdin=json.dumps({"db":str(auth_db),
+                                          "privateKey":str(key_path),
+                                          "token":signed_token}))
+                    run(["sudo","-n","chown",KERNEL+":"+KERNEL,source_cfg])
+                    run(["sudo","-n","chmod","0600",source_cfg])
+                    signed_ready_dir=home/"b14-source-ready"
+                    signed_ready_dir.mkdir(mode=0o755)
+                    run(["sudo","-n","chown",KERNEL+":"+KERNEL,
+                         signed_ready_dir])
+                    source_ready=signed_ready_dir/"ready.json"
+                    source_log=home/"b14-signed-source.log"
+                    with source_log.open("w") as output:
+                        signed_source_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u",KERNEL,"--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b14"/"signed_source.py"),
+                            "--config",str(source_cfg),
+                            "--ready",str(source_ready)
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(100):
+                        if source_ready.is_file():break
+                        if signed_source_proc.poll() is not None:
+                            raise AssertionError("B14_SIGNED_SOURCE_EXIT "+
+                                                 source_log.read_text()[-1100:])
+                        time.sleep(.08)
+                    if not source_ready.is_file():
+                        raise AssertionError("B14_SIGNED_SOURCE_NOT_READY")
+                    source_meta=json.loads(source_ready.read_text())
+                    signed_url=("http://127.0.0.1:"+
+                                str(source_meta["port"])+
+                                "/v5/apps/app-a/projection/signed-pull")
+                    signed_status,signed_feed=api_json(
+                        signed_url,"POST",{"after":0,"limit":100},signed_token)
+                    check("B14-108-Kernel-signed-real-28-B2-atomic-outbox-events",
+                          signed_status==200 and signed_feed["head"]==28 and
+                          len(signed_feed["events"])==28 and
+                          all(len(e["eventSig"])>=86 for e in
+                              signed_feed["events"]) and
+                          source_meta["uid"]==uids[KERNEL],
+                          {"realB2OutboxHead":28,"signedEvents":28,
+                           "signerUid":source_meta["uid"]})
+                    denied_sign=denied_read("ailcapb13cons",key_path)
+                    no_write=uid_probe("ailcapb13cons",
+                        "import os,sys\n"
+                        "try:\n"
+                        " os.open(sys.argv[1],os.O_WRONLY)\n"
+                        " raise SystemExit(3)\n"
+                        "except PermissionError:\n"
+                        " raise SystemExit(0)\n",(key_path,))
+                    check("B14-109-consumer-cannot-read-or-write-signing-key",
+                          denied_sign and no_write.returncode==0,
+                          {"consumerHasPrivateKey":False})
+                    # Give a FIFTH audit-only UID group-read (not write) of
+                    # actual Native SQLite. Saltcorn still owns the file.
+                    run(["sudo","-n","chgrp","ailcapb14audit",
+                         runtime,v1native["db"]])
+                    run(["sudo","-n","chmod","0710",runtime])
+                    run(["sudo","-n","chmod","0640",v1native["db"]])
+                    audit_uid=pwd.getpwnam("ailcapb14audit").pw_uid
+                    check("B14-110-fifth-independent-real-auditor-Linux-UID",
+                          audit_uid>0 and audit_uid not in (
+                              *uids.values(),consumer_uid),
+                          {"auditUid":audit_uid,"nativeUid":uids[SALT],
+                           "fileMode":"0640","dirMode":"0710"})
+                    check("B14-111-auditor-can-read-but-cannot-write-native-SQLite",
+                          uid_probe("ailcapb14audit",
+                            "import os,sys\n"
+                            "f=os.open(sys.argv[1],os.O_RDONLY)\n"
+                            "os.close(f)\n",(v1native["db"],)).returncode==0 and
+                          uid_probe("ailcapb14audit",
+                            "import os,sys\n"
+                            "try:\n"
+                            " os.open(sys.argv[1],os.O_WRONLY)\n"
+                            " raise SystemExit(3)\n"
+                            "except PermissionError:\n"
+                            " raise SystemExit(0)\n",
+                            (v1native["db"],)).returncode==0,
+                          {"auditDirectSQLiteRead":True,
+                           "auditDirectSQLiteWrite":False})
+                    b14_ipc_ready=ipc_dir/"b14-signed-ready.json"
+                    signed_ipc_log=home/"b14-signed-ipc.log"
+                    with signed_ipc_log.open("w") as output:
+                        signed_ipc_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u",SALT,"--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b14"/"signed_native_ipc.py"),
+                            "--db",str(v1native["db"]),
+                            "--socket",str(consumer_socket),
+                            "--ready",str(b14_ipc_ready),
+                            "--public-key-file",str(public_path),
+                            "--consumer-uid",str(consumer_uid)
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(100):
+                        if b14_ipc_ready.is_file():break
+                        if signed_ipc_proc.poll() is not None:
+                            raise AssertionError("B14_SIGNED_IPC_EXIT "+
+                                                 signed_ipc_log.read_text()[-1000:])
+                        time.sleep(.08)
+                    if not b14_ipc_ready.is_file():
+                        raise AssertionError("B14_SIGNED_IPC_NOT_READY")
+                    b14_ipc_info=json.loads(b14_ipc_ready.read_text())
+                    check("B14-112-Saltcorn-UID-IPC-pins-public-key-only",
+                          b14_ipc_info["uid"]==uids[SALT] and
+                          b14_ipc_info["privateKeyPresent"] is False and
+                          consumer_socket.stat().st_mode&0o777==0o660,
+                          {"brokerUid":uids[SALT],"privateKeyPresent":False})
+                    # The B13 forgery with a valid recomputed SHA256 but no
+                    # Ed25519 signature MUST be rejected by the B14 Broker.
+                    unsigned_forgery=peer_call(
+                        "ailcapb13cons",consumer_socket,
+                        {"op":"apply","batch":{"app":"app-a","after":0,
+                                              "events":[forged]}})
+                    check("B14-113-previous-B13-forgery-rejected-before-SQL",
+                          not unsigned_forgery["ok"] and
+                          unsigned_forgery["error"]==
+                              "SIGNED_EVENT_SHAPE_INVALID" and
+                          native_inspect(v1native["db"])["lastSeq"]==0,
+                          {"forgedSHA256Accepted":False,
+                           "nativeCursor":0})
+                    altered=copy.deepcopy(signed_feed["events"][0])
+                    altered["cells"]["title"]="ATTACK_WITH_STOLEN_SIGNATURE"
+                    altered["eventHash"]=digest({
+                        k:altered[k] for k in (
+                            "app","seq","model","recordId","version","cells"
+                        )})
+                    forged_signature=peer_call(
+                        "ailcapb13cons",consumer_socket,
+                        {"op":"apply","batch":{"app":"app-a","after":0,
+                                              "events":[altered]}})
+                    check("B14-114-valid-SHA-invalid-Ed25519-rejected",
+                          not forged_signature["ok"] and
+                          forged_signature["error"]=="EVENT_SIGNATURE_INVALID"
+                          and native_inspect(v1native["db"])["lastSeq"]==0,
+                          {"attackerCanRecomputeHash":True,
+                           "attackerCannotForgeKernelSignature":True})
+                    accepted=peer_call("ailcapb13cons",consumer_socket,{
+                        "op":"apply","batch":{"app":"app-a","after":0,
+                                           "events":signed_feed["events"]}})
+                    check("B14-115-full-28-Kernel-signed-events-atomic-native-apply",
+                          accepted["ok"] and
+                          accepted["result"]["lastSeq"]==28 and
+                          accepted["result"]["applied"]==28 and
+                          native_inspect(v1native["db"])["mappings"]==7,
+                          {"signedApplied":28,"realContracts":7,
+                           "cursor":28})
+                    replay=peer_call("ailcapb13cons",consumer_socket,{
+                        "op":"apply","batch":{"app":"app-a","after":0,
+                                           "events":signed_feed["events"]}})
+                    check("B14-116-signed-replay-28-events-idempotent",
+                          replay["ok"] and
+                          replay["result"]["replayed"]==28 and
+                          replay["result"]["applied"]==0,
+                          {"duplicateRows":0,"replayed":28})
+                    audit_dir=home/"b14-audit-ipc"
+                    audit_dir.mkdir(mode=0o755)
+                    run(["sudo","-n","chown",
+                         "ailcapb14audit:ailcapb14audit",audit_dir])
+                    audit_socket=audit_dir/"guard.sock"
+                    audit_ready=audit_dir/"ready.json"
+                    audit_log=home/"b14-auditor.log"
+                    with audit_log.open("w") as output:
+                        audit_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u","ailcapb14audit","--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b14"/"audit_reader.py"),
+                            "--db",str(v1native["db"]),
+                            "--socket",str(audit_socket),
+                            "--ready",str(audit_ready),
+                            "--router-uid",str(uids[ROUTER])
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(100):
+                        if audit_ready.is_file():break
+                        if audit_proc.poll() is not None:
+                            raise AssertionError("B14_AUDITOR_EXIT "+
+                                                 audit_log.read_text()[-1000:])
+                        time.sleep(.08)
+                    if not audit_ready.is_file():
+                        raise AssertionError("B14_AUDITOR_NOT_READY")
+                    audit_info=json.loads(audit_ready.read_text())
+                    check("B14-117-independent-UID-real-SQL-auditor-read-only",
+                          audit_info["uid"]==audit_uid and
+                          audit_info["directSQLiteRead"] and
+                          audit_info["directSQLiteWrite"] is False and
+                          audit_socket.stat().st_mode&0o777==0o660,
+                          {"auditUid":audit_uid,"nativeUid":uids[SALT],
+                           "directPhysicalSQLiteRead":True})
+                    check("B14-118-Native-UID-cannot-connect-auditor-guard-socket",
+                          denied_connect(SALT,audit_socket),
+                          {"nativeCanSpoofGuardSnapshot":False})
+                    audited=peer_call(ROUTER,audit_socket,{"op":"snapshot"})
+                    check("B14-119-router-reads-independent-physical-SQL-7-rows",
+                          audited["ok"] and
+                          audited["result"]["clean"] and
+                          audited["result"]["cursor"]==28 and
+                          len(audited["result"]["rows"])==7,
+                          {"independentPhysicalSQLCursor":28,"rows":7})
+                    audit_forbid=peer_call(ROUTER,audit_socket,
+                                           {"op":"apply","batch":{}})
+                    check("B14-120-auditor-guard-socket-read-only-no-apply",
+                          not audit_forbid["ok"] and
+                          audit_forbid["error"]=="GUARD_READ_ONLY",
+                          {"auditorWriteAPI":False})
+                    b14_guard_dir=home/"b14-guard-private"
+                    b14_guard_dir.mkdir(mode=0o700)
+                    b14_guard_cfg=b14_guard_dir/"guard.json"
+                    b14_guard_cfg.write_text(json.dumps({
+                        "sourceUrl":signed_url,
+                        "sourceToken":signed_token,
+                        "kernelPort":meta["port"],
+                        "kernelReadToken":router_read_token,
+                        "guardSocket":str(audit_socket),
+                        "nativePort":3158,"marker":MARKER,
+                        "version":1,"manifestHash":v1["manifestHash"],
+                        "publicKeyHex":public_hex
+                    }))
+                    b14_guard_cfg.chmod(0o600)
+                    run(["sudo","-n","chown","-R",
+                         ROUTER+":"+ROUTER,b14_guard_dir])
+                    b14_guard_ready_dir=home/"b14-guard-ready"
+                    b14_guard_ready_dir.mkdir(mode=0o755)
+                    run(["sudo","-n","chown",ROUTER+":"+ROUTER,
+                         b14_guard_ready_dir])
+                    b14_guard_ready=b14_guard_ready_dir/"ready.json"
+                    signed_guard_log=home/"b14-guard.log"
+                    with signed_guard_log.open("w") as output:
+                        signed_guard_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u",ROUTER,"--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b14"/"guard_router.py"),
+                            "--config",str(b14_guard_cfg),
+                            "--ready",str(b14_guard_ready)
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(100):
+                        if b14_guard_ready.is_file():break
+                        if signed_guard_proc.poll() is not None:
+                            raise AssertionError("B14_GUARD_EXIT "+
+                                                 signed_guard_log.read_text()[-1100:])
+                        time.sleep(.08)
+                    if not b14_guard_ready.is_file():
+                        raise AssertionError("B14_GUARD_NOT_READY")
+                    b14_guard_meta=json.loads(b14_guard_ready.read_text())
+                    b14_guard_base=("http://127.0.0.1:"+
+                                    str(b14_guard_meta["port"]))
+                    signed_guarded=web_call(b14_guard_base+ROUTE)
+                    check("B14-121-signed-source-independent-SQL-guard-HTTP200",
+                          signed_guarded[0]==200 and
+                          signed_guarded[1].get("X-OpenAILCAP-Guard")==
+                              "B14-ED25519-SQL-VERIFIED" and
+                          seventh.encode() in signed_guarded[2],
+                          {"signedEvents":28,"physicalSQLRows":7,
+                           "guardHTTP":200})
+                    b14_page=context.new_page()
+                    b14_page.goto(b14_guard_base+ROUTE,
+                                  wait_until="domcontentloaded")
+                    check("B14-122-real-Chromium-signed-independent-audit-view",
+                          seventh in b14_page.content() and
+                          "HT-2026-000001" in b14_page.content(),
+                          {"realChromium":True,"guardedContracts":7})
+                    # Source token, Ed25519 private key and Router read token
+                    # must all be unreadable to Native UID.
+                    check("B14-123-Saltcorn-cannot-read-signer-or-router-secrets",
+                          denied_read(SALT,key_path) and
+                          denied_read(SALT,source_cfg) and
+                          denied_read(SALT,b14_guard_cfg),
+                          {"nativeCanSign":False,"nativeHasB2Token":False})
+                    b14_cons_dir=home/"b14-consumer-private"
+                    b14_cons_dir.mkdir(mode=0o700)
+                    b14_cons_cfg=b14_cons_dir/"consumer.json"
+                    b14_cons_status=b14_cons_dir/"status.json"
+                    b14_cons_log=home/"b14-consumer.log"
+                    b14_cons_cfg.write_text(json.dumps({
+                        "sourceUrl":signed_url,
+                        "token":signed_token,
+                        "nativeSocket":str(consumer_socket),
+                        "intervalMs":180
+                    }))
+                    b14_cons_cfg.chmod(0o600)
+                    run(["sudo","-n","chown","-R",
+                         "ailcapb13cons:ailcapb13cons",b14_cons_dir])
+                    with b14_cons_log.open("w") as output:
+                        signed_consumer_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u","ailcapb13cons","--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b14"/"consumer_daemon.py"),
+                            "--config",str(b14_cons_cfg),
+                            "--status",str(b14_cons_status)
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT,
+                          start_new_session=True)
+                    def signed_state():
+                        p=run(["sudo","-n","cat",b14_cons_status],
+                              cwd=stage,ok=False)
+                        try:return json.loads(p.stdout)
+                        except ValueError:return {}
+                    def wait_signed(target,seconds=28):
+                        until=time.monotonic()+seconds
+                        last={}
+                        while time.monotonic()<until:
+                            last=signed_state()
+                            if target(last):return last
+                            if signed_consumer_proc.poll() is not None:
+                                raise AssertionError("B14_CONSUMER_EXIT "+
+                                                     b14_cons_log.read_text()[-1000:])
+                            time.sleep(.12)
+                        raise AssertionError("B14_CONSUMER_TIMEOUT "+
+                                             json.dumps(last))
+                    initial_signed=wait_signed(
+                        lambda x:x.get("state")=="CAUGHT_UP" and
+                                 x.get("cursor")==28)
+                    check("B14-124-no-sudo-signed-Consumer-restarts-cursor28",
+                          initial_signed["lag"]==0 and
+                          signed_consumer_proc.poll() is None,
+                          {"consumerUid":consumer_uid,
+                           "sourcePrivateKeyAccessible":False})
+                    eighth=create_approved(8)
+                    caught8=wait_signed(
+                        lambda x:x.get("state")=="CAUGHT_UP" and
+                                 x.get("cursor")==32)
+                    guard8=web_call(b14_guard_base+ROUTE)
+                    check("B14-125-new-real-B2-contract8-signed-auto-applied",
+                          caught8["head"]==32 and
+                          native_inspect(v1native["db"])["receipts"]==32 and
+                          guard8[0]==200 and eighth.encode() in guard8[2],
+                          {"realB2Head":32,"nativeSignedCursor":32,
+                           "guardHTTP":200})
+                    # A compromised Consumer tries to insert seq33 with a
+                    # valid B11 hash and stolen signature from seq32.
+                    stolen=copy.deepcopy(signed_feed["events"][-1])
+                    stolen["seq"]=33
+                    stolen["cells"]["contract_no"]="HT-2026-999999"
+                    stolen["cells"]["title"]="FORGED_B14_CONSUMER"
+                    stolen["eventHash"]=digest({
+                        k:stolen[k] for k in (
+                            "app","seq","model","recordId","version","cells"
+                        )})
+                    forged_b14=peer_call("ailcapb13cons",consumer_socket,{
+                        "op":"apply","batch":{"app":"app-a","after":32,
+                                              "events":[stolen]}})
+                    after_attack=native_inspect(v1native["db"])
+                    check("B14-126-forged-Consumer-event-rejected-Native-unchanged",
+                          not forged_b14["ok"] and
+                          forged_b14["error"]=="EVENT_SIGNATURE_INVALID" and
+                          after_attack["lastSeq"]==32 and
+                          after_attack["mappings"]==8 and
+                          web_call(b14_guard_base+ROUTE)[0]==200,
+                          {"forgedSHA256Valid":True,
+                           "nativeAccepted":False,
+                           "nativeCursor":32,"guardHTTP":200})
+                    native_command([sys.executable,"-c",
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B14_NATIVE_UID_TAMPER' "
+                        "WHERE contract_no='HT-2026-000008'\")\n"
+                        "c.commit()\n"],v1native["db"])
+                    dirty_guard=web_call(b14_guard_base+ROUTE)
+                    direct_native=web_call(native1+ROUTE)
+                    independent_dirty=peer_call(ROUTER,audit_socket,
+                                                {"op":"snapshot"})
+                    check("B14-127-real-Saltcorn-UID-SQL-tamper-independent-audit-503",
+                          dirty_guard[0]==503 and direct_native[0]==200 and
+                          independent_dirty["ok"] and
+                          independent_dirty["result"]["clean"] is False and
+                          audit_proc.poll() is None,
+                          {"nativeDirectHTTP":200,"guardHTTP":503,
+                           "auditorUid":audit_uid,
+                           "auditorIndependentOfNativeIPC":True})
+                    native_command([sys.executable,"-c",
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B2 autonomous contract 8' "
+                        "WHERE contract_no='HT-2026-000008'\")\n"
+                        "c.commit()\n"],v1native["db"])
+                    repaired=web_call(b14_guard_base+ROUTE)
+                    check("B14-128-independent-audit-recovers-after-manual-repair",
+                          repaired[0]==200 and eighth.encode() in repaired[2] and
+                          peer_call(ROUTER,audit_socket,
+                                    {"op":"snapshot"})["result"]["clean"],
+                          {"guardHTTP":200,"repair":"MANUAL",
+                           "nativeUIDCanStillDirectWrite":True})
                     data["final"]={
-                        "B13GuardAfterForgedEvent":"FAIL_CLOSED",
-                        "B13ConsumerLeastPrivilege":True,
-                        "nativeIPCAuthenticatesEventSource":False,
-                        "readGuardResistsMaliciousNativeUID":False,
+                        "B14Ed25519SourceForgeryRejected":True,
+                        "B14IndependentPhysicalSQLAuditorUID":audit_uid,
+                        "B14SaltcornUIDCannotSpoofAuditorSocket":True,
+                        "B14NativeDirectHTTPBypassStillOpen":True,
+                        "B14MaliciousSaltcornCanModifySQLite":True,
+                        "B14ProductionPKIKeyRotationImplemented":False,
                         "formalG1Passed":False
                     }
 
