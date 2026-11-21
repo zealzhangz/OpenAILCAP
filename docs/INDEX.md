@@ -259,3 +259,14 @@ undefined
 - 故意终止正在服务的真实 v2 Saltcorn，代理真实返回 **503** 而非假定自愈；受信 B2 Publisher 真执行 `app.rollback` 发布指针 v2→v1，Router 再 CAS 切回仍在运行的 v1，真实 Chromium 恢复合同页面、两份 B2 发布哈希完整、App B 不变。B2 另通过实际 `form.submit` + `workflow.advance` 把超阈值合同状态推进到 **Approved**，故障/回滚时权威业务事实保持。
 - **不能提升到生产 W17/W20/W24**：Router 状态/回执仅内存、无重启恢复/高可用/长连接/零停机保证；本轮故障真实出现 503；Saltcorn 两份合同是独立 seed fixture，**尚无 B2 权威业务数据 → Native 派生视图的 CDC/Outbox/脱敏同步协议**，Saltcorn Form/Workflow/Code 仍未得到等价执行。正式 G1-B01 OPEN；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。
 - [PR #12](https://github.com/zealzhangz/OpenAILCAP/pull/12) 已合并 main，SHA **d1b498699065de460ed1a3763aa0914066828fa0**。建议下一 B11 优先打通**真实权威合同记录/审批状态的单向业务数据投影与幂等重放**，而非再堆静态 UI 测试。
+
+
+## 2026-11-21：S1 B11 真正权威业务合同 Outbox → 双 Saltcorn Native 增量数据投影
+
+- [完整报告 44：B11 真实 B2 业务创建/审批 + 同事务 SQLite Trigger Outbox + 双 Native SQLite/HTTP/Chromium 数据同步](01-research/44-s1-b11-authoritative-business-outbox-native-projection-evidence.md)；[源码与严格适用边界](../experiments/g1-b01-b11/README.md)、[实际 GitHub Actions 工作流](../.github/workflows/s1-b11-real-business-outbox-projection.yml)。
+- **最终 [GitHub Actions #44908563537](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44908563537)** completed/success，Job **136859260383**，[原始 Artifact #14708123689](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44908563537/artifacts/14708123689)：B11 **28/28** 原子 Outbox/Consumer 单测、B10 Router **34/34** 回归、B2 **18/18** 回归、B5 **40/40** 回归、B11 **62/62** 真正 Linux UID/Kernel/SQL/双 Saltcorn/Chromium/故障回滚 E2E，**0 次大模型调用**。
+- 与 B10 最大区别：**完全移除 Saltcorn 独立合同 seed**。B2 真正 `form.submit` + `workflow.advance` 两级审批，`records` 表的真实 SQLite AFTER INSERT/UPDATE Trigger **在同一事务**写 `b11_outbox`；按 app-a 连续序号、事件时点四列内容和 SHA，通过独立 `projectionToken` 只读拉取，受信控制器仅把业务 JSON 交给 Saltcorn UID 997 的 Native Apply Worker。Native UID 对 Kernel SQLite/密钥 `open(O_RDONLY)` **DENIED**。
+- Native Apply 在**真实 Saltcorn SQLite** 上一个事务更新 `s1_contracts + record_map + receipts + cursor`，重放 `applied=0`、同序号改内容拒绝、缺口拒绝、源版本不连续拒绝、派生行漂移拒绝；v2 真实注入 COMMIT 前失败，独立 SQL 证明无部分行/回执/游标，重试成功。
+- v1/v2 两个真实 Saltcorn Native 进程同时在线、View 列分别 3/4，业务行完全来自 B2；运行期间 B2 真正新建并批准**第二份合同**，源 seq5..8 通过增量消费使两套原生 SQLite 都拥有两份 Approved 合同，**无需重启**；两套真实 Native HTTP、Router HTTP 与 Chromium 页面均看见第二份合同。
+- 真实 v2 Native 故障导致 Router **503**，受信 B2 发布指针 v2→v1 回滚并 Router CAS 回滚后，前端恢复 v1，但两份权威合同 **Approved** 状态、Outbox 8 条事件、Native v1 cursor8 都不回退；App B 不变。**这只是 UI/Release 回滚，不是业务事务补偿**。
+- [PR #13](https://github.com/zealzhangz/OpenAILCAP/pull/13) 已合并 main，SHA **68da2ce8cf5cd1312866f68c22314636354ab26b**。仍**不是**通用 CDC/后台自动消费者/企业行级权限与脱敏/跨主机安全签名/全量 Native Form/Workflow/Code/生产高可用。正式 G1-B01 OPEN，冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一 B12 优先真实**持续消费者的崩溃恢复、checkpoint/重放/投影漂移与读取前防污染**。
