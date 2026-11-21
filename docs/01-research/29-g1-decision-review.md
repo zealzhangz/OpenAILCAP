@@ -152,3 +152,16 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **必须保留的反例**：B7-28 再次实际运行与 Kernel **相同 UID** 的 native SQLite 程序，直接读配置并成功 SQL UPDATE；B7-29 则让受信 root 控制器直接篡改已存储资源，物理写入真实成功。B2 读草稿时能识别资源 Hash drift、HTTP 409 和 QUARANTINED，已发布最后有效 v1 可读，但**同 UID/root 写入本身没有被阻止**，而且 root 可同时修改 Hash/版本指针避开此检测。B7 没有运行真正 Saltcorn Field.update、原生 CLI/Pack，也没有隔离业务应用 installer 与 Kernel 同 UID，生产级全入口强制治理仍未收口。B4 独立 Build Worker/制品可信回执与统一发布快照同样未在本轮测试。
 
 **G1 审核保持**：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。下一 P0：结合真实 Saltcorn C2 原生 CLI/Field/Pack 写入的证据和宿主 Unix 用户、实际 DB 身份边界，证明普通生产插件/代码安装器没有任何同 UID/root/DB 直写通道；再审查强制 Kernel 变更、镜像/制品和 B2/B4 统一发布快照，以及远端动作的未知结果与补偿协议。32 项研究实验不替代正式冻结门禁。
+
+
+## 2026-11-21：B8 真正 Saltcorn 原生 Field.update、Pack 导入和浏览器写入的权限边界复审
+
+[报告 41](41-s1-b8-real-saltcorn-native-write-path-evidence.md)，[最终 GitHub Actions #44899334319](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44899334319) completed/success；Job 136831743808，Artifact 14704953422：B8 **15/15** 单测、B2 **18/18** 与 B5 **40/40** 回归、**24/24** 真实官方 Saltcorn CLI/Pack/Chromium/Linux OS/物理 SQLite 对照。PR #10 已合并 `main`，SHA `92a06863c91d8a59c80ca93ef95b2a87c4ca4f4e`。零模型费用。
+
+**本轮比 C2/B7 更关键的真实结论**：在同一个官方 `@saltcorn/cli@1.7.0-beta.5` 实例及真正合同 Pack/SQLite 下，两个不同 Linux 非 root UID 的进程实际对照。不同于 DB owner 的 UID 997 执行官方 `saltcorn run-js -f native-out-of-band.js`（真实 `Field.update`）和 `saltcorn install-pack` 均以操作系统权限错误失败，物理字段和合同记录不变；该低权限 OS 进程仍能通过历史研究 Gateway 的受控 HTTP CAS 修改原生字段，合法修改有 revision+receipt，冲突 HTTP409。但是**以 DB owner UID 999 运行的真实 Saltcorn 原生 Server /field/:id 浏览器编辑器**成功直接修改 `_sc_fields`，Gateway revision/receipt 均不变；**同 owner UID 的官方 Saltcorn Native CLI Field.update**也真实成功直接改字段，整个外围 CAS 只能事后 `OUT_OF_BAND_DRIFT 409` fail-closed。此结果实际否定了“**只靠 DB OS DAC + 外围 Gateway 就能强制 Saltcorn 原生所有写入口经同一权限/版本内核**”的架构假设，并与早前 C2 Patch 绕行证据独立对应。
+
+**不能升级的正式门禁**：B8 的 24 个 PASS 是研究情景独立观察，其中 B8-20/23 分别明确为不安全 Native Web 和同 UID CLI 旁路**成功复现**，绝不说明 W11/W16 已安全通过。原生 Pack 仅在不同 UID 被 OS 拒绝，不代表 owner UID Pack 导入已经受 CAS 管控；真实 Saltcorn Native UI 编辑/CLI 仍然可越过版本账本完成**已发生的物理修改**。尚未关闭实际插件安装器权限、Native Field/Pack 全量路径、热更新缓存、生产身份、跨代码发布事务及外部副作用补偿。
+
+**候选架构与下一 P0**：不继续以“给 `/field` 加一个临时签名检查”当作完整安全方案。优先 B9 对照**由独立 Domain Schema + Manifest Kernel 单独拥有权威数据库，Saltcorn 仅可编辑可删除的派生副本**；在该场景以真实 Saltcorn Native Web/CLI/Pack 再次试图攻击，必须证明**权威 Kernel 的 Manifest/receipt/audit 完全不变**、派生 Runtime 可丢弃重建且发布后重放一致。成熟平台复用仍可作为 UI/runtime，前提是权威写边界确实强制隔离。另一个候选是深改 Saltcorn 上游 Field/Pack/CLI 的全部写入 Hook，但当前未做等效覆盖证据与维护成本量化，不能声明已经可行。
+
+正式判定继续：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。
