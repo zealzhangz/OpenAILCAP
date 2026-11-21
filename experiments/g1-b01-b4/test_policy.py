@@ -47,11 +47,11 @@ class PolicyTests(unittest.TestCase):
             "    return 42","    import os\n    return 42"))
 
     def test_exec_rejected(self):
-        self.bad("FUNCTION_CALL_FORBIDDEN",BASE.replace(
+        self.bad("EXPRESSION_FORBIDDEN",BASE.replace(
             "    return 42","    exec('print(1)')\n    return 42"))
 
     def test_network_call_rejected(self):
-        self.bad("FUNCTION_CALL_FORBIDDEN",BASE.replace(
+        self.bad("EXPRESSION_FORBIDDEN",BASE.replace(
             "    return 42","    socket(1)\n    return 42"))
 
     def test_attribute_traversal_rejected(self):
