@@ -270,7 +270,18 @@ def main():
             procs.append(proc)
             base="http://127.0.0.1:"+str(port)
             if not wait_page(base,"/auth/login",70):
-                raise RuntimeError("ACTUAL_SALTCORN_SERVER_NOT_READY")
+                # CI diagnosis without leaking the ephemeral Saltcorn or
+                # Kernel secrets; the server output only belongs to fixture.
+                diagnostic=salt_log.read_text(errors="replace")[-2400:]
+                for private_value in (
+                    salt_session,admin_password,password,
+                    token_agent,token_runtime,token_publisher,token_appb
+                ):
+                    diagnostic=diagnostic.replace(
+                        private_value,"[REDACTED]")
+                raise RuntimeError(
+                    "ACTUAL_SALTCORN_SERVER_NOT_READY status="+
+                    str(proc.poll())+" excerpt="+diagnostic)
             return base
 
         def stop_runtime():
