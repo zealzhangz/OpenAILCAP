@@ -392,7 +392,7 @@ def main():
             with routelog.open("w") as output:
                 routeproc=subprocess.Popen([
                     "sudo","-n","runuser","-u",ROUTER,"--",
-                    sys.executable,"-u",str(stage/"g1-b01-b11"/"router.py"),
+                    sys.executable,"-u",str(stage/"g1-b01-b10"/"router.py"),
                     "--config",str(route_cfg),"--ready",str(router_ready)
                 ],cwd=str(stage),stdin=subprocess.DEVNULL,stdout=output,
                   stderr=subprocess.STDOUT)
