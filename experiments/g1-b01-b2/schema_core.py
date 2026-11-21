@@ -66,7 +66,8 @@ def validate_definition(resource_id, spec):
                 raise Rejected(422, "INVALID_FIELDS")
             if not isinstance(f["name"], str) or not FIELD.fullmatch(f["name"]):
                 raise Rejected(422, "INVALID_FIELDS")
-            if f["name"] in names or f["type"] not in TYPES or type(f["required"]) is not bool:
+            if (f["name"] in names or not isinstance(f["type"], str) or
+                    f["type"] not in TYPES or type(f["required"]) is not bool):
                 raise Rejected(422, "INVALID_FIELDS")
             names.add(f["name"])
     elif kind in ("form", "view"):
@@ -78,8 +79,8 @@ def validate_definition(resource_id, spec):
             raise Rejected(422, "INVALID_PRESENTATION")
         if (not isinstance(spec["title"], str) or not 1 <= len(spec["title"]) <= 90 or
                 not isinstance(spec[key], list) or not 1 <= len(spec[key]) <= 16 or
-                len(set(spec[key])) != len(spec[key]) or
-                any(not isinstance(x, str) or not FIELD.fullmatch(x) for x in spec[key])):
+                any(not isinstance(x, str) or not FIELD.fullmatch(x) for x in spec[key]) or
+                len(set(spec[key])) != len(spec[key])):
             raise Rejected(422, "INVALID_PRESENTATION")
     else:
         if set(spec) != {"kind", "model", "amountField", "statusField", "thresholdMinor"}:
@@ -452,7 +453,10 @@ class SchemaStore:
     def release(self, actor, app):
         self.authorize(actor, app)
         with self.connect() as db:
-            head = self._app(db, app)
+            head = db.execute("SELECT * FROM apps WHERE app=?", (app,)).fetchone()
+            if head is None:
+                raise Rejected(404, "APP_NOT_FOUND")
+            # A quarantined DRAFT must not destroy the last verified release.
             if head["current_release"] is None:
                 raise Rejected(404, "NOT_PUBLISHED")
             row = db.execute("SELECT * FROM releases WHERE app=? AND version=?",
