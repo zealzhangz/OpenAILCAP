@@ -272,9 +272,10 @@ def main():
     evidence["summary"]={"total":len(evidence["cases"]),
                          "passed":sum(x["status"]=="PASS" for x in evidence["cases"])}
     Path(a.output).write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    # 1 + 4 fixtures + 4 logins + 1 anonymous + 1 CSRF negative +
-    # AUTH05..19 (15) + 4 physical DB checks + 2 metadata checks = 28.
-    return 0 if len(evidence["cases"])==28 and all(x["status"]=="PASS" for x in evidence["cases"]) else 1
+    # 1 native-users + 4 fixtures + 4 logins + 1 anonymous + 1 CSRF +
+    # 15 role/action cases (AUTH05..19) + 4 DB cases + 2 metadata = 32.
+    # A failure here with every case PASS is a test-harness counting bug.
+    return 0 if len(evidence["cases"])==32 and all(x["status"]=="PASS" for x in evidence["cases"]) else 1
 
 if __name__=="__main__":
     raise SystemExit(main())
