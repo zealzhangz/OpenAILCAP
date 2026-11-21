@@ -167,3 +167,13 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 正式判定继续：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。
 
 undefined
+
+## 2026-11-21：B10 真实双 Saltcorn Runtime 在线版本切换、Readiness/故障回滚复审
+
+[完整报告 43](43-s1-b10-real-saltcorn-traffic-cutover-evidence.md) / [最终 GitHub Actions #44906374299](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906374299) completed/success，Job **136852721607**，[Artifact #14708420037](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906374299/artifacts/14708420037)：B10 **34/34 Router 策略单测**，B2 **18/18** 回归、B5 **40/40** 回归，**44/44** 实际 Ubuntu24/三 Linux UID/官方 Saltcorn CLI 1.7.0-beta.5/双进程 Native/Chromium/权威 B2 SQL 审核。PR #12 已合并 main，SHA **d1b498699065de460ed1a3763aa0914066828fa0**，本轮 0 次 DeepSeek。
+
+**新的有限正向架构证据**：将 B9 唯一权威 B2 Kernel（UID999）与 Saltcorn 可删派生 Runtime（UID997）之间新增单独 Router（UID995），Router 只有真正限制为 app-a `release.read` 的 Token 而无任何权威写权限；只公开匿名 GET 合同列表，实际 Native /field 和 POST 不通过。真正不同 SQLite 的 Saltcorn v1/v2 **同时在线**，Native view 列 3/4；新版本通过真实原生业务 HTML/预期合同号 Readiness 与 B2 当前已发布 Release/Manifest SHA 验证后才注册/切换。真实已有 GET 捕获 v1 路由时受实验 Header 延迟，v1→v2 CAS 切换后仍按旧 v1/epoch1 返回，新 GET v2/epoch2；重复 changeId 不重复推进 epoch、过时 epoch 409。故意终止真正 Native v2 进程后，前端明确返回 503，不伪造成功或静默回退；B2 发布指针尚为 v2 时主动路由回滚被 409 拒，只有受权 B2 Publisher 真回滚 v1 后 Router 再 CAS 回退才恢复业务前端 GET 和 Chromium。B2 同时独立真实执行合同创建和金额两级 Workflow 到 Approved，业务事实在 Saltcorn 故障/发布回滚期间保持正确。
+
+**关键未过门禁**：这个“可切换”是**单个研究 Python Router 进程内锁保护的版本指针**，未持久化变更账本、未做跨 Router 多副本一致性、重启故障恢复、网络路由/Ingress 多节点、页面/身份/长连接转发、零停机部署或自动健康故障切换；实际 v2 故障产生 **503**。本轮 B2 业务 Approved 合同与 Saltcorn 展示的独立 fixture **合同号相同但标题不相同**，刻意证明尚未实现权威数据复制/增量投影和脱敏。Router 的 H10 Readiness 是局部业务页面标记可被伪造，并未复核所有页面逻辑。Saltcorn 原生数据库仍可由 Runtime UID 修改且 Native Port 暴露 localhost，Form/Workflow/B4 Code 未做 Native 语义等价。B2 Release 与 Router Route 是**顺序更新的两个指针**，故意可观察“源已发布 v2、客户端仍服务 v1”的部署滞后，**不是 W24 全域原子事务、W20 外部未知结果补偿或 W17 生产热缓存/无损切流**。
+
+**阶段判定继续不变**：S1 **IN_PROGRESS**，G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**，冻结 W01—W24 **0/24 FULL PASS**、冻结 TC01—TC18 **0/18 FULL PASS**。B10 44/44 PASS 仅为独立研究证据，不能冒充正式 W/TC。下一优先 B11 **真实 B2 审批业务事实 → Saltcorn 只读物化数据层**的单向同步、幂等重放、冲突/乱序/停机恢复与跨 UI 版本数据一致性；同时补齐发布控制面持久化/原子状态切换和路由实例故障恢复以逐步挑战 W17/W20/W24。
