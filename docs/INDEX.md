@@ -249,3 +249,13 @@
 - [PR #10](https://github.com/zealzhangz/OpenAILCAP/pull/10) 已合并 main，SHA `92a06863c91d8a59c80ca93ef95b2a87c4ca4f4e`；S1 IN_PROGRESS / G1 **NOT_PASSED** / G1-B01 **OPEN**，冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。
 
 undefined
+
+## 2026-11-21：S1 B10 两个真正在线 Saltcorn 版本的业务预热、路由 CAS、在途请求固定与故障回滚
+
+- [报告 43：B10 双 Saltcorn Native 在线实例、真实 Chromium、真实合同两级审批、业务 Readiness、CAS 流量指针与 503 fail-closed](01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md)，[可复现代码和限制](../experiments/g1-b01-b10/README.md)、[实际 CI 工作流](../.github/workflows/s1-b10-real-runtime-route-switch.yml)。
+- **最终实际 [GitHub Actions #44906374299](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906374299)** completed/success，Job **136852721607**，[原始 Artifact #14708420037](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906374299/artifacts/14708420037)：Router **34/34** 严格权限/Readiness/CAS 单测、B2 **18/18** 回归、B5 **40/40** 回归、实际三 Linux UID/两 Saltcorn 实例/Chrome/权威合同审批/流量切换和回滚 **44/44**，**0 次大模型调用**。
+- 权威 Kernel UID 999、Saltcorn Runtime UID 997、受控只读 Router UID 995。真正 B2 数据库/密钥 0700/0600，第三 UID Router 仅持 **app-a release.read-only** Broker Token；两个 Saltcorn 派生 Native SQLite 的 View 列分别为 v1 三列、v2 四列。真正 Node24 Saltcorn v1/v2 同时在 3158/3159 服务，Router 只允许公开 `GET /view/s1_contract_list`、阻断原生 /field 及用户 POST。
+- 真实 B2 人工 Chromium 发布 v1/v2 后，旧运行时仍独立服务 v1，直至 v2 原生业务 HTTP GET+合同标记及源 B2 当前 Release Hash 核验通过，再以 `expectedEpoch` CAS **v1→v2**；在途旧 GET 固定 v1/epoch1、切换后新 GET v2/epoch2；幂等变更不重复切换、过时变更 409。
+- 故意终止正在服务的真实 v2 Saltcorn，代理真实返回 **503** 而非假定自愈；受信 B2 Publisher 真执行 `app.rollback` 发布指针 v2→v1，Router 再 CAS 切回仍在运行的 v1，真实 Chromium 恢复合同页面、两份 B2 发布哈希完整、App B 不变。B2 另通过实际 `form.submit` + `workflow.advance` 把超阈值合同状态推进到 **Approved**，故障/回滚时权威业务事实保持。
+- **不能提升到生产 W17/W20/W24**：Router 状态/回执仅内存、无重启恢复/高可用/长连接/零停机保证；本轮故障真实出现 503；Saltcorn 两份合同是独立 seed fixture，**尚无 B2 权威业务数据 → Native 派生视图的 CDC/Outbox/脱敏同步协议**，Saltcorn Form/Workflow/Code 仍未得到等价执行。正式 G1-B01 OPEN；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。
+- [PR #12](https://github.com/zealzhangz/OpenAILCAP/pull/12) 已合并 main，SHA **d1b498699065de460ed1a3763aa0914066828fa0**。建议下一 B11 优先打通**真实权威合同记录/审批状态的单向业务数据投影与幂等重放**，而非再堆静态 UI 测试。
