@@ -65,3 +65,7 @@ GitHub [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/
 ## 2026-11-21 类型化 Agent 工具 Broker、权限和真实 Saltcorn 适配
 
 [Run #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333) 中 21/21 stdlib 单元与 29/29 原生 Saltcorn 集成均成功；并非 Prompt 自我声明：实际 Browser Session/CSRF 和 SQL 主表/审批明细/工具审计共同裁判。白名单 Handler Manifest 能增加只读能力，危险 handler 被拒绝；宿主单独模拟授权后，真实 Saltcorn 原生触发器完成 Draft→Submitted→Level1Approved→Approved。**实际模型推理 NOT_RUN，人工确认仍属实验模拟**。代码见 [实验工程](../../experiments/agent-tools/README.md) 和 [报告 23](23-agent-tool-contract-evidence.md)；G1 不通过。
+
+## 2026-11-21：单次 DeepSeek 模式路由 + 原生执行端到端证据
+
+[Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495)：DeepSeek `deepseek-flash` 1 次 Function Calling 推理批量选择 6 个固定需求的 CONFIG/CODE/HYBRID 模式，**6/6 预登记参考标签匹配**，实际 Saltcorn Native Pack/Model/Trigger/View/SQLite/HTML **20/20 PASS**，只消耗 994 Tokens；原始预测与平台验收分开保存在两个 Artifact 中。独立 [离线无模型平台预检 #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) 20/20，不计模型分数。禁区：这不是模型生成代码/Schema、不涉及真实人工设计器，也没有多次任务的可靠性/准确率验证。[报告 26](26-deepseek-mode-route-evidence.md)。

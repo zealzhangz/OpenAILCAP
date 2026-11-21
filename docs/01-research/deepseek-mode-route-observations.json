@@ -1,0 +1,172 @@
+{
+  "study": "S1 real DeepSeek CONFIG/CODE/HYBRID routing under an independently verified Saltcorn native executor",
+  "date": "2026-11-21",
+  "status": "EXPERIMENT_PASS_WITH_EXPLICIT_LIMITATIONS",
+  "bench_id": "S1-DEEPSEEK-ROUTE-CHOICE-6-v1",
+  "inference": {
+    "executed": true,
+    "provider": "DeepSeek",
+    "model": "deepseek-flash",
+    "api": "https://api.deepseek.com/chat/completions",
+    "actual_model_http_requests": 1,
+    "function_calls_returned": 1,
+    "enabled_once_by_commit": "4e9307b876db94c96ddc4f179353e7beccd40352",
+    "usage": {
+      "prompt_tokens": 876,
+      "completion_tokens": 118,
+      "total_tokens": 994
+    },
+    "selected": [
+      {
+        "id": "RC01",
+        "mode": "CONFIG"
+      },
+      {
+        "id": "RC02",
+        "mode": "CONFIG"
+      },
+      {
+        "id": "RC03",
+        "mode": "CODE"
+      },
+      {
+        "id": "RC04",
+        "mode": "CODE"
+      },
+      {
+        "id": "RC05",
+        "mode": "HYBRID"
+      },
+      {
+        "id": "RC06",
+        "mode": "HYBRID"
+      }
+    ],
+    "secret_storage": "GitHub Actions DEEPSEEK_KEY; no key value exposed or committed"
+  },
+  "native": {
+    "actual_saltcorn": "@saltcorn/cli@1.7.0-beta.5",
+    "runtime": "fresh SQLite, native Pack / Table / Field / View / Trigger, HTTP List Views",
+    "native_tables": [
+      "s1_route_cfg",
+      "s1_route_code",
+      "s1_route_hybrid",
+      "s1_route_hybrid_audit"
+    ],
+    "native_views": [
+      "s1_route_cfg_view",
+      "s1_route_hybrid_view"
+    ],
+    "native_code_actions": [
+      {
+        "name": "S1 Route Choice Code Validate",
+        "when": "Validate",
+        "action": "run_js_code"
+      },
+      {
+        "name": "S1 Route Choice Hybrid Audit",
+        "when": "Insert",
+        "action": "run_js_code"
+      }
+    ],
+    "cases": [
+      {
+        "id": "RC01",
+        "expected_mode": "CONFIG",
+        "model_mode": "CONFIG",
+        "route_is_correct": true,
+        "native_execution_pass": true,
+        "physical_table": "s1_route_cfg",
+        "physical_evidence": "business note stored; native List View"
+      },
+      {
+        "id": "RC02",
+        "expected_mode": "CONFIG",
+        "model_mode": "CONFIG",
+        "route_is_correct": true,
+        "native_execution_pass": true,
+        "physical_table": "s1_route_cfg",
+        "physical_evidence": "archive note stored; native List View"
+      },
+      {
+        "id": "RC03",
+        "expected_mode": "CODE",
+        "model_mode": "CODE",
+        "route_is_correct": true,
+        "native_execution_pass": true,
+        "physical_table": "s1_route_code",
+        "physical_evidence": "K-14-0 persisted; K-14-5 blocked CHECKSUM_MISMATCH"
+      },
+      {
+        "id": "RC04",
+        "expected_mode": "CODE",
+        "model_mode": "CODE",
+        "route_is_correct": true,
+        "native_execution_pass": true,
+        "physical_table": "s1_route_code",
+        "physical_evidence": "K-22-1 persisted; K-22-5 blocked CHECKSUM_MISMATCH"
+      },
+      {
+        "id": "RC05",
+        "expected_mode": "HYBRID",
+        "model_mode": "HYBRID",
+        "route_is_correct": true,
+        "native_execution_pass": true,
+        "physical_table": "s1_route_hybrid",
+        "physical_evidence": "audit HIGH with exact note snapshot for 100000001 cents"
+      },
+      {
+        "id": "RC06",
+        "expected_mode": "HYBRID",
+        "model_mode": "HYBRID",
+        "route_is_correct": true,
+        "native_execution_pass": true,
+        "physical_table": "s1_route_hybrid",
+        "physical_evidence": "audit NORMAL with exact note snapshot for 100000000 cents"
+      }
+    ],
+    "routing_correct": 6,
+    "routing_total": 6,
+    "native_validation_passed": 20,
+    "native_validation_total": 20,
+    "comparison_all_config_baseline_correct": 2,
+    "comparison_all_config_baseline_total": 6
+  },
+  "ci": {
+    "preflight": {
+      "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751",
+      "run_id": 44883844751,
+      "conclusion": "success",
+      "model_inference_executed": false,
+      "native_checks_pass": 20,
+      "prediction_artifact": 14699067484,
+      "native_artifact": 14699037829
+    },
+    "real_inference": {
+      "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495",
+      "run_id": 44884021495,
+      "conclusion": "success",
+      "code_sha": "4e9307b876db94c96ddc4f179353e7beccd40352",
+      "model_job_id": 136785281254,
+      "native_job_id": 136785345227,
+      "prediction_artifact": 14698694770,
+      "native_artifact": 14699311128
+    }
+  },
+  "strict_boundaries": {
+    "oracle_not_sent_to_llm": true,
+    "fixtures_not_sent_to_llm": true,
+    "model_supplied_code": false,
+    "model_generated_schema": false,
+    "model_executed_write_tools": false,
+    "trusted_preinstalled_native_adapters": true,
+    "statistical_generalization_proven": false,
+    "human_ai_visual_editor_roundtrip_proven": false,
+    "real_app_generation_proven": false,
+    "frozen_contract_complete_pass": 0,
+    "frozen_contract_total": 18,
+    "phase": "S1",
+    "G1": "NOT_PASSED"
+  },
+  "source": "Curated transcription of actual GitHub Actions model stdout and independent physical DB/runtime checks; original model output and native result preserved separately as workflow artifacts"
+}

@@ -83,3 +83,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：Agent 工具执行契约阶段性实证
 
 新增 [报告 23](23-agent-tool-contract-evidence.md)、[Run #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333)：类型化 Broker 的 **21/21 安全单元 + 29/29 真实平台集成**成功。固定只读工具/Manifest 能力发现，参数白名单、可信四用户 Saltcorn Session、跨主体与跨资源拒绝、短时单次授权、审计和真实状态读回；宿主模拟人工签发后的 3 次 Saltcorn 原生变更最终得到 Approved/2 审批行。无实际外部 LLM 选择或自主开发，下一工作继续验证持久化幂等、未知远端结果和真正模型接口。G1 不通过。
+
+## 2026-11-21：S1 配置 / 代码 / 混合模式的真实模型选择最小实验完成
+
+在真实只读 Function Calling 之后，新增六项预冻结模式分类研究：[真实 DeepSeek CI #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495) completed/success，**1 次调用/994 Tokens，六个模型选择 6/6 正确；真正 Saltcorn 执行验证 20/20**。代码仅预装允许的原生字段、List View、校验触发器和跨表审计，模型只选择受限枚举；此结果是 S1“能否做开发模式路由”的小样本正向证据，**不是 AI 自动开发应用**。离线预检先取得 [20/20](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751)，避免一次推理中的平台失败产生额外费用。下一优先投入**真实人工编辑器和 AI 接手的安全正向闭环**，再整合 G1 正式选型，不再重复模式分类连通性收费测试。

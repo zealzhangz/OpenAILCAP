@@ -123,3 +123,12 @@
 - [Run #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363) completed/success，**29/29 安全/崩溃恢复单元 + 29/29 真实 Saltcorn 集成**，原始 Artifact 14698431130。已有工具测试 21 项，新加崩溃故障测试 8 项；真实平台审批链路仍为 29 项。
 
 **边界**：持久化唯一 call_id 可以在同一 SQLite ledger 共享范围内拒绝进程重启后的重复执行；不保证不同调用 ID 的业务幂等，也不是 Broker/Saltcorn 双数据库的 exactly-once 事务。远端结果未知时须查真实业务数据，不得盲目重试审批。LLM 未推理，G1 仍未通过。
+
+## 2026-11-21：S1 DeepSeek 真实选择配置 / 代码 / 混合开发路径
+
+- [研究报告 26：真实 DeepSeek 选型与 Saltcorn 平台执行](01-research/26-deepseek-mode-route-evidence.md)
+- [六项选择与两层 CI 结果 JSON](01-research/deepseek-mode-route-observations.json)
+- [可复现六需求基准、固定原生能力与受限模型工具协议](../experiments/route-choice/README.md)
+- [Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495)：**真正 DeepSeek 1 次 Function Call，6/6 路由正确，Saltcorn 20/20 独立运行验证通过**；模型输入 876、输出 118、总计 994 Tokens。参照 [无模型平台预检 #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) 同样 20/20，明确不将预检的 6/6 当作 AI 成果。
+
+**严格边界**：模型只选择 CONFIG/CODE/HYBRID 枚举；Saltcorn 原生 Pack、字段和代码 Trigger 都是研究员预写，**没有 AI 自动生成代码/Schema 或人工—AI 双向编辑**。小样本单次成功不是泛化准确率证明。G1 NOT_PASSED，完整合同 18 项仍 0/18 PASS。

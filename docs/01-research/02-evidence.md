@@ -117,3 +117,7 @@
 ## E26 — 进程重启后的调用占位与未知结果 fail-closed（S0 单元故障注入 + Saltcorn 回归）
 
 [报告 24](24-durable-agent-calls-evidence.md)、[GitHub Actions #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363) completed/success，代码 e15b36e845611170ddced1bc739bdd80b994d710。原有工具调用的进程内 set 去重升级为 SQLite PRIMARY KEY 唯一调用账本，先占位 CLAIMED，再调用 Saltcorn；结果未知不自动重发。**29/29 单元**（新增 8 项跨 Broker 重启、已占位崩溃、远端先写后断、账本失效、授权重启失效等）+ **29/29 真实 Saltcorn 集成**成功，Artifact 14698431130。**并非真实 Saltcorn 网络 kill -9，也不证明分布式 exactly-once / 不同 call_id 的业务幂等**。无模型推理、实际人工授权与组织安全证明；G1 NOT_PASSED。
+
+## E27 — DeepSeek 真实 CONFIG/CODE/HYBRID 分类与 Saltcorn 原生运行（S0 单次小样本实证）
+
+[Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495) completed/success，被测 Commit 4e9307b876db94c96ddc4f179353e7beccd40352，模型 Job 136785281254 / Artifact 14698694770，真实 Saltcorn Job 136785345227 / Artifact 14699311128。DeepSeek `deepseek-flash` 一次真实 HTTPS Function Call，6 个固定合同需求中 CONFIG/CODE/HYBRID **各 2/2，共 6/6 分类正确**，876 输入 +118 输出 = **994 Tokens**。受限路由确实驱动预装原生 Table、Field、List View、Validate/Insert Code Action Trigger，独立 SQL/HTML 检查 **20/20 PASS**：模 7 不合法校验码被真实平台拒绝，超过 100 万与恰好 100 万分别产生 HIGH/NORMAL 跨表审计。**仅预装能力选择，未由 AI 创建任何字段或代码**。单次六样本不足以推断泛化准确率，人机双向编辑未验收；G1 仍未通过。[完整报告](26-deepseek-mode-route-evidence.md)。

@@ -129,3 +129,7 @@ H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑
 ## 2026-11-21 Agent 类型化能力及工具治理的正向小范围证据
 
 [报告 23](../01-research/23-agent-tool-contract-evidence.md)、[Run #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333) 在真实 Saltcorn/SQLite 上通过 50 个安全/集成断言，支持“限制模型仅发出类型化工具请求、由可信宿主验证身份、权限、状态和授权后再操作原生 API”的**可实施性**。实验并未执行真正大模型推理；Manifest 扩展是固定 allowlist handler，不是任意代码插件，也不是 AI 自主选择配置或代码。不得将 H02/H05/H07 的核心 AI 结论标为已通过。G1 继续 NOT_PASSED。
+
+## 2026-11-21 配置/代码/混合自主路由假设的首次真实模型小样本证据
+
+[报告 26](../01-research/26-deepseek-mode-route-evidence.md)、[Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495)：模型在不见 expected_mode 和 fixture 的条件下，依据固定 Saltcorn 能力目录，在一个批次中对 6 项需求分别选出 CONFIG×2/CODE×2/HYBRID×2（6/6）；确定性执行器根据模型选择调用实际原生 Table/Validate/Insert Trigger，独立检查 20/20。这个实验为**可描述的能力清单 + 受约束实现路径选择**提供可复现、限域正向证据。但 6 项手选样本无法支持模型综合泛化，模型没有自生成扩展代码/页面、也没有在失败时重规划；不能将 AI 原生完整开发的 H02/H04 等假设标已全面通过。G1 不通过。

@@ -157,3 +157,9 @@
 ## 2026-11-21：真实 DeepSeek Function Calling 最小验证结果（修正此前模型 NOT_RUN 状态）
 
 [报告 25](25-deepseek-real-tool-call.md)、[Actions #44882955824](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44882955824) completed/success，用户提供 GitHub Secret `DEEPSEEK_KEY`，使用 DeepSeek 官方 `deepseek-flash`（non-thinking）、单次 HTTPS Chat Completions 推理。真实模型返回 **contract.read 和 contract.route** 两个工具调用，均通过类型化 Broker 参数校验并在真实 Saltcorn 数据上执行；集成 30/30 PASS，原有安全单元 29/29 PASS。**“真实 LLM 只读工具调用”不再是未验证项。** 该结论只覆盖一次最小真实模型验证，不覆盖 AI 自主创建应用、配置/代码路径智能选择、多轮人机编辑或写操作的真实人工授权。G1 **仍 NOT_PASSED**，冻结合同完整 18 项仍 0/18 PASS。后续应从“真实模型连通性”转向**开发任务的正确工具选择和执行结果**，无需重复付费连通测试。
+
+## 2026-11-21 第九轮 G1 复审：DeepSeek 配置 / 代码 / 混合模式自主选择已完成最小实证
+
+本轮 [报告 26](26-deepseek-mode-route-evidence.md) 和 [Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495) **completed/success**：真实 DeepSeek `deepseek-flash` 单次推理、单个结构化 Function Call 在预先固定的 6 项需求中分别正确选择 CONFIG 两项、CODE 两项、HYBRID 两项，**6/6 与独立冻结标签一致**。模型决策实际驱动 Saltcorn 受控预装能力，平台 `_sc_tables`、`_sc_triggers`、实际 SQLite、校验码拒绝、跨表审计及 HTML List View 的 **20/20 独立断言通过**；模型本次共 994 Tokens，GitHub Secret `DEEPSEEK_KEY` 未暴露。先进行 [无模型预检 #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) 20/20，再进行唯一一次模型推理，保证平台问题不会导致重复付费。
+
+因此 G1 中“真实模型能否基于能力清单作模式路由”已有**小样本正向机制性证据**，不再是 NOT_RUN。但不能把六项手选、描述清晰的案例推导为实际陌生需求上的准确率；代码/模型/页面均由研究员预装，**还没有模型自主创建业务模型/生成代码、失败自动修复、自动发布或与原生人工设计器多轮双向编辑**。对 S1 阶段尤其重要的尚缺项是：**真实原生人工编辑—Agent 安全接手的正向闭环**、模式/代码扩展失败后的重新规划、四平台证据综合选型与正式最终 G1 决策。完整冻结合同仍为 **0/18 完整 PASS，G1 仍 NOT_PASSED**。
