@@ -1,6 +1,8 @@
 """S1 B5 broker contract tests. Pure permission checks; no fake build PASS."""
 import json,sys,secrets,tempfile,time,unittest
 from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b2"))
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b4"))
 from schema_core import Actor,SchemaStore,Rejected
 from tool_broker import ToolBroker
 
