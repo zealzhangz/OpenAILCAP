@@ -86,7 +86,7 @@ class IRParity(unittest.TestCase):
         self.assertEqual(from_ir(self.ir)["definitions"]["workflow.approval"]
                          ["thresholdMinor"],100000000)
     def test_ir_process_ref_swap_denied(self):
-        self.bad_ir("DOMAIN_SEMANTICS_INVALID",
+        self.bad_ir("BROKEN_WORKFLOW_FIELD_TYPE",
                     lambda x:x["processes"][0].update({"amount":"contract_no"}))
     def test_domain_missing_resource_denied(self):
         p=copy.deepcopy(self.direct);del p["workflow.approval"]
