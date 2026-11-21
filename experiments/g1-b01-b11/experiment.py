@@ -250,6 +250,34 @@ def main():
                 raise AssertionError("NATIVE_ORACLE_MISMATCH")
             return {"db":db,"pack":pack,"projection":compiled,"oracle":oracle}
 
+        def pull_events(after=0,limit=100,token=None):
+            return api_json(core_base+"/v4/apps/app-a/projection/pull",
+                            "POST",{"after":after,"limit":limit},
+                            projection_token if token is None else token)
+
+        def native_apply(db,batch,fail=False,allow_fail=False):
+            args=[sys.executable,
+                  str(stage/"g1-b01-b11"/"apply_worker.py"),
+                  "--db",db]
+            if fail:args.append("--fail-before-commit")
+            p=native_command(args,db,timeout=20,allow_fail=allow_fail,
+                             stdin_payload=json.dumps(batch))
+            tag="S1_B11_NATIVE_REJECT" if allow_fail else "S1_B11_NATIVE_APPLY"
+            return one(p.stdout,tag)
+
+        def native_inspect(db):
+            p=native_command([sys.executable,
+                str(stage/"g1-b01-b11"/"apply_worker.py"),
+                "--db",db,"--inspect"],db,timeout=15)
+            return one(p.stdout,"S1_B11_NATIVE_APPLY")
+
+        def sync_native(db,after=0):
+            code,feed=pull_events(after)
+            if code!=200:raise AssertionError("SOURCE_PULL_"+str(code))
+            batch={"app":"app-a","after":after,"events":feed["events"]}
+            result=native_apply(db,batch)
+            return feed,result,native_inspect(db)
+
         def start_native(tag,db,port):
             entry=env_native.copy()
             cfg={key:entry[key] for key in (
