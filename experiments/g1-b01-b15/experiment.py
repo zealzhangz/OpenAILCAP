@@ -2103,7 +2103,7 @@ def main():
                         "version":1,"manifestHash":v1["manifestHash"]
                     }))
                     pub_cfg.chmod(0o600)
-                    run(["sudo","-n","chown","-R",pub_user+":"+pub_user,
+                    run(["sudo","-n","chown","-R",pub_user+":ailcapb15snap",
                          pub_cfg_dir])
                     def publish_real(allow_fail=False):
                         r=run(["sudo","-n","runuser","-u",pub_user,"--",
