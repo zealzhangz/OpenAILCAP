@@ -141,3 +141,11 @@
 - [最终真实模型 GitHub Actions #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152)：**8/8 单元 + 16/16 实际 Saltcorn/Chromium/LLM/SQLite/HTTP 验收**，仅 1 次 DeepSeek Function Calling，共 583 Tokens，Artifact ID 14699991457。另有 **零模型预检** [#44885046889](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889)，同样 16/16，不能计为 AI 证据。
 
 **已验证**：真实浏览器模拟人工先改 title，DeepSeek 从真实最新元数据提出 status-only Patch，可信执行器事务内检查旧快照并调用原生 Field.update，第二次浏览器编辑后 AI 字段不丢，旧 AI Patch 被拒。**未验证**：真实自然人手工授权、原生浏览器编辑路径的版本门禁、所有并发交错/插件写入、AI 自动建模/代码。S1 仍在进行，G1 NOT_PASSED，冻结 TC 完整 0/18。
+
+## 2026-11-21：S1 综合研究、候选 ADR 与 G1 评审收口
+
+- [综合深度研究与五平台架构比较](01-research/28-s1-synthesis-and-architecture-comparison.md)：对照 ToolJet、Appsmith、Budibase、NocoBase v3 与 Saltcorn，分别标识源码/官方文档/真实运行证据；整理可借鉴、不应直接复用和自主创新机制；比较全局 IR、分域 Schema+Manifest、原生系统外挂 Agent 三条路线。
+- [ADR-S1-002：分域 Schema+Manifest 优先进行 S3 对照实验](01-research/28-adr-domain-schema-manifest.md)：仅选择后续优先验证路线，不冒充架构定稿。
+- [G1 综合评审与条件性继续建议](01-research/29-g1-decision-review.md)：六类交付物逐项映射和五项 P0 阻断，明确 Gate Status **NOT_PASSED**、研究建议 **CONDITIONAL GO（只允许 S2 范围预研准备，不代表正式进入 S2）**。
+
+**本轮没有新增 CI、外部模型调用或平台运行。** 前序真实证据的边界保持不变：模型路由 6/6、Saltcorn 20/20；真实 Chromium/DeepSeek 顺序编辑 8/8+16/16；原生 Web 编辑路径的 CAS 绕过风险未解除，完整合同冻结用例仍 0/18 FULL PASS。下一优先事项是全渠道强制治理写路径的可证伪设计和真实 PoC，不能通过增加文档绕过 G1。
