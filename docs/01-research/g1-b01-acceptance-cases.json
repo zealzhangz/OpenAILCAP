@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "stage": "S1",
+  "work_item": "G1-B01",
+  "contract": "docs/01-research/30-g1-b01-unified-write-contract.md",
+  "source": "docs/01-research/31-g1-b01-acceptance-matrix.md",
+  "all_cases_not_run": true,
+  "counts": {
+    "total": 24,
+    "passed": 0,
+    "failed": 0,
+    "not_run": 24
+  },
+  "cases": [
+    {
+      "id": "W01",
+      "slug": "three-writer-registration",
+      "expected": "H/A/P mutations have revision hash receipt audit",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W02",
+      "slug": "native-stale-web",
+      "expected": "stale native form receives 409 without lost update",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W03",
+      "slug": "web-before-agent-conflict",
+      "expected": "old agent patch rejected",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W04",
+      "slug": "agent-before-web-conflict",
+      "expected": "old web patch rejected",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W05",
+      "slug": "disjoint-field-merge",
+      "expected": "both independent field edits persist",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W06",
+      "slug": "plugin-agent-same-field",
+      "expected": "exactly one successful commit",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W07",
+      "slug": "two-process-cas",
+      "expected": "one apply and one conflict",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W08",
+      "slug": "idempotent-original-receipt",
+      "expected": "replay returns first receipt after newer edits",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W09",
+      "slug": "idempotency-key-reuse",
+      "expected": "changed principal or digest rejected",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W10",
+      "slug": "transaction-fault-injection",
+      "expected": "no partial mutation or success receipt",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W11",
+      "slug": "native-out-of-band-drift",
+      "expected": "quarantine and fail closed",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W12",
+      "slug": "whole-pack-restoration",
+      "expected": "unapproved whole-app overwrite prohibited",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W13",
+      "slug": "spoofed-agent-identity",
+      "expected": "identity claims cannot elevate permissions",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W14",
+      "slug": "app-scope-authorization",
+      "expected": "cross-app/read-only mutations denied",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W15",
+      "slug": "csrf-and-expired-token",
+      "expected": "all unauthorized writes rejected",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W16",
+      "slug": "plugin-db-bypass",
+      "expected": "plugin has no unmanaged database write",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W17",
+      "slug": "runtime-cache-readback",
+      "expected": "same-process DB REST browser values consistent",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W18",
+      "slug": "publish-drift-gate",
+      "expected": "release blocked on drift/broken reference",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W19",
+      "slug": "broken-code-build",
+      "expected": "verified release pointer unchanged",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W20",
+      "slug": "remote-unknown-outcome",
+      "expected": "no new-ID blind replay",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W21",
+      "slug": "cross-application-isolation",
+      "expected": "app A and app B assets isolated",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W22",
+      "slug": "no-llm-human-mode",
+      "expected": "human edit succeeds without model",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W23",
+      "slug": "cross-resource-dependency",
+      "expected": "dangling dependency rejected/migrated explicitly",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    },
+    {
+      "id": "W24",
+      "slug": "verified-snapshot-rollback",
+      "expected": "runtime/config/code roll back consistently",
+      "status": "NOT_RUN",
+      "code_commit": null,
+      "ci_run_url": null,
+      "artifact_id": null,
+      "observations": null
+    }
+  ]
+}
