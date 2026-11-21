@@ -71,3 +71,13 @@ python3 experiment.py --output /tmp/s1-b7-evidence.json
 5. 当前 SQLite 单文件满足实验的原子性，却不覆盖多个数据库、跨服务发布事务、长期运维/灾备、真实外部工作流副作用和成熟开源低代码平台 Native CLI 特权入口。
 
 **B7 通过也只说明有限的 OS UID 边界假设得到实验证据**。正式冻结 G1-B01 W01—W24、TC01—TC18 未自动转成 FULL PASS；S1 IN_PROGRESS，G1 NOT_PASSED，正式 G1-B01 OPEN。
+
+
+## 2026-11-21：B7 最终真实实验证据（已合并 main）
+
+- [完整研究报告 40](../../docs/01-research/40-s1-b7-real-linux-dac-domain-kernel-evidence.md)；[CI #44897992713](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44897992713) **completed/success**，Job **136827642934**，[原始 Artifact #14704777950](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44897992713/artifacts/14704777950)。
+- **16/16 B7 可信配置单测 + 18/18 B2 回归 + 40/40 B5 回归 + 32/32 真实多 Linux UID/原生 SQLite/Chromium/物理 SQL 验证通过**；0 次外部模型调用。
+- 内核 UID=999；Plugin UID=997；Agent UID=995。真实内核私有目录 0700，SQLite 与启动配置 0600；普通 Plugin/Agent 的数据库 O_RDONLY/O_RDWR、SQLite `mode=ro/rw`、原生 `UPDATE`、私有配置、`/proc/kernelPid/environ` 与文件描述符目录访问全部 **DENIED**。普通插件仍可通过专属受限 v3 Token 更新 View HTTP 200；越权 SQL/代码/Model/跨应用请求被拒绝，真 Chromium 旧版本写入 409，模拟人工仍能发布 B2 v1 和运行两级审批。
+- **重要负对照**：相同 kernel UID 的另一个 CLI 和 root 都实际能够直接写权威 SQLite。root 篡改数据之后，内核 Draft 409 `RESOURCE_DRIFT` 并 `QUARANTINED`，上次不可变发布 v1 仍能读取。这是检测，不是 root 物理写入阻止。
+- 首个 [CI #44897859852](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44897859852) 发现 Runner checkout 目录不支持分离 Linux UID 读取可信源码、临时私有目录清理权限不足；没有放宽 SQLite 权限，只将可信测试源码单独复制到非秘密、只读、可遍历路径，受信 sudo 控制器负责最后清理。**以最终成功 #44897992713 为准**。
+- [PR #9](https://github.com/zealzhangz/OpenAILCAP/pull/9) 已合并，SHA `8b4cd3e87135efe6744b9614e6673bcff439defb`。本轮未测试真实 Saltcorn Native CLI 或 B4 Docker Code Build，冻结 G1-B01 W01—W24 与 TC01—TC18 仍未达到 FULL PASS；G1 NOT_PASSED。
