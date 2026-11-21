@@ -80,10 +80,24 @@ def run(a,record):
         browser=p.chromium.launch(headless=True,args=["--no-sandbox"])
         contexts={}
         csrf_by_role={}
+        def safe_get(page,path):
+            # Retry only GET navigations. NEVER automatically retry any
+            # state-changing approval request.
+            last_error=None
+            for attempt in range(3):
+                try:
+                    page.goto(base+path,wait_until="domcontentloaded",timeout=18000)
+                    return
+                except Exception as exc:
+                    last_error=exc
+                    if attempt==2:
+                        raise
+                    page.wait_for_timeout(400)
+            raise last_error
         for role,(email,pwvar) in IDENTITIES.items():
             ctx=browser.new_context()
             page=ctx.new_page()
-            page.goto(base+"/auth/login",wait_until="domcontentloaded")
+            safe_get(page,"/auth/login")
             loginform=page.locator('form[action="/auth/login"]')
             has_csrf=loginform.locator('input[name="_csrf"]').count()==1
             page.locator('input[name="email"]').fill(email)
@@ -95,7 +109,7 @@ def run(a,record):
                    {"login_redirect_path":page.url.replace(base,""),"csrf_present":has_csrf})
             # An authenticated session has its own CSRF token, which is
             # obtained from the standard Saltcorn page after login.
-            page.goto(base+"/auth/login",wait_until="domcontentloaded")
+            safe_get(page,"/auth/login")
             csrf_input=page.locator('form[action="/auth/login"] input[name="_csrf"]')
             if csrf_input.count()!=1:
                 raise AssertionError("No CSRF token on authenticated Saltcorn page")
