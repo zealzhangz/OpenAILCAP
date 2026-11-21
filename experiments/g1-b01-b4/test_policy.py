@@ -84,7 +84,7 @@ class PolicyTests(unittest.TestCase):
                  "    return 42\n")
 
     def test_assignment_cannot_target_index(self):
-        self.bad("AST_NODE_FORBIDDEN",BASE.replace(
+        self.bad("ASSIGNMENT_FORBIDDEN",BASE.replace(
             "    return 42","    a[0] = 1\n    return 42"))
 
     def test_safe_min_max_allowed(self):
