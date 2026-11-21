@@ -247,3 +247,5 @@
 - 固定 `@saltcorn/cli@1.7.0-beta.5`，官方 `saltcorn reset-schema/install-pack/run-js` 建真实应用。在数据库独占 UID=999/0700 目录前提下，另一真实 UID=997 运行官方 `run-js Field.update`、`install-pack` 均 **exit1 / permissionError**、物理 DB 不变；同 UID=999 则不受此 OS 隔离，真正官方 Saltcorn /field/:id 浏览器及 Native CLI **均成功绕过外围 Gateway**修改 `_sc_fields.title`，受控 CAS revision/receipt **不递增**，外围 Gateway 只在后续 GET/POST 返回 `OUT_OF_BAND_DRIFT 409`。
 - 这是**重要架构否定证据**，不能把 24/24 的“危险反例真实成功”当作平台统一写入安全通过：单靠外围 API CAS + 给 Saltcorn SQLite 加 Linux DAC，**无法约束同数据库所有者 UID 的 Saltcorn 原生 Web/CLI/Pack**。下一方案候选：**唯一权威 Domain Kernel + Saltcorn 仅作可删的、无权威持久化写入权限的派生运行/呈现投影**；需在 B9 真验证缓存、发布/回滚与原生直接写仅影响派生层。
 - [PR #10](https://github.com/zealzhangz/OpenAILCAP/pull/10) 已合并 main，SHA `92a06863c91d8a59c80ca93ef95b2a87c4ca4f4e`；S1 IN_PROGRESS / G1 **NOT_PASSED** / G1-B01 **OPEN**，冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。
+
+undefined
