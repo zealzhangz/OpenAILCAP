@@ -4,6 +4,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b2"))
 from schema_core import Rejected,sha
 from ir_bridge import (EXTENSION,IDS,compare_representations,
                        from_ir,normalise_domain,to_ir)
