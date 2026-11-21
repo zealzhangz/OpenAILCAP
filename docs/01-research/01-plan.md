@@ -51,3 +51,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 2. 以 [合同基准](10-contract-benchmark.md) 冻结 12 项金额规则、12 项审批状态机及 18 项真实平台验收任务；这些任务尚未在平台执行。
 3. 以 [GitHub Actions #44868550471](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44868550471) 实际尝试 NocoBase v3 官方 CLI 安装：Node24/pnpm11 成功，下载 app-template-default 时返回 E530/TEMPLATE_DOWNLOAD_FAILED。**属于安装阻断，不是业务用例失败**。
 4. [G1 中期复审](12-g1-gap-review.md) 继续限定为 S1 受控研究，不进入正式 S2。
+
+## 2026-11-21：真实低代码参考平台纵向切片
+
+新增 Saltcorn MIT 作为第五个低资源、便于研究真实元数据到运行态的参考平台，并在 GitHub Actions 上实际运行：[Run #44869777036](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869777036) 7/7，原生 fixture 表/视图/REST；[Run #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796) 9/9，以 Pack 配置合同/审批关联和列表、真实 SQLite 插入、REST 与页面渲染。详细见 [报告 14](14-saltcorn-real-platform.md)、[报告 15](15-native-contract-platform-evidence.md)。这一进展确证了真实第三方运行时可复现，但尚不满足原始合同 decimal(12,2)、审批、AI 自动配置及双向编辑，18 项正式业务验收保持 NOT_RUN。后续必须深测二次变更、版本冲突和真实 Agent 接手。

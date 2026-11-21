@@ -77,3 +77,11 @@
 ## E16 — NocoBase v3 官方创建器真实失败（S0：安装前置实验）
 
 [GitHub Actions Run #44868550471](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44868550471)，Node24.22.3、pnpm11.11.0 成功，但 `npm.nocobase.ai/@nocobase/app-template-default` 返回 npm E530，创建器报 `TEMPLATE_DOWNLOAD_FAILED`，projectCreated=false。后续安装/业务测试没有执行。详见 [原始错误与分析](11-installation-trial.md)。
+
+## E17 — Saltcorn 真实平台独立运行时实证（S0）
+
+固定上游研究源码 SHA [515254bee5a98df70530cc59846b1df02d5db350](https://github.com/saltcorn/saltcorn/tree/515254bee5a98df70530cc59846b1df02d5db350)，MIT 许可。[@saltcorn/cli 1.7.0-beta.5 GitHub Actions #44869777036](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869777036) 实际安装并运行，7/7 真正 SQLite/REST/HTML/匿名读取拒绝测试通过，Artifact ID 14693426822。见 [源码-运行态报告](14-saltcorn-real-platform.md)。
+
+## E18 — Saltcorn 原生 Pack 配置合同资源（S0）
+
+[GitHub Actions #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796) 执行本仓库原生 Pack、CLI Table.insertRow 和真实服务端 HTTP 断言，9/9 独立检查通过，Artifact ID 14693482263。其数据库真实持久化 s1_contracts、s1_approvals Key 关系、合同业务行与 List View，并经 REST/HTML 读回。**该测试使用预编写配置，没有 AI Agent；金额采用整数分，不是冻结基准的 decimal(12,2)**。见 [详细合同纵向切片](15-native-contract-platform-evidence.md)。

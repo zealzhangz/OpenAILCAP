@@ -37,3 +37,13 @@ python3 experiments/platform-saltcorn/smoke.py --db "$SQLITE_FILEPATH" --output 
 ~~~
 
 CI 只上传不含密钥或数据库文件的结构化结果。若安装失败，应保留真实 GitHub Actions 错误并标注阻断，而非夸大成平台能力缺失。
+
+## 第二组：原生合同 Pack 真实平台验证（2026-11-21）
+
+- [原生合同配置 contract-pack.json](contract-pack.json) 含 s1_contracts / s1_approvals（Key 指向 s1_contracts）和 s1_contract_list 视图。
+- [原生 Table API 测试数据初始化脚本](seed-contract.js)：调用 Saltcorn CLI run-js，将 1000000.01 CNY 转为整数分 100000001 写入平台数据库。
+- [独立验证 contract_verify.py](contract_verify.py)：检查实际 SQL、元数据、REST、HTML 和匿名审批数据读取拒绝。
+- [GitHub Actions 工作流](../../.github/workflows/s1-saltcorn-contract.yml) 与 [运行 #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796)，全部 **9/9 PASS**。
+- [研究报告](../../docs/01-research/15-native-contract-platform-evidence.md) 详细说明 9 个业务/技术断言与每一处证据。
+
+本次不实现预注册 decimal(12,2) 类型、不执行真实审批和 AI/人工交替编辑。因此它是**真实第三方平台配置 + 数据 + 运行态的部分纵向切片**，不等于正式合同 TC 通过，更不等于 G1/G3 通过。 

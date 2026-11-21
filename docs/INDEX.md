@@ -45,3 +45,12 @@
 **状态**：已完成统一能力研究的首轮证据矩阵和合同场景预注册。真实平台试验被第三方模板包仓库阻断，18 项平台任务均 NOT_RUN；G1 未通过。必须区分合同 oracle 正确与真实平台验收成功。
 
 - [合同 Benchmark 规范 GitHub Actions 检查记录](01-research/13-contract-oracle-ci.md)：Run #44868820335 success，12+12 oracle 自检通过，18 项平台任务仍 NOT_RUN。
+
+## 2026-11-21：S1 首次真实第三方低代码平台运行与合同纵向切片
+
+- [Saltcorn 真实运行时：7/7 原生表/视图/REST/未授权拒绝实测](01-research/14-saltcorn-real-platform.md)，[Actions Run #44869777036](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869777036)
+- [Saltcorn 原生合同 Pack：9/9 配置模型、SQL 记录、REST 与页面实测](01-research/15-native-contract-platform-evidence.md)，[Actions Run #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796)
+- [真实运行时源代码与实验脚本](../experiments/platform-saltcorn/README.md)
+- [两次运行日志的结构化核查摘录（非原始 Artifact）](01-research/saltcorn-runtime-observations.json)
+
+**重要更新**：第三方可运行低代码参考平台已从 0 增加到 1；总计 16/16 项平台运行时检查由独立 GitHub Actions 实际执行成功。合同原生 Pack 已实现模型/页面最小纵向切片，但金额类型与冻结合同基准存在差异，审批/AI/人机交互未执行，所以 18 项正式合同平台任务仍 0/18 PASS。**G1 仍未通过**。

@@ -80,3 +80,15 @@
 ## 2026-11-21 远端规范检查回填
 
 [合同规范 GitHub Actions #44868820335](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44868820335) completed/success，金额/状态机 oracle 及 18 项平台任务 NOT_RUN 的基线检查步骤均成功。见 [独立执行记录](13-contract-oracle-ci.md)。该结果不改变阶段 G1 未通过的结论。
+
+## 2026-11-21：首次真实平台实验后重新评估
+
+- 真实 Saltcorn CLI 运行并独立测试：GitHub [Run #44869777036](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869777036)，7/7 PASS，真正 SQLite metadata / View / REST、匿名拒绝。此项将第三方实际运行平台从 0 更新为 **1**。
+- 真实 Saltcorn 原生 Pack 导入合同/审批关联模型、合同数据与可渲染页面：GitHub [Run #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796)，9/9 PASS，确为实际第三方服务端和 SQLite，不是自研模型模拟。
+- 研究报告：[真实运行时](14-saltcorn-real-platform.md)、[合同配置纵向切片](15-native-contract-platform-evidence.md)。源码/实验工程位于 [experiments/platform-saltcorn](../../experiments/platform-saltcorn/README.md)。
+
+**新的事实**：G1 的“第三方真实平台无法安装”这一阻断已被解决；可直接观察结构化低代码配置入口经模型/字段/视图到运行态产生结果。
+
+**仍有阻断**：Saltcorn Pack 是研究员预先编写，不是 Agent 生成；金额存储为整数分而冻结基准要求 decimal(12,2)，多级审批、真实人员修改/AI 接手、受限插件发现、多应用隔离没有在平台运行；既定四个平台仍未完成统一合同场景真实复现。H01/H03 的核心双向编辑尚无真实设计器实证，因此 18 项冻结合同验收仍 0/18。**G1 保持 NOT_PASSED，仅允许继续 S1 受控研究。** 
+
+**下一关键技术验证**：使用相同真实 Saltcorn Pack 资源执行“人工修改已保存配置 → 旧 Agent 会话持旧快照导入/增量修改”，记录平台 API 对冲突是否拒绝、是否覆盖。与本仓库 CAS + 三方合并机制的真实服务端接入方案做双路线对照，并及时记录失败/安全边界。

@@ -1,0 +1,128 @@
+{
+  "study": "OpenAILCAP S1 first real third-party low-code runtime evidence",
+  "verified_at": "2026-11-21",
+  "project": "saltcorn/saltcorn",
+  "project_source_sha": "515254bee5a98df70530cc59846b1df02d5db350",
+  "npm_cli_version": "1.7.0-beta.5",
+  "runtime_node": "v24.22.3",
+  "evidence_type": "Curated transcript from GitHub Actions job stdout; raw JSON kept as artifacts, not copied here",
+  "upstream_fixture_run": {
+    "commit": "f0c2947c4744a65e14d10d9e85073610d7d57ee9",
+    "run_id": 44869777036,
+    "job_id": 136741468536,
+    "artifact_id": 14693426822,
+    "conclusion": "success",
+    "checks": [
+      {
+        "id": "SC01",
+        "status": "PASS",
+        "evidence": "metadata tables _sc_tables/_sc_fields/_sc_views"
+      },
+      {
+        "id": "SC02",
+        "status": "PASS",
+        "evidence": "tables books and patients"
+      },
+      {
+        "id": "SC03",
+        "status": "PASS",
+        "evidence": "field books.author"
+      },
+      {
+        "id": "SC04",
+        "status": "PASS",
+        "evidence": "view authorlist"
+      },
+      {
+        "id": "SC05",
+        "status": "PASS",
+        "http": 200,
+        "evidence": "books REST returns Herman Melville"
+      },
+      {
+        "id": "SC06",
+        "status": "PASS",
+        "http": 200,
+        "evidence": "authorlist page renders Tolstoy"
+      },
+      {
+        "id": "SC07",
+        "status": "PASS",
+        "http": 401,
+        "evidence": "anonymous read patients denied"
+      }
+    ]
+  },
+  "native_contract_pack_run": {
+    "commit": "66dd75de52103f76ed3e3f46d6a59b0395591688",
+    "run_id": 44869926796,
+    "job_id": 136741936555,
+    "artifact_id": 14693482263,
+    "conclusion": "success",
+    "checks": [
+      {
+        "id": "PK01",
+        "status": "PASS",
+        "evidence": "s1_contracts, s1_approvals metadata models"
+      },
+      {
+        "id": "PK02",
+        "status": "PASS",
+        "evidence": "contract_no,title,amount_minor,status fields"
+      },
+      {
+        "id": "PK03",
+        "status": "PASS",
+        "evidence": "Key contract_ref -> s1_contracts"
+      },
+      {
+        "id": "PK04",
+        "status": "PASS",
+        "evidence": "SQLite physical table has contract columns"
+      },
+      {
+        "id": "PK05",
+        "status": "PASS",
+        "evidence": "SQLite row HT-2026-000001, amount_minor=100000001"
+      },
+      {
+        "id": "PK06",
+        "status": "PASS",
+        "evidence": "s1_contract_list view"
+      },
+      {
+        "id": "PK07",
+        "status": "PASS",
+        "http": 200,
+        "evidence": "REST returns contract"
+      },
+      {
+        "id": "PK08",
+        "status": "PASS",
+        "http": 200,
+        "evidence": "HTML list renders contract number"
+      },
+      {
+        "id": "PK09",
+        "status": "PASS",
+        "http": 401,
+        "evidence": "anonymous approval read denied"
+      }
+    ]
+  },
+  "conclusion": {
+    "real_third_party_platform_started": 1,
+    "standalone_runtime_checks_passed": 16,
+    "standalone_runtime_checks_total": 16,
+    "frozen_contract_benchmark_completed_tasks": 0,
+    "frozen_contract_benchmark_total_tasks": 18,
+    "G1": "NOT_PASSED"
+  },
+  "caveats": [
+    "Model is configured via native Saltcorn Pack by a preauthored research asset, not AI",
+    "Source commit is investigated snapshot; npm published package pinned by version, not source tarball digest",
+    "Contract model uses integer minor currency units, not decimal(12,2) required by benchmark",
+    "No approval execution, true role-based business authorization, cross-app isolation, Agent auto-coding or human-AI roundtrip",
+    "Original machine-readable artifact files are in GitHub Actions and may expire"
+  ]
+}
