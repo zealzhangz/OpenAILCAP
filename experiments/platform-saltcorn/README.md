@@ -63,3 +63,7 @@ CI 只上传不含密钥或数据库文件的结构化结果。若安装失败�
 ## 2026-11-21 真实 SQLite 的共享 HTTP 编辑协议正向研究
 
 新增 [governed/](governed/README.md)，[CI #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) completed/success，主流程 22/22、原生绕过漂移检测 4/4。研究网关自带的 Chromium HTML 页面和模拟 Agent Bearer HTTP 客户端共用真实 Saltcorn SQLite 的事务/版本/指纹/幂等/审计，旧页面 409、Agent 旧上下文 409、并发一胜一拒，失败可回滚。Saltcorn 原生 Field.update 绕过后，网关用指纹发现未登记变更并失败关闭。**研究页不是 Saltcorn 自带 /field 编辑器，Agent 不是真实 LLM；实验 direct SQL 内表更新不用于生产，G1 未通过。** 详见 [报告 20](../../docs/01-research/20-governed-http-evidence.md)。
+
+## 2026-11-21 冻结合同业务原生 Trigger 两级审批实验
+
+新增 [workflow/](workflow/README.md)，[GitHub Actions #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097) 在真实 Saltcorn 安装三个原生 Validate/Insert run_js_code Trigger，执行 12 项金额边界、12 项状态转移与三条连续真实审批路径，独立 SQLite+API+ListView 验证 **35/35 PASS**。重要偏差：金额 SQL TEXT 非 decimal(12,2)，角色字段可伪造非 HTTP 用户鉴权，业务逻辑由研究员预写而非 AI，动作使用研究 CLI SQL 事务，因此不等于完整合同或 G1 通过。[研究报告 21](../../docs/01-research/21-saltcorn-native-workflow-evidence.md)。

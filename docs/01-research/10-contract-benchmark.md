@@ -72,3 +72,7 @@
 ## 八、真实平台纵向切片的补充进展
 
 已通过 [Saltcorn 原生 Pack 试验](15-native-contract-platform-evidence.md) 创建真实合同和审批关联模型，在真实 SQLite、API 和 HTML 中完成 9 项独立测试（[CI #44869926796](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44869926796)）。此实测**并未覆盖**本规范完整 TC01 的 decimal(12,2) 与系统业务/关系强约束；没有执行两级审批、AI 开发、人工接管及插件/应用隔离。因此原本冻结的 18 项正式验收仍均为 NOT_RUN，本规范原始 JSON 结果不应被提前改为 PASS。后续可把 Saltcorn 的原生配置部分作为同任务的可用性证据，但完整通过必须执行冻结契约。
+
+## 九、2026-11-21 原生 Saltcorn 业务规则实际复现：部分证据但不改冻结判定
+
+[Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097)、[报告 21](21-saltcorn-native-workflow-evidence.md) 与 [结果摘录](workflow-observations.json) 表明真正 Saltcorn 原生 Validate/Insert Trigger 及 Code Action 已运行原规范 AM01—AM12 12/12、ST01—ST12 12/12、正常/高额二级/拒绝连续路径 3/3（总 35/35 项独立验证）。这给 TC01、TC02、TC03、TC05、TC18 提供**部分机制性证据**，不是正式验收 PASS：金额实际存储为 TEXT canonical 字符串+Integer 分，并非要求的 decimal(12,2)；请求中的 actor_role 可伪造，不是 HTTP 403 身份授权；没有真实用户在网页提交审批动作，也没有真实 AI 开发。**原冻结 spec.json 中 18 个平台任务仍为 NOT_RUN，完整通过 0/18，G1 未通过。**

@@ -71,3 +71,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：受治理 HTTP 编辑接口的正向研究闭环
 
 在此前真实 Saltcorn 浏览器旧表单丢更新、外部版本表被绕过两类负例之后，本轮新增共享 HTTP 命令原型：[源码](../../experiments/platform-saltcorn/governed/README.md)，[GitHub CI #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) completed/success。研究网关自建 Chromium 页面与确定性 Bearer Agent 共用 Saltcorn 真实 SQLite 修订及指纹，在独立数据库上 **G01—G22 22/22**，原生绕过时 **D01—D04 4/4**。数据库事务回滚、并发一胜一拒、409 版本冲突、审计/幂等和原生环境重启读回已有证据。具体 HTTP 结果以 [报告 20](20-governed-http-evidence.md) 为准；研究直接更新 _sc_fields 只可用于实验，不是生产适配方案。下一步优先真实 Agent 工具/合同审批，不再重复单字段版控小试。**G1 仍未通过。**
+
+## 2026-11-21：S1 冻结合同业务实际运行而非继续字段标签测试
+
+[Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097) 实际安装了含 4 个业务表、1 个原生视图和 3 个真正 Saltcorn Validate/Insert JS Action Trigger 的原生 Pack，并通过 Table.insertRow/updateRow 执行金额阈值及审批；独立 Oracle 在物理 SQL、CLI 日志、运行时 REST/HTML 验收 **35/35**，包括 12 金额边界、12 状态机、3 连续审批轨迹，证实超额合同需要二级审批。完整报告见 [21](21-saltcorn-native-workflow-evidence.md)。这比单纯比较 API Schema 更直接满足 README 1.4，但**角色仍为可伪造的请求字段、金额为 TEXT+分、没有 LLM**，不标正式 TC 通过。下一阶段 S1 工作重点：真实审批身份/HTTP 和真实 Agent 类型化工具；G1 不通过。

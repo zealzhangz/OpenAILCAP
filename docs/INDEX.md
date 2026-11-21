@@ -88,3 +88,12 @@
 - [研究用网关、浏览器及模拟 Agent 验收代码](../experiments/platform-saltcorn/governed/README.md)
 
 **本轮明确的正向结果**：研究网关自建浏览器与模拟 Agent 共用真实 SQLite 的修订/指纹/幂等/审计后，过时 Web 表单与 Agent 请求均返回 HTTP 409，不覆盖最新值；两个 HTTP 并发仅一胜、故障注入能够回滚；Saltcorn 原生 Field.update 绕过网关后，网关能够以 OUT_OF_BAND_DRIFT 失败关闭。**但原生 Saltcorn 编辑器未接入这套网关，Agent 并非 LLM，仍不代表完整人机开发闭环。G1 未通过，合同 18 项完整任务依然 0/18。**
+
+## 2026-11-21：S1 第一次真实 Saltcorn 原生 Trigger 执行冻结合同审批
+
+- [研究报告 21：真正 Saltcorn Trigger 的金额阈值和两级审批执行](01-research/21-saltcorn-native-workflow-evidence.md)
+- [35 项物理数据库/状态机/HTTP 验收证据摘要](01-research/workflow-observations.json)
+- [可重复的原生 Pack、3 条 Code Action Trigger、冻结用例驱动和独立验证器](../experiments/platform-saltcorn/workflow/README.md)
+- [GitHub Actions #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097)，completed/success，Artifact 14695849924
+
+**实证结论**：12/12 金额边界（等于一百万不升级、超过升级）、12/12 状态迁移、3/3 连续普通/高额二级/驳回路径在真实 Saltcorn 表、Validate/Insert Trigger、审批记录和原生 List/REST 运行中得到物理验证。总 35/35 项测试符合预期。**限制**：角色是客户端可声明的业务字符串，没有真实身份授权/HTTP 403；amount_decimal SQL 类型为 TEXT，并非冻结 decimal(12,2)；动作事务由研究 CLI 显式 SQL 包裹；没有真实 LLM 或审批浏览器提交。冻结 18 项合同的完整通过仍为 0/18，**G1 继续 NOT_PASSED**。

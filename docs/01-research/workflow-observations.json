@@ -1,0 +1,328 @@
+{
+  "study": "S1 real Saltcorn native Trigger contract rule execution",
+  "date": "2026-11-21",
+  "frozen_spec": "OpenAILCAP-S1-CONTRACT-2026-11-21",
+  "source_commit": "8671d3091fbdd10d7b373a49757d66c53fe68fff",
+  "upstream_inspected": "saltcorn/saltcorn@515254bee5a98df70530cc59846b1df02d5db350",
+  "run_package": "@saltcorn/cli@1.7.0-beta.5",
+  "ci": {
+    "run_id": 44876882097,
+    "job_id": 136763423876,
+    "conclusion": "success",
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097",
+    "artifact": {
+      "name": "s1-saltcorn-real-trigger-workflow-results",
+      "id": 14695849924
+    }
+  },
+  "source_type": "Curated sample of actual native-CLI log + independent physical SQLite / HTTP verifier results; original comprehensive 35-check JSON in Actions artifact",
+  "native_resources": {
+    "tables": [
+      "s1_bench_contracts",
+      "s1_bench_routes",
+      "s1_bench_action_requests",
+      "s1_bench_approvals"
+    ],
+    "triggers": [
+      {
+        "name": "S1 Route On Contract Insert",
+        "action": "run_js_code",
+        "when": "Insert",
+        "table": "s1_bench_contracts"
+      },
+      {
+        "name": "S1 Validate Approval Request",
+        "action": "run_js_code",
+        "when": "Validate",
+        "table": "s1_bench_action_requests"
+      },
+      {
+        "name": "S1 Apply Approval Request",
+        "action": "run_js_code",
+        "when": "Insert",
+        "table": "s1_bench_action_requests"
+      }
+    ],
+    "view": "s1_bench_contract_list"
+  },
+  "checks": {
+    "schema_and_trigger_checks": {
+      "total": 3,
+      "passed": 3
+    },
+    "amounts": [
+      {
+        "id": "AM01",
+        "input": "999999.99",
+        "actual_route": "NORMAL",
+        "real_cents": 99999999,
+        "status": "PASS",
+        "invalid_preinsert": false
+      },
+      {
+        "id": "AM02",
+        "input": "1000000.00",
+        "actual_route": "NORMAL",
+        "real_cents": 100000000,
+        "status": "PASS",
+        "invalid_preinsert": false
+      },
+      {
+        "id": "AM03",
+        "input": "1000000.01",
+        "actual_route": "HIGH",
+        "real_cents": 100000001,
+        "status": "PASS",
+        "invalid_preinsert": false
+      },
+      {
+        "id": "AM04",
+        "input": "0.00",
+        "actual_route": "NORMAL",
+        "real_cents": 0,
+        "status": "PASS",
+        "invalid_preinsert": false
+      },
+      {
+        "id": "AM05",
+        "input": "9999999999.99",
+        "actual_route": "HIGH",
+        "real_cents": 999999999999,
+        "status": "PASS",
+        "invalid_preinsert": false
+      },
+      {
+        "id": "AM06",
+        "input": "-0.01",
+        "actual_route": "INVALID",
+        "real_cents": null,
+        "status": "PASS",
+        "invalid_preinsert": true
+      },
+      {
+        "id": "AM07",
+        "input": "1000000.001",
+        "actual_route": "INVALID",
+        "real_cents": null,
+        "status": "PASS",
+        "invalid_preinsert": true
+      },
+      {
+        "id": "AM08",
+        "input": "1e6",
+        "actual_route": "INVALID",
+        "real_cents": null,
+        "status": "PASS",
+        "invalid_preinsert": true
+      },
+      {
+        "id": "AM09",
+        "input": "NaN",
+        "actual_route": "INVALID",
+        "real_cents": null,
+        "status": "PASS",
+        "invalid_preinsert": true
+      },
+      {
+        "id": "AM10",
+        "input": "10000000000",
+        "actual_route": "INVALID",
+        "real_cents": null,
+        "status": "PASS",
+        "invalid_preinsert": true
+      },
+      {
+        "id": "AM11",
+        "input": "abc",
+        "actual_route": "INVALID",
+        "real_cents": null,
+        "status": "PASS",
+        "invalid_preinsert": true
+      },
+      {
+        "id": "AM12",
+        "input": "0000001.00",
+        "actual_route": "NORMAL",
+        "real_cents": 100,
+        "status": "PASS",
+        "invalid_preinsert": false
+      }
+    ],
+    "transitions": [
+      {
+        "id": "ST01",
+        "actual_state": "Submitted",
+        "actual_error": null,
+        "real_requests": 1,
+        "real_approvals": 0,
+        "status": "PASS"
+      },
+      {
+        "id": "ST02",
+        "actual_state": "Approved",
+        "actual_error": null,
+        "real_requests": 1,
+        "real_approvals": 1,
+        "status": "PASS"
+      },
+      {
+        "id": "ST03",
+        "actual_state": "Level1Approved",
+        "actual_error": null,
+        "real_requests": 1,
+        "real_approvals": 1,
+        "status": "PASS"
+      },
+      {
+        "id": "ST04",
+        "actual_state": "Approved",
+        "actual_error": null,
+        "real_requests": 1,
+        "real_approvals": 1,
+        "status": "PASS"
+      },
+      {
+        "id": "ST05",
+        "actual_state": "Submitted",
+        "actual_error": "FORBIDDEN",
+        "real_requests": 0,
+        "real_approvals": 0,
+        "status": "PASS"
+      },
+      {
+        "id": "ST06",
+        "actual_state": "Level1Approved",
+        "actual_error": "FORBIDDEN",
+        "real_requests": 0,
+        "real_approvals": 0,
+        "status": "PASS"
+      },
+      {
+        "id": "ST07",
+        "actual_state": "Draft",
+        "actual_error": "INVALID_STATE",
+        "real_requests": 0,
+        "real_approvals": 0,
+        "status": "PASS"
+      },
+      {
+        "id": "ST08",
+        "actual_state": "Approved",
+        "actual_error": "INVALID_STATE",
+        "real_requests": 0,
+        "real_approvals": 0,
+        "status": "PASS"
+      },
+      {
+        "id": "ST09",
+        "actual_state": "Rejected",
+        "actual_error": null,
+        "real_requests": 1,
+        "real_approvals": 1,
+        "status": "PASS"
+      },
+      {
+        "id": "ST10",
+        "actual_state": "Rejected",
+        "actual_error": null,
+        "real_requests": 1,
+        "real_approvals": 1,
+        "status": "PASS"
+      },
+      {
+        "id": "ST11",
+        "actual_state": "Submitted",
+        "actual_error": "FORBIDDEN",
+        "real_requests": 0,
+        "real_approvals": 0,
+        "status": "PASS"
+      },
+      {
+        "id": "ST12",
+        "actual_state": "Draft",
+        "actual_error": "FORBIDDEN",
+        "real_requests": 0,
+        "real_approvals": 0,
+        "status": "PASS"
+      }
+    ],
+    "sequences": [
+      {
+        "id": "normal",
+        "statuses": [
+          "Submitted",
+          "Approved"
+        ],
+        "actual_approval_roles": [
+          "approver1"
+        ],
+        "status": "PASS"
+      },
+      {
+        "id": "high",
+        "statuses": [
+          "Submitted",
+          "Level1Approved",
+          "Approved"
+        ],
+        "actual_approval_roles": [
+          "approver1",
+          "approver2"
+        ],
+        "status": "PASS"
+      },
+      {
+        "id": "reject",
+        "statuses": [
+          "Submitted",
+          "Rejected"
+        ],
+        "actual_approval_roles": [
+          "approver1"
+        ],
+        "status": "PASS"
+      }
+    ],
+    "runtime_and_limitation_checks": {
+      "total": 3,
+      "passed": 3,
+      "actual_amount_decimal_sql_type": "TEXT",
+      "required_frozen": "decimal(12,2)",
+      "type_meets_frozen_spec": false
+    },
+    "web_readback": {
+      "total": 2,
+      "passed": 2,
+      "api_status": 200,
+      "view_status": 200
+    }
+  },
+  "total": {
+    "passed": 35,
+    "total": 35
+  },
+  "contract_coverage": {
+    "TC01": "PARTIAL real native tables/1:N, but schema not frozen",
+    "TC02": "PARTIAL amount canonical via research code, not decimal(12,2) and full CRUD",
+    "TC03": "PARTIAL actual HIGH/NORMAL native Trigger routing, no authenticated approval HTTP",
+    "TC04": "NOT_VERIFIED actor_role is supplied client string; FORBIDDEN is business validation, not HTTP 403",
+    "TC05": "PARTIAL 12 of 12 state transition cases via native Trigger but no true RBAC",
+    "TC18": "PARTIAL independent physical SQL and GET HTML/API, no actual approval browser action"
+  },
+  "original_frozen_benchmark": {
+    "total": 18,
+    "complete_pass": 0,
+    "unchanged": true
+  },
+  "limitations": [
+    "No actual authenticated approvers; roles are asserted strings passed through privileged CLI",
+    "Strict input parsing is research JS extension before native insertion, not Saltcorn form constraints",
+    "amount_decimal is TEXT and amount_minor Integer: not exact declared SQL decimal(12,2)",
+    "Atomicity of each action depends on explicit CLI BEGIN IMMEDIATE not proved for native HTTP path",
+    "No real LLM Agent, AI-generated tools/Trigger code, browser approval, plugin authorization or multitenant isolation",
+    "Native JS code action executes privileged logic: must not expose unrestricted to an AI Agent",
+    "Successful independent 35 tests do not mean 18 frozen full contract acceptance tasks passed"
+  ],
+  "G1": "NOT_PASSED",
+  "phase": "S1"
+}

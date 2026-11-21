@@ -53,3 +53,7 @@ R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C
 ## 2026-11-21 H03 正向写入协议实验
 
 GitHub [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) 真实 Saltcorn SQLite + Chromium + 统一研究 HTTP 接口：**G01—G22 22/22**（鉴权/CSRF、422、409、内容指纹、跨应用拒绝、重放幂等、两独立 HTTP 并发、故障回滚、审计）及 **D01—D04 4/4**（Saltcorn 原生 Field.update 绕过研究账本，网关实际识别漂移并失败关闭），最后 Saltcorn REST/HTML 重启可用。原始 Artifact 14695407749。仅证明研究接口内的受控写入，不等于生产级原生设计器改造、真实 LLM Agent 或原合同业务全面验收；G1 仍未通过。证据见 [报告 20](20-governed-http-evidence.md)。
+
+## 2026-11-21：Saltcorn 原生业务 Trigger 首次完整金额/审批轨迹
+
+[Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097) 已对冻结 spec.json 的 12 金额输入、12 状态迁移在真实 Saltcorn Table.insertRow/Validate/Insert Trigger/run_js_code 上执行，对三条持续状态路线完成独立物理 SQLite 验收，并核对原生 REST 和 List View。**35/35 断言符合预期**。其中 WF05 证实金额物理列是 TEXT 并非冻结 decimal(12,2)，属于负面差异证据。研究 CLI 强制 SQL 事务，不代表 Saltcorn 原生 HTTP 动作的默认原子性。模拟审批角色是调用方声明字段，不是真实用户身份。没有模型 Agent、浏览器审批提交，完整 TC 仍 0/18。详见 [报告 21](21-saltcorn-native-workflow-evidence.md)、[源码](../../experiments/platform-saltcorn/workflow/README.md)。

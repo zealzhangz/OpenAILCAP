@@ -117,3 +117,7 @@ H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑
 [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44874668928) 确认真正 Saltcorn SQLite 中两类**自愿接入研究网关**的编辑客户端（自建 Chromium 页面、确定性模拟 Agent HTTP）能够共用原子 revision/内容指纹/幂等与实验审计：旧 Web 表单、旧 Agent 均得到 409，非冲突修改保留，并发同资源一胜一拒，错误注入无部分提交。**D01—D04 负对照**：Saltcorn 自身 Field.update 能绕过研究网关，但内容指纹漂移会触发网关失败关闭，避免继续用旧账本误写。
 
 这为“受治理领域命令接口”提供**有限正向可行性证据**，并不证明“所有人工/Agent/插件实际写入口已统一”；网关页面是研究 UI，非原生 Saltcorn 编辑器；模拟 Agent 不是模型。**H03 平台级及真实 AI/人工交替目标仍未通过**，H01 的 Application IR vs 分域模型没有因本实验得到最终结论。G1 未通过。完整 [源码/报告](../01-research/20-governed-http-evidence.md)。
+
+## 2026-11-21 H02/H04/H05 相关的原生业务 Trigger 实证
+
+[真实 Saltcorn 冻结合同审批运行报告](../01-research/21-saltcorn-native-workflow-evidence.md)、[Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097)：3 条真正 Pack 导入的 Validate/Insert run_js_code Trigger，12 项金额规则、12 项状态机、3 条连续审批路径均通过独立物理 SQL 与运行时 API 验证，说明**低代码元数据可以与代码扩展组合实现复杂业务**。这为“配置/代码混合执行模型”提供了真实机制证据，**没有验证 AI 能识别能力缺口并选择写代码**；没有编译隔离/代码自动生成/工具权限/插件发现，故 H02/H04/H05 的 AI 目标都未通过。可伪造 actor_role 是重大身份授权缺口；内置 run_js_code 是平台高权限脚本，不能直接给不受信 Agent。G1 未通过。
