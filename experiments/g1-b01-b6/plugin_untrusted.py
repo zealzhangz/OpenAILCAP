@@ -20,6 +20,15 @@ def try_open_rw(name):
         return "DENIED"
 
 
+def try_open_read(name):
+    try:
+        fd=os.open(name,os.O_RDONLY)
+        os.close(fd)
+        return "OPENED"
+    except (OSError,ValueError):
+        return "DENIED"
+
+
 def try_host_db(name):
     try:
         con=sqlite3.connect("file:"+name+"?mode=rw",uri=True,timeout=0.2)
@@ -64,7 +73,8 @@ def main():
         "dockerSocket":try_socket("/var/run/docker.sock"),
         "hostSqliteRwConnect":try_host_db(db),
         "hostDbFileWrite":try_open_rw(db),
-        "hostSentinelRead":try_open_rw(sentinel),
+        "hostDbFileRead":try_open_read(db),
+        "hostSentinelRead":try_open_read(sentinel),
         "containerPluginFileWrite":try_open_rw("/workspace/plugin_untrusted.py"),
         "internetTcp":try_outbound(),
         "hostSecretInherited":bool(os.getenv("S1_B6_HOST_SENTINEL")),
