@@ -635,26 +635,23 @@ def main():
                           native2obj["oracle"]["businessRows"][0]["status"]==
                           "Approved",
                           {"twoDerivedDatabasesSameBusinessState":True})
-                    dac=run(["sudo","-n","runuser","-u",SALT,"--",
-                        sys.executable,"-c",
-                        "import sys;from pathlib import Path;"
-                        "raise SystemExit(0 if all("
-                        "not Path(p).exists() or not Path(p).open('rb') "
-                        "for p in []) else 3)",
-                        ],cwd=stage,ok=False)
-                    # Check explicit O_RDONLY attempts, not only os.path.exists.
+                    # Actual OS open(2) attempt, not just os.access metadata.
                     probe_script=(
-                        "import sys,os; "
-                        "targets=sys.argv[1:]; "
-                        "ok=all(not os.access(p,os.R_OK) for p in targets); "
-                        "raise SystemExit(0 if ok else 3)"
+                        "import sys,os\n"
+                        "for path in sys.argv[1:]:\n"
+                        " try:\n"
+                        "  fd=os.open(path,os.O_RDONLY)\n"
+                        "  os.close(fd)\n"
+                        "  raise SystemExit(3)\n"
+                        " except PermissionError:\n"
+                        "  pass\n"
+                        "raise SystemExit(0)\n"
                     )
                     native_probe=run(["sudo","-n","runuser","-u",SALT,
                         "--",sys.executable,"-c",probe_script,
                         auth_db,auth_cfg],cwd=stage,ok=False)
                     check("B11-55-native-UID-cannot-read-authority-SQLite-or-token",
-                          native_probe.returncode==0 and
-                          dac.returncode==0,
+                          native_probe.returncode==0,
                           {"authoritySqliteRead":"DENIED",
                            "authorityConfigRead":"DENIED",
                            "projectionTokenNotPassedToNative":True})
