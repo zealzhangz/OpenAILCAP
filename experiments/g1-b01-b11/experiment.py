@@ -888,11 +888,13 @@ def main():
                           {"releases":2,"latestDraft":5,"published":1,
                            "authorityContractStatus":"Approved",
                            "appBunchanged":True})
-                    check("B11-43-genuine-native-v1-v2-database-business-rows-are-fixtures",
+                    check("B11-43-genuine-native-v1-v2-business-row-matches-B2-recordId",
                           v1native["oracle"]["businessRows"][0]["title"]==
                           v2native_columns_title(native2obj) and
                           v1native["oracle"]["businessRows"][0]["title"]==
-                          full["app-a"]["records"][0]["value"]["title"],
+                          next(r["value"]["title"]
+                               for r in full["app-a"]["records"]
+                               if r["id"]==record),
                           {"nativeDataFromB2Outbox":True,
                            "notFromIndependentSeed":True})
                     check("B11-44-no-false-production-zero-downtime-or-workflow-parity",
