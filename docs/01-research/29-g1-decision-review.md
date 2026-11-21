@@ -165,3 +165,5 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **候选架构与下一 P0**：不继续以“给 `/field` 加一个临时签名检查”当作完整安全方案。优先 B9 对照**由独立 Domain Schema + Manifest Kernel 单独拥有权威数据库，Saltcorn 仅可编辑可删除的派生副本**；在该场景以真实 Saltcorn Native Web/CLI/Pack 再次试图攻击，必须证明**权威 Kernel 的 Manifest/receipt/audit 完全不变**、派生 Runtime 可丢弃重建且发布后重放一致。成熟平台复用仍可作为 UI/runtime，前提是权威写边界确实强制隔离。另一个候选是深改 Saltcorn 上游 Field/Pack/CLI 的全部写入 Hook，但当前未做等效覆盖证据与维护成本量化，不能声明已经可行。
 
 正式判定继续：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。
+
+undefined
