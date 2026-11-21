@@ -1,0 +1,121 @@
+name: S1 Shared Governed HTTP Editing Gateway (research only)
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-governed-gateway.yml'
+      - 'experiments/platform-saltcorn/governed/**'
+  pull_request:
+    paths:
+      - '.github/workflows/s1-governed-gateway.yml'
+      - 'experiments/platform-saltcorn/governed/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  localhost-gateway-on-real-saltcorn-db:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install tested Saltcorn and real Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+          python3 -m py_compile experiments/platform-saltcorn/governed/gateway.py experiments/platform-saltcorn/governed/acceptance.py
+      - name: Initialize native low-code SQLite test fixture and isolated credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-governed.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          export S1_HUMAN_PASSWORD="$(openssl rand -hex 32)"
+          export S1_AGENT_TOKEN="$(openssl rand -hex 32)"
+          export S1_READ_TOKEN="$(openssl rand -hex 32)"
+          echo "::add-mask::$SALTCORN_SESSION_SECRET"
+          echo "::add-mask::$S1_HUMAN_PASSWORD"
+          echo "::add-mask::$S1_AGENT_TOKEN"
+          echo "::add-mask::$S1_READ_TOKEN"
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$SALTCORN_SESSION_SECRET" >> "$GITHUB_ENV"
+          echo "S1_HUMAN_PASSWORD=$S1_HUMAN_PASSWORD" >> "$GITHUB_ENV"
+          echo "S1_AGENT_TOKEN=$S1_AGENT_TOKEN" >> "$GITHUB_ENV"
+          echo "S1_READ_TOKEN=$S1_READ_TOKEN" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          echo "S1_TEST_MODE=1" >> "$GITHUB_ENV"
+          timeout 120s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f experiments/platform-saltcorn/contract-pack.json
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/seed-contract.js
+          test -s "$SQLITE_FILEPATH"
+      - name: Start localhost-only governed HTTP adapter over REAL Saltcorn metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u experiments/platform-saltcorn/governed/gateway.py \
+            --db "$SQLITE_FILEPATH" --port 3200 > "$RUNNER_TEMP/governed.log" 2>&1 &
+          ready=0
+          for i in $(seq 1 50); do
+            if curl -fsS --max-time 3 http://127.0.0.1:3200/health | grep -q '"status": "OK"'; then
+              ready=1; break
+            fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then
+            tail -n 60 "$RUNNER_TEMP/governed.log"
+            exit 1
+          fi
+      - name: Real Chromium UI plus bearer-agent HTTP acceptance (auth, 409, CAS, rollback)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/platform-saltcorn/governed/acceptance.py --phase main \
+            --db "$SQLITE_FILEPATH" --output /tmp/s1-governed-main.json
+      - name: Negative - actual Saltcorn native Field.update bypasses adapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/governed/native-out-of-band.js \
+            > "$RUNNER_TEMP/native-bypass.log" 2>&1
+          grep '^S1_NATIVE_BYPASS|' "$RUNNER_TEMP/native-bypass.log"
+          python3 experiments/platform-saltcorn/governed/acceptance.py --phase drift \
+            --db "$SQLITE_FILEPATH" --output /tmp/s1-governed-drift.json
+      - name: Reopen native Saltcorn runtime and check actual HTTP app view/API
+        shell: bash
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/saltcorn-final.log" 2>&1 &
+          ready=0
+          for i in $(seq 1 80); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ready=1;break;fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then tail -n 75 "$RUNNER_TEMP/saltcorn-final.log"; exit 1; fi
+          python3 - <<'PY'
+          import json
+          from urllib.request import urlopen
+          base="http://127.0.0.1:3100"
+          with urlopen(base+"/api/s1_contracts/",timeout=15) as r:
+              data=json.load(r)
+              assert r.status==200 and any(x.get("contract_no")=="HT-2026-000001" for x in data["success"])
+          with urlopen(base+"/view/s1_contract_list",timeout=15) as r:
+              body=r.read().decode()
+              assert r.status==200 and "HT-2026-000001" in body
+          print("NATIVE_SALTCORN_REOPEN_REST_AND_HTML_PASS")
+          PY
+      - name: Upload scrubbed machine-readable evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-governed-http-shared-editing
+          path: |
+            /tmp/s1-governed-main.json
+            /tmp/s1-governed-drift.json
+          if-no-files-found: warn
