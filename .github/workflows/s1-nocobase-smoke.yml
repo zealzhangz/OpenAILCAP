@@ -1,0 +1,50 @@
+name: S1 NocoBase v3 isolated install feasibility
+on:
+  push:
+    paths:
+      - ".github/workflows/s1-nocobase-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  official-cli-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.11.0'
+          run_install: false
+      - name: Create isolated research app using NocoBase official CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/platform-study"
+          cd "$RUNNER_TEMP/platform-study"
+          node --version
+          pnpm --version
+          timeout 420s env PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 \
+            npm_config_registry=https://npm.nocobase.ai \
+            pnpm create @nocobase/app contract-probe --json >create.log 2>&1 || {
+              echo "Third-party installation failed; diagnostic excerpt:"
+              tail -n 80 create.log | sed -E 's/(token|password|secret|authorization)([=: ]+)[^[:space:]]+/\1\2[REDACTED]/Ig'
+              exit 1
+            }
+          test -f contract-probe/package.json
+          node -e 'const x=require("./contract-probe/package.json");console.log(JSON.stringify({created:true,name:x.name,version:x.version??null}))'
+          cd contract-probe
+          timeout 120s pnpm nocobase config init --dialect sqlite --json >config.log 2>&1
+          timeout 120s pnpm nocobase config check --no-connect --json >check.log 2>&1
+          timeout 120s pnpm nocobase commands --json >commands.log 2>&1
+          node -e 'const fs=require("fs");const p=require("./package.json");fs.writeFileSync("/tmp/s1-platform-result.json",JSON.stringify({study:"NocoBase-v3-official-cli",scope:"third-party research-only install and offline config check",created:true,commands:["create-app","config-init-sqlite","config-check-offline","commands-json"],package:p.name??null,version:p.version??null,commit:process.env.GITHUB_SHA},null,2))'
+      - name: Upload bounded smoke-test observation
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nocobase-v3-official-cli-smoke
+          path: /tmp/s1-platform-result.json
+          if-no-files-found: warn
