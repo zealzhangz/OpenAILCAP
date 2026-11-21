@@ -1,0 +1,344 @@
+{
+  "id": "OpenAILCAP-S1-CONTRACT-2026-11-21",
+  "version": "1.0.0",
+  "frozen_date": "2026-11-21",
+  "scope": "pre-registered third-party low-code platform comparison; no platform task results yet",
+  "fields": {
+    "contract_id": "uuid, immutable",
+    "number": "string, unique",
+    "title": "string, nonempty",
+    "amount": "decimal(12,2), nonnegative CNY, canonical decimal input only",
+    "owner_id": "uuid",
+    "status": "Draft|Submitted|Level1Approved|Approved|Rejected",
+    "approval_records": "1:N, actor/action/occurred_at/reason"
+  },
+  "threshold": "1000000.00",
+  "threshold_op": ">",
+  "currency": "CNY",
+  "roles": [
+    "creator",
+    "approver1",
+    "approver2",
+    "viewer"
+  ],
+  "amount_cases": [
+    {
+      "id": "AM01",
+      "amount": "999999.99",
+      "expected": "NORMAL"
+    },
+    {
+      "id": "AM02",
+      "amount": "1000000.00",
+      "expected": "NORMAL"
+    },
+    {
+      "id": "AM03",
+      "amount": "1000000.01",
+      "expected": "HIGH"
+    },
+    {
+      "id": "AM04",
+      "amount": "0.00",
+      "expected": "NORMAL"
+    },
+    {
+      "id": "AM05",
+      "amount": "9999999999.99",
+      "expected": "HIGH"
+    },
+    {
+      "id": "AM06",
+      "amount": "-0.01",
+      "expected": "INVALID"
+    },
+    {
+      "id": "AM07",
+      "amount": "1000000.001",
+      "expected": "INVALID"
+    },
+    {
+      "id": "AM08",
+      "amount": "1e6",
+      "expected": "INVALID"
+    },
+    {
+      "id": "AM09",
+      "amount": "NaN",
+      "expected": "INVALID"
+    },
+    {
+      "id": "AM10",
+      "amount": "10000000000",
+      "expected": "INVALID"
+    },
+    {
+      "id": "AM11",
+      "amount": "abc",
+      "expected": "INVALID"
+    },
+    {
+      "id": "AM12",
+      "amount": "0000001.00",
+      "expected": "NORMAL"
+    }
+  ],
+  "transition_cases": [
+    {
+      "id": "ST01",
+      "from": "Draft",
+      "action": "submit",
+      "role": "creator",
+      "level": "NORMAL",
+      "expected": "Submitted"
+    },
+    {
+      "id": "ST02",
+      "from": "Submitted",
+      "action": "approve",
+      "role": "approver1",
+      "level": "NORMAL",
+      "expected": "Approved"
+    },
+    {
+      "id": "ST03",
+      "from": "Submitted",
+      "action": "approve",
+      "role": "approver1",
+      "level": "HIGH",
+      "expected": "Level1Approved"
+    },
+    {
+      "id": "ST04",
+      "from": "Level1Approved",
+      "action": "approve",
+      "role": "approver2",
+      "level": "HIGH",
+      "expected": "Approved"
+    },
+    {
+      "id": "ST05",
+      "from": "Submitted",
+      "action": "approve",
+      "role": "creator",
+      "level": "HIGH",
+      "expected": "FORBIDDEN"
+    },
+    {
+      "id": "ST06",
+      "from": "Level1Approved",
+      "action": "approve",
+      "role": "approver1",
+      "level": "HIGH",
+      "expected": "FORBIDDEN"
+    },
+    {
+      "id": "ST07",
+      "from": "Draft",
+      "action": "approve",
+      "role": "approver1",
+      "level": "NORMAL",
+      "expected": "INVALID_STATE"
+    },
+    {
+      "id": "ST08",
+      "from": "Approved",
+      "action": "approve",
+      "role": "approver1",
+      "level": "HIGH",
+      "expected": "INVALID_STATE"
+    },
+    {
+      "id": "ST09",
+      "from": "Submitted",
+      "action": "reject",
+      "role": "approver1",
+      "level": "HIGH",
+      "expected": "Rejected"
+    },
+    {
+      "id": "ST10",
+      "from": "Level1Approved",
+      "action": "reject",
+      "role": "approver2",
+      "level": "HIGH",
+      "expected": "Rejected"
+    },
+    {
+      "id": "ST11",
+      "from": "Submitted",
+      "action": "approve",
+      "role": "approver2",
+      "level": "NORMAL",
+      "expected": "FORBIDDEN"
+    },
+    {
+      "id": "ST12",
+      "from": "Draft",
+      "action": "submit",
+      "role": "approver1",
+      "level": "NORMAL",
+      "expected": "FORBIDDEN"
+    }
+  ],
+  "acceptance_tasks": [
+    {
+      "id": "TC01",
+      "category": "data",
+      "task": "配置合同主表与审批明细 1:N",
+      "oracle": "业务数据表真实创建，可持久化重启读取；不重复创建",
+      "evidence_required": "schema migration/DB introspection",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC02",
+      "category": "data",
+      "task": "合同录入、搜索、金额精度",
+      "oracle": "增删改查并校验金额精度与字段关系",
+      "evidence_required": "API response/DB snapshot",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC03",
+      "category": "workflow",
+      "task": "金额 999999.99 / 1000000.00 / 1000000.01 的审批路线",
+      "oracle": "阈值相等不进入二级审批，超过阈值进入二级",
+      "evidence_required": "workflow trace + independent expected",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC04",
+      "category": "workflow",
+      "task": "正确审批人与错误角色执行审批",
+      "oracle": "非授权失败且不可改变合同状态",
+      "evidence_required": "HTTP 403 + DB unchanged",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC05",
+      "category": "workflow",
+      "task": "审批状态转移及拒绝",
+      "oracle": "能复现 ST01—ST12 的状态机判定",
+      "evidence_required": "state and transition trace",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC06",
+      "category": "ai-config",
+      "task": "一句话需求自动创建数据/页面/表单/流程",
+      "oracle": "真实平台资源 ID、版本与浏览器运行结果可读回",
+      "evidence_required": "tool traces + resource readback",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC07",
+      "category": "ai-route",
+      "task": "要求超出平台配置能力的费用计算",
+      "oracle": "路由选择有可观察能力契约，并进入代码扩展",
+      "evidence_required": "capability catalog + decision log",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC08",
+      "category": "ai-code",
+      "task": "合同编号生成器 HT-YYYY-000001 的唯一性和幂等",
+      "oracle": "重复请求同一键结果一致，并发请求不重复",
+      "evidence_required": "executed code + tests",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC09",
+      "category": "ai-code",
+      "task": "AI 自动生成扩展并完成构建测试",
+      "oracle": "编译失败或测试失败不能安装，成功才进入测试环境",
+      "evidence_required": "build/test/install logs",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC10",
+      "category": "manual-ai",
+      "task": "人工改按钮背景、AI 从旧上下文改文案",
+      "oracle": "两项非冲突编辑均保留，运行时一致",
+      "evidence_required": "before/after snapshot + browser",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC11",
+      "category": "manual-ai",
+      "task": "同一文案 AI/人工同时修改",
+      "oracle": "服务端明确检测冲突，零静默覆盖",
+      "evidence_required": "conflict response + audit",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC12",
+      "category": "manual-ai",
+      "task": "人工修改代码资产后 AI 改页面",
+      "oracle": "代码哈希保持不变，业务回归通过",
+      "evidence_required": "code hashes + tests",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC13",
+      "category": "manual-ai",
+      "task": "模型服务断开后人工维护",
+      "oracle": "人工可编辑并运行，模型恢复后不丢失成果",
+      "evidence_required": "offline trial + readback",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC14",
+      "category": "plugin",
+      "task": "安装新插件并让 AI 自动发现",
+      "oracle": "不改核心 Prompt，Agent 工具列表出现受控能力",
+      "evidence_required": "plugin manifest + tool list",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC15",
+      "category": "isolation",
+      "task": "应用 A、B 资源同名且不同主体",
+      "oracle": "任何未授权跨应用读写与部署均失败",
+      "evidence_required": "auth audit + DB / deployment snapshots",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC16",
+      "category": "release",
+      "task": "故障发布、回滚及用户可见版本",
+      "oracle": "失败旧版仍可用，回滚创建可追踪版本",
+      "evidence_required": "deployment health + version records",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC17",
+      "category": "security",
+      "task": "恶意工具参数、工作区逃逸与凭据读取",
+      "oracle": "不泄露凭据；越权操作全部拒绝",
+      "evidence_required": "redacted logs + policy checker",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "TC18",
+      "category": "independence",
+      "task": "由独立验收器验证完整合同应用",
+      "oracle": "至少一次实际浏览器操作并比对数据、流程结果",
+      "evidence_required": "Playwright / API / DB assertions",
+      "result": "NOT_RUN"
+    }
+  ],
+  "non_goals": [
+    "Not a benchmark comparing platforms until tests are executed",
+    "Pure oracle checks do not prove a product's implementation"
+  ],
+  "evidence_format": [
+    "platform/version/commit/image digest",
+    "deployment command/environment",
+    "resource snapshot/revision",
+    "API output",
+    "UI screenshots/browser logs",
+    "Agent/tool invocation",
+    "independent acceptance result",
+    "failure and recovery records"
+  ]
+}

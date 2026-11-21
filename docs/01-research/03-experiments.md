@@ -33,3 +33,7 @@ R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C
 ## 2026-11-21 SQLite 持久化实验回填
 
 新增了独立的 [SQLite 文件数据库与事务测试](../../experiments/sqlite-roundtrip/README.md)：23 项独立测试全部通过，覆盖并发写事务、异常退出后恢复、乐观冲突、重复命令、版本回退以及模拟的 app_id/ACL 拒绝。它不是平台级实验；真实用户认证、Agent 编码执行、部署及第三方平台安装尚未执行。G1/G3 未通过。参考 [研究报告](07-persistence-and-license.md)。
+
+## 2026-11-21：正式业务场景基准预注册
+
+为后续真实平台和自研平台的同条件实验固定了 [合同业务规范](../../experiments/contract-benchmark/spec.json)：12 项金额边界、12 项审批转移预期和 18 项平台级验收任务。Oracle 仅校验规范一致性，所有平台任务现为 NOT_RUN。参见 [验收协议](10-contract-benchmark.md)。真实平台安装被 NocoBase v3 默认模板仓库 E530 阻断，没有新增平台级通过项。

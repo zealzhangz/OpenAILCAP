@@ -69,3 +69,11 @@
 ## E14 — OpenAILCAP SQLite 文件数据库试验（S0，范围受限）
 
 [实验代码与 23 项测试](../../experiments/sqlite-roundtrip/README.md) 在 Python 3.13.5 / SQLite 3.46.1 实际运行，文件持久化、事务回滚、另起进程不提交退出、模拟 A/B 应用分区等 23/23 通过。[结果 JSON](../../experiments/sqlite-roundtrip/results.json) 与 [原始测试日志](../../experiments/sqlite-roundtrip/test-output.txt) 同库保存。没有真正鉴权、平台运行时和 AI Agent；不得把逻辑隔离测试误认为生产安全验证。详见 [深度报告](07-persistence-and-license.md)。
+
+## E15 — 四平台功能证据矩阵（S1/S2）
+
+新增 [22 项静态源码与官方文档能力对照](09-capability-matrix.md)（[JSON](capability-matrix.json)），覆盖 ToolJet、Appsmith、Budibase、NocoBase v3。Appsmith [widget registry](https://github.com/appsmithorg/appsmith/blob/0a6f6934fb33c06ee0a132c5baba78e006611621/app/client/src/widgets/registry.ts)、[NewPage unpublished/published 对象](https://github.com/appsmithorg/appsmith/blob/0a6f6934fb33c06ee0a132c5baba78e006611621/app/server/appsmith-server/src/main/java/com/appsmith/server/domains/NewPage.java)，Budibase [Automation actions](https://github.com/Budibase/budibase/blob/724cb529d7b32fde84ae537e4b44673cf0618dad/packages/server/src/automations/actions.ts) 均为具体源码线索。无产品级能力测试 PASS。
+
+## E16 — NocoBase v3 官方创建器真实失败（S0：安装前置实验）
+
+[GitHub Actions Run #44868550471](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44868550471)，Node24.22.3、pnpm11.11.0 成功，但 `npm.nocobase.ai/@nocobase/app-template-default` 返回 npm E530，创建器报 `TEMPLATE_DOWNLOAD_FAILED`，projectCreated=false。后续安装/业务测试没有执行。详见 [原始错误与分析](11-installation-trial.md)。

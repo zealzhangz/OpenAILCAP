@@ -44,3 +44,10 @@ WP2 已完成 ToolJet MCP Code mode 文件写入保护的首条源码调用链�
 ## 2026-11-21 第二次推进
 
 WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控制器/服务为 stub，EE 子模块实际源码无法在本次取得；同时追踪了常规 AppVersion 持久化对象。NocoBase 方面读取插件定义、Agent Runner 的隔离/策略、凭据管理和 LICENSE.txt。WP5 已在真实 SQLite 文件数据库上执行 23 项回归与故障注入测试。见 [综合报告](07-persistence-and-license.md) 与 [实验代码](../../experiments/sqlite-roundtrip/README.md)。未完成真实第三方平台安装和场景复现，G1 尚未通过。
+
+## 2026-11-21：统一对照与安装可行性验证
+
+1. 已形成 [22 项能力证据分级矩阵](09-capability-matrix.md)，逐平台区分 SRC/DOC/BND/UNK，并保留固定 SHA 与源码入口。
+2. 以 [合同基准](10-contract-benchmark.md) 冻结 12 项金额规则、12 项审批状态机及 18 项真实平台验收任务；这些任务尚未在平台执行。
+3. 以 [GitHub Actions #44868550471](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44868550471) 实际尝试 NocoBase v3 官方 CLI 安装：Node24/pnpm11 成功，下载 app-template-default 时返回 E530/TEMPLATE_DOWNLOAD_FAILED。**属于安装阻断，不是业务用例失败**。
+4. [G1 中期复审](12-g1-gap-review.md) 继续限定为 S1 受控研究，不进入正式 S2。

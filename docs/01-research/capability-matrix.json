@@ -1,0 +1,783 @@
+{
+  "title": "OpenAILCAP S1 four-platform capability evidence matrix",
+  "as_of": "2026-11-21",
+  "status_legend": {
+    "SRC": "已静态核查相关源码/测试位置；非完整功能验收",
+    "DOC": "仅官方文档声明/描述；未执行验证",
+    "BND": "相关源码、版本或许可受制于 EE/闭源/边界，不能当作社区版可复用能力",
+    "UNK": "目前证据不足，不表示不存在"
+  },
+  "source_versions": {
+    "ToolJet/ToolJet": "d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0",
+    "ToolJet/tooljet-mcp": "8a178ad34f6e3326b6957503ca4ed4f555d23096",
+    "appsmithorg/appsmith": "0a6f6934fb33c06ee0a132c5baba78e006611621",
+    "Budibase/budibase": "724cb529d7b32fde84ae537e4b44673cf0618dad",
+    "nocobase/nocobase": "0894734040c3d30d4f4f3d7a6da98ae22f365f80"
+  },
+  "evidence_catalog": {
+    "TJ-page": "https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/server/src/modules/apps/services/page.service.ts",
+    "TJ-event": "https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/server/src/modules/apps/services/event.service.ts",
+    "TJ-version": "https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/server/src/modules/versions/repository.ts",
+    "TJ-codeCE": "https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/server/src/modules/code-mode-source/service.ts",
+    "TJ-plan": "https://github.com/ToolJet/tooljet-mcp/blob/8a178ad34f6e3326b6957503ca4ed4f555d23096/src/appPlanSchema.ts",
+    "TJ-sync": "https://github.com/ToolJet/tooljet-mcp/blob/8a178ad34f6e3326b6957503ca4ed4f555d23096/tests/codeAppSync.test.ts",
+    "TJ-isolation": "https://github.com/ToolJet/tooljet-mcp/blob/8a178ad34f6e3326b6957503ca4ed4f555d23096/tests/codeAppIsolation.test.ts",
+    "TJ-license": "https://github.com/ToolJet/ToolJet/blob/d2f09ed9ab6c6cf289abfc8aa7ee77c1264aaeb0/LICENSE",
+    "TJ-ai-doc": "https://docs.tooljet.ai/docs/build-with-ai/generate-applications/",
+    "AS-widget": "https://github.com/appsmithorg/appsmith/blob/0a6f6934fb33c06ee0a132c5baba78e006611621/app/client/src/widgets/registry.ts",
+    "AS-app": "https://github.com/appsmithorg/appsmith/blob/0a6f6934fb33c06ee0a132c5baba78e006611621/app/server/appsmith-server/src/main/java/com/appsmith/server/applications/base/ApplicationServiceCEImpl.java",
+    "AS-page": "https://github.com/appsmithorg/appsmith/blob/0a6f6934fb33c06ee0a132c5baba78e006611621/app/server/appsmith-server/src/main/java/com/appsmith/server/domains/NewPage.java",
+    "AS-plugin": "https://github.com/appsmithorg/appsmith/tree/0a6f6934fb33c06ee0a132c5baba78e006611621/app/server/appsmith-plugins",
+    "AS-license": "https://github.com/appsmithorg/appsmith/blob/0a6f6934fb33c06ee0a132c5baba78e006611621/LICENSE",
+    "AS-ai-doc": "https://docs.appsmith.com/build-apps/how-to-guides/use-ask-ai",
+    "AS-js-doc": "https://docs.appsmith.com/write-code/overview",
+    "BD-bind": "https://github.com/Budibase/budibase/blob/724cb529d7b32fde84ae537e4b44673cf0618dad/packages/builder/src/dataBinding.ts",
+    "BD-autom": "https://github.com/Budibase/budibase/blob/724cb529d7b32fde84ae537e4b44673cf0618dad/packages/server/src/automations/actions.ts",
+    "BD-license": "https://github.com/Budibase/budibase/blob/724cb529d7b32fde84ae537e4b44673cf0618dad/LICENSE",
+    "BD-agent-doc": "https://docs.budibase.com/docs/agent-building-101",
+    "BD-install-doc": "https://docs.budibase.com/docs/docker-compose",
+    "NB-define": "https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/packages/app/app-server/src/plugins/define.ts",
+    "NB-agent": "https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/packages/plugins/app-plugin-agents/server/plugin.ts",
+    "NB-runner": "https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/packages/app/agent-runner/src/core/job-worker.ts",
+    "NB-isol": "https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/packages/app/agent-runner/src/core/isolation.ts",
+    "NB-license": "https://github.com/nocobase/nocobase/blob/0894734040c3d30d4f4f3d7a6da98ae22f365f80/LICENSE.txt",
+    "NB-core-doc": "https://docs.nocobase.com/core/getting-started/what-is-core/",
+    "NB-workflow-doc": "https://docs.nocobase.com/core/developing-apps/business-workflows/",
+    "NB-cli-doc": "https://docs.nocobase.com/core/reference/cli/",
+    "NB-approval-doc": "https://docs.nocobase.com/core/using-plugins/collaboration/approval/"
+  },
+  "items": [
+    {
+      "id": "F01",
+      "capability": "多应用创建与管理",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-version"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-app"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "BD-agent-doc"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "不能用多应用实体存在推定进程或租户强隔离"
+    },
+    {
+      "id": "F02",
+      "capability": "业务数据与数据模型",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-plugin"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-bind"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "Appsmith 主要通过外部数据源和查询，不等于原生业务建模"
+    },
+    {
+      "id": "F03",
+      "capability": "页面与组件配置",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-page"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-widget"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-bind"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "NocoBase v3 Core 主要代码交付，不能混同 v2 无代码设计器"
+    },
+    {
+      "id": "F04",
+      "capability": "表单和数据绑定",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-page"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-widget"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-bind"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "仅核对入口，尚未运行表单业务"
+    },
+    {
+      "id": "F05",
+      "capability": "工作流/审批",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-event"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "AS-js-doc"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-autom"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-workflow-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "事件≠完整审批引擎；多级审批必须单独验证"
+    },
+    {
+      "id": "F06",
+      "capability": "API/数据源连接",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-plugin"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-autom"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "须区分平台调用外部 API 与生成新 API"
+    },
+    {
+      "id": "F07",
+      "capability": "权限模型",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-version"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-app"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "BD-agent-doc"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "存在鉴权相关模块≠所有业务权限正确"
+    },
+    {
+      "id": "F08",
+      "capability": "人工可视化/代码开发",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-page"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-widget"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-bind"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "NocoBase v3 非 v2 UI DSL，人工代码开发可通过 Core 完成"
+    },
+    {
+      "id": "F09",
+      "capability": "自定义代码与扩展点",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-codeCE"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "AS-js-doc"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-autom"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-define"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "ToolJet Code Mode 的公开 CE 实现是 stub，EE 不能用 CE 代码证明"
+    },
+    {
+      "id": "F10",
+      "capability": "插件注册及扩展",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "TJ-ai-doc"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-plugin"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "BD-autom"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-define"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "Appsmith plugin 主要为数据连接器，不能等同通用应用插件"
+    },
+    {
+      "id": "F11",
+      "capability": "版本/发布/回滚",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-version"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-page"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-cli-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "草稿/发布字段不证明任意资源支持无损回滚"
+    },
+    {
+      "id": "F12",
+      "capability": "AI 自然语言理解/辅助",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "TJ-ai-doc"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "AS-ai-doc"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "BD-agent-doc"
+          ],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-agent"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "业务 Agent/Ask AI 与开发 Agent 不能混为一谈"
+    },
+    {
+      "id": "F13",
+      "capability": "AI 自动创建数据模型",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "无真实任务运行证据"
+    },
+    {
+      "id": "F14",
+      "capability": "AI 自动生成/修改页面",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "ToolJet MCP 计划不能绕过 EE 服务端边界"
+    },
+    {
+      "id": "F15",
+      "capability": "AI 自动编排审批流程",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "没有固定合同业务真实复现"
+    },
+    {
+      "id": "F16",
+      "capability": "AI 自动编码、构建、集成",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-codeCE"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-runner"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "NocoBase Runner 有执行实现线索，但非端到端证明"
+    },
+    {
+      "id": "F17",
+      "capability": "AI 自主测试/修复/部署",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-codeCE"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-runner"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "源码/测试存在不等于失败恢复真实成功"
+    },
+    {
+      "id": "F18",
+      "capability": "AI/人工多轮双向编辑",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-sync"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-core-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "ToolJet MCP 有旧快照覆盖回归用例，未证实实际产品级无损"
+    },
+    {
+      "id": "F19",
+      "capability": "插件能力自动被 AI 发现",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-cli-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "需安装未知插件后不改系统 Prompt 的独立试验"
+    },
+    {
+      "id": "F20",
+      "capability": "多应用安全隔离",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-isolation"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "AS-app"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-isol"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "只核对源码位置；需攻击性越权试验"
+    },
+    {
+      "id": "F21",
+      "capability": "机器可读平台能力契约",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "TJ-plan"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "NB-cli-doc"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "NocoBase CLI commands --json 是入口，但不代表完整 Agent API"
+    },
+    {
+      "id": "F22",
+      "capability": "隔离执行不可信代码",
+      "platforms": {
+        "ToolJet": {
+          "evidence_status": "BND",
+          "evidence_refs": [
+            "TJ-codeCE"
+          ],
+          "runtime_verified": false
+        },
+        "Appsmith": {
+          "evidence_status": "DOC",
+          "evidence_refs": [
+            "AS-js-doc"
+          ],
+          "runtime_verified": false
+        },
+        "Budibase": {
+          "evidence_status": "UNK",
+          "evidence_refs": [],
+          "runtime_verified": false
+        },
+        "NocoBase-v3": {
+          "evidence_status": "SRC",
+          "evidence_refs": [
+            "NB-isol"
+          ],
+          "runtime_verified": false
+        }
+      },
+      "caveat": "NocoBase runner 确定性步骤默认 none、container 未支持；agent tools 另行隔离"
+    }
+  ],
+  "platform_runtime_verified": false,
+  "scope": "第一阶段源码/官方文档证据分级表；未完成同一合同应用的平台级实测"
+}
