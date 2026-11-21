@@ -1,0 +1,120 @@
+name: S1 typed Agent tool broker on real Saltcorn (no LLM unless manually opted in)
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-agent-tools.yml'
+      - 'experiments/agent-tools/**'
+  workflow_dispatch:
+    inputs:
+      live_model:
+        description: 'Call a separately configured real HTTPS LLM provider; requires secret and vars'
+        type: boolean
+        required: false
+        default: false
+permissions:
+  contents: read
+jobs:
+  typed-agent-tool-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Pure stdlib adversarial broker unit tests (NO LLM)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/agent-tools/*.py
+          python3 -m unittest discover -s experiments/agent-tools -p 'test_broker.py' -v
+      - name: Install real Saltcorn 1.7.0 beta.5 and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: Generate actual native Table/Trigger workflow with req.user validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/platform-saltcorn/workflow/generate.py \
+            --base-pack experiments/platform-saltcorn/contract-pack.json \
+            --benchmark experiments/contract-benchmark/spec.json \
+            --trigger-dir experiments/platform-saltcorn/workflow/triggers \
+            --driver-template experiments/platform-saltcorn/workflow/drive-template.js \
+            --pack-out "$RUNNER_TEMP/s1-agent-base-pack.json" \
+            --driver-out "$RUNNER_TEMP/s1-agent-unused-driver.js"
+          python3 experiments/platform-saltcorn/auth/harden_pack.py \
+            --in-pack "$RUNNER_TEMP/s1-agent-base-pack.json" \
+            --validation-code experiments/platform-saltcorn/auth/trusted-validate.js \
+            --out-pack "$RUNNER_TEMP/s1-agent-native-pack.json"
+      - name: Real Saltcorn DB, actual seeded contracts, and four native human users
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-agent-tools.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          export S1_CREATOR_PASSWORD="$(openssl rand -hex 28)"
+          export S1_APPROVER1_PASSWORD="$(openssl rand -hex 28)"
+          export S1_APPROVER2_PASSWORD="$(openssl rand -hex 28)"
+          export S1_VIEWER_PASSWORD="$(openssl rand -hex 28)"
+          for key in SALTCORN_SESSION_SECRET S1_CREATOR_PASSWORD S1_APPROVER1_PASSWORD S1_APPROVER2_PASSWORD S1_VIEWER_PASSWORD; do
+            echo "::add-mask::$(printenv "$key")"
+            echo "$key=$(printenv "$key")" >> "$GITHUB_ENV"
+          done
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 120s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f "$RUNNER_TEMP/s1-agent-native-pack.json"
+          timeout 120s saltcorn run-js -f experiments/agent-tools/seed.js
+          saltcorn create-user --email s1-creator@example.invalid --password "$S1_CREATOR_PASSWORD" >/dev/null
+          saltcorn create-user --email s1-approver1@example.invalid --password "$S1_APPROVER1_PASSWORD" >/dev/null
+          saltcorn create-user --email s1-approver2@example.invalid --password "$S1_APPROVER2_PASSWORD" >/dev/null
+          saltcorn create-user --email s1-viewer@example.invalid --password "$S1_VIEWER_PASSWORD" >/dev/null
+          test -s "$SQLITE_FILEPATH"
+      - name: Start third-party Saltcorn native REST/API server
+        shell: bash
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/s1-agent-native.log" 2>&1 &
+          ready=0
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/auth/login;then ready=1;break;fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then tail -n 65 "$RUNNER_TEMP/s1-agent-native.log"; exit 1; fi
+      - name: Validate typed tools + safe human grant + native workflow + physical SQL
+        shell: bash
+        env:
+          OPENAILCAP_LLM_API_KEY: ${{ secrets.OPENAILCAP_LLM_API_KEY }}
+          OPENAILCAP_LLM_MODEL: ${{ vars.OPENAILCAP_LLM_MODEL }}
+          OPENAILCAP_LLM_CHAT_URL: ${{ vars.OPENAILCAP_LLM_CHAT_URL }}
+          S1_LIVE_MODEL_INPUT: ${{ inputs.live_model }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$S1_LIVE_MODEL_INPUT" == "true" ]]; then
+            echo "S1_LIVE_MODEL_EXPLICIT_OPT_IN"
+            python3 -u experiments/agent-tools/integration.py \
+              --db "$SQLITE_FILEPATH" \
+              --base http://127.0.0.1:3100 \
+              --output /tmp/s1-agent-tools-evidence.json --live-model
+          else
+            echo "S1_REAL_LLM_NOT_RUN -- independent tool and platform checks only"
+            python3 -u experiments/agent-tools/integration.py \
+              --db "$SQLITE_FILEPATH" \
+              --base http://127.0.0.1:3100 \
+              --output /tmp/s1-agent-tools-evidence.json
+          fi
+      - name: Upload redacted independent acceptance evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-agent-tool-broker-acceptance
+          path: /tmp/s1-agent-tools-evidence.json
+          if-no-files-found: warn
