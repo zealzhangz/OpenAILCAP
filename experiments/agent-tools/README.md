@@ -68,3 +68,9 @@ GitHub Models 的旧推理接口**已在 2026-07-30 退役**；不要使用旧�
 这只是 S1 验证基础：应用 ID 固定、角色→邮箱为硬编码研究映射、模型默认未执行；直接模型自定义代码/插件安装/自动创建页面/自动测试修复未实现。真实 Saltcorn API 的事务原子性和重复审批请求幂等尚未验证；只在单机 SQLite 和两个合同上观察，存在状态先读后 POST 的 TOCTOU 风险。**目前不得声称 G1 或冻结 TC06/TC07/TC14/TC17 通过。** 只有原始 CI 成功且全部独立断言通过，才记录实测正向结果。
 
 参考前序：[真实用户身份审批报告 22](../../docs/01-research/22-native-identity-approval-evidence.md)。
+
+## 2026-11-21：调用去重跨重启与未知结果研究
+
+新增 [test_durable.py](test_durable.py) 的 8 项确定性故障注入验证，并在 [broker.py](broker.py) 增加调用前 SQLite `agent_tool_call_claims(call_id PRIMARY KEY)` 持久化占位。以 CLAIMED 记录执行前/后崩溃的未知结果，同一调用 ID 重启后拒绝，账本不可用则拒绝任何变更，未知远端结果不自动重发。正常返回时，调用结果与脱敏 audit 同事务落库。注意其保证的是**研究用同 ID 不重发**，并非业务幂等或跨 Saltcorn/账本的分布式 exactly-once。
+
+[GitHub Actions Run #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363) completed/success，**29/29 stdlib 安全与故障单元 + 29/29 真实 Saltcorn 集成**，原始 Artifact 14698431130。物理合同依然完成提交和两级批准，审批记录 2 条。报告：[24-durable-agent-calls-evidence.md](../../docs/01-research/24-durable-agent-calls-evidence.md)。真实模型仍未运行，G1 未通过。

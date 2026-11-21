@@ -113,3 +113,7 @@
 ## E25 — 受限工具协议的真实 Saltcorn 实证（S0，限域）
 
 [Actions #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333) completed/success，代码 Commit 109dd420e48f2cd545f120ede450c47d5c82917e，Job 136776285247、Artifact 14698057458。**21 个工具对抗性单元测试 + 29 个原生 Saltcorn/Chromium/物理 SQLite 验收**全部通过：manifest 白名单新增只读路由工具，未知系统命令、额外身份参数、权限范围外、跨用户/合同、过期及重复授权被拒；独立授权后经真实 Saltcorn Session+CSRF 的原生 API 完成三次合同状态写入，最终 Approved/2 审批行，工具审计 16 条（10 次拒绝）。**模型推理 NOT_RUN；人工授权由研究控制器模拟，不等于真实签名授权；生产并发/事务、组织 RBAC、应用隔离均未证明。** 见 [报告 23](23-agent-tool-contract-evidence.md)。
+
+## E26 — 进程重启后的调用占位与未知结果 fail-closed（S0 单元故障注入 + Saltcorn 回归）
+
+[报告 24](24-durable-agent-calls-evidence.md)、[GitHub Actions #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363) completed/success，代码 e15b36e845611170ddced1bc739bdd80b994d710。原有工具调用的进程内 set 去重升级为 SQLite PRIMARY KEY 唯一调用账本，先占位 CLAIMED，再调用 Saltcorn；结果未知不自动重发。**29/29 单元**（新增 8 项跨 Broker 重启、已占位崩溃、远端先写后断、账本失效、授权重启失效等）+ **29/29 真实 Saltcorn 集成**成功，Artifact 14698431130。**并非真实 Saltcorn 网络 kill -9，也不证明分布式 exactly-once / 不同 call_id 的业务幂等**。无模型推理、实际人工授权与组织安全证明；G1 NOT_PASSED。

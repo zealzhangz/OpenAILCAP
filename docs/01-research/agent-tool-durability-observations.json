@@ -1,0 +1,109 @@
+{
+  "study": "OpenAILCAP S1 durable call-id fail-closed crash/replay protection research",
+  "date": "2026-11-21",
+  "run": {
+    "id": 44881510363,
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363",
+    "status": "completed",
+    "conclusion": "success",
+    "job_id": 136777608360,
+    "head_sha": "e15b36e845611170ddced1bc739bdd80b994d710",
+    "artifact": {
+      "name": "s1-agent-tool-broker-acceptance",
+      "id": 14698431130
+    }
+  },
+  "checks": {
+    "unit": {
+      "previous": 21,
+      "new_durable": 8,
+      "total": 29,
+      "passed": 29,
+      "stdout": "Ran 29 tests in 0.245s ... OK"
+    },
+    "durable_cases": [
+      {
+        "case": "completed_read_restart",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "completed_mutation_restart",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "crash_claimed_pre_io",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "unknown_remote_after_native_write",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "ledger_unavailable_denies_write",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "duplicate_cross_tool",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "grant_missing_after_restart",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      },
+      {
+        "case": "durable_redacted_audit",
+        "status": "PASS",
+        "scope": "deterministic simulated adapter / SQLite ledger"
+      }
+    ],
+    "real_platform": {
+      "total": 29,
+      "passed": 29,
+      "stdout": "AT_RESULT|{\"total\":29,\"passed\":29}",
+      "actual_platform": "Saltcorn CLI 1.7.0-beta.5, real SQLite, real Chromium login and REST",
+      "native_transitions": [
+        "Draft",
+        "Submitted",
+        "Level1Approved",
+        "Approved"
+      ],
+      "physical_approval_rows": 2,
+      "real_native_post_accepted": 3,
+      "redacted_audit_rows": 16,
+      "rejected_tool_invocations": 10
+    }
+  },
+  "observations": {
+    "durable_claim_table": "agent_tool_call_claims, call_id TEXT PRIMARY KEY",
+    "state_unknown_after_crash": "CLAIMED",
+    "remote_response_missing_after_native_write": "UNKNOWN_REMOTE_OUTCOME",
+    "unknown_outcome_retried_automatically": false,
+    "duplicate_call_id_after_broker_restart_rejected": true,
+    "tool_name_swap_with_same_call_id_rejected": true,
+    "grant_survives_restart": false,
+    "adapter_write_count_after_replay": 1,
+    "ledger_unavailable_write_count": 0
+  },
+  "cannot_claim": [
+    "Exactly once business operation when different call_ids or external writers are involved",
+    "Atomically commit Saltcorn business DB and Broker ledger",
+    "Real Saltcorn process-kill during HTTP POST was tested",
+    "Shared durable ledger survives network partition or HA failover",
+    "Real user clicked a permission grant or signed it",
+    "Real LLM inference / tool selection happened",
+    "Full contract tasks passed G1"
+  ],
+  "model_inference_executed": false,
+  "frozen_contract_tasks_total": 18,
+  "completed_full_tasks": 0,
+  "phase": "S1",
+  "G1": "NOT_PASSED",
+  "evidence_level": "github CI unit fault simulation plus regression integration; detailed raw integration JSON in run artifact"
+}

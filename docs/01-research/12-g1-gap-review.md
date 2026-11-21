@@ -147,3 +147,9 @@
 [报告 23](23-agent-tool-contract-evidence.md)、[Actions #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333) completed/success：21 项独立安全单元 + 29 项实际 Saltcorn 登录/工具/API/真实业务表断言均通过，宿主模拟有约束的短时一次性人工许可后，原生业务流程完成高金额合同两级审批，物理审批行 2 条。此结果支持最小权限 Broker + 原生平台适配器的限域架构方向；同时提示 Token/授权/调用日志当前在本机研究流程中，尚非生产高可用授权。
 
 **G1 仍 NOT_PASSED**：真正 LLM 外部推理与工具自主选择仍 NOT_RUN；授权为可信研究程序模拟，不是真实人的同意；不是组织级 RBAC、多应用严格隔离或安全插件安装；原生 HTTP 跨表事务、并发幂等与人工 Web 审批 UI 未闭环；金额 TEXT ≠ decimal(12,2)，原生 HTTP 400/401 ≠ 冻结 TC04 的 403。原始 18 项合同任务依旧 0/18 完整通过。下一优先为工具调用的崩溃重放/未知结果防护和真实大模型工具选择，对照能力路由与代码扩展。
+
+## 2026-11-21 第八轮 S1/G1 复审：AI 工具恢复语义不再只依赖进程内存
+
+[报告 24](24-durable-agent-calls-evidence.md)、[CI #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363)：增加 SQLite 持久调用占位+唯一 call_id，29/29 安全与崩溃单元（较上轮 +8）、29/29 真实 Saltcorn 集成均通过。重点反证：仅靠进程内 self.calls 无法在重启后阻止同 ID 再次执行；本轮用持久唯一占位对该风险做了研究性修补，未知远端结果保留待核验，审批 POST 不自动重试。
+
+**G1 仍 NOT_PASSED**，冻结 TC01—TC18 完整通过保持 0/18。不能把仅在本地 SQLite 账本中保证同 ID 不重试当作跨平台/多节点 exactly-once；相同业务的新 call_id 仍可能重复。真正 LLM 推理、正式委托同意、平台原生审批事务/幂等、企业 RBAC、金额 SQL decimal(12,2) 和完整应用自主开发仍是阻断项。

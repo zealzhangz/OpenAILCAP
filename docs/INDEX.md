@@ -115,3 +115,11 @@
 - [GitHub Actions #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333)，completed/success，Artifact ID 14698057458。
 
 **边界**：本轮 50 项独立断言通过，真实平台完成提交/一级/二级审批、阻止伪造/越权/过期/重复授权；调用由确定性测试控制器发起，**外部 LLM 推理没有运行**，人工确认也是可信测试宿主模拟。G1 尚未通过，冻结的 18 项完整合同任务仍为 0/18。
+
+## 2026-11-21：S1 Agent 调用持久化防重放与故障未知结果实证
+
+- [报告 24：进程重启、同 ID 重放、未知远端结果与持久审计](01-research/24-durable-agent-calls-evidence.md)
+- [机器可读结论与原始 CI 信息](01-research/agent-tool-durability-observations.json)
+- [Run #44881510363](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881510363) completed/success，**29/29 安全/崩溃恢复单元 + 29/29 真实 Saltcorn 集成**，原始 Artifact 14698431130。已有工具测试 21 项，新加崩溃故障测试 8 项；真实平台审批链路仍为 29 项。
+
+**边界**：持久化唯一 call_id 可以在同一 SQLite ledger 共享范围内拒绝进程重启后的重复执行；不保证不同调用 ID 的业务幂等，也不是 Broker/Saltcorn 双数据库的 exactly-once 事务。远端结果未知时须查真实业务数据，不得盲目重试审批。LLM 未推理，G1 仍未通过。
