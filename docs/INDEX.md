@@ -229,3 +229,12 @@
 - 真正插件只能向可信宿主提交单次 JSON 工具提议，再由可信 Host Relay 携自己的有限 Bearer 调用 B5 v3 Broker：View 修改 HTTP 200 + SQL Audit，Model/SQL/Code/发布越权 403、跨应用拒绝、撤销 token 401；真 Chromium 旧表单保存 409，B2 合同发布后可运行、B4 432 组测试并在模拟人工批准后运行高风险评分 95。
 - **重要缺口未关闭**：B6-32 中**具有宿主 DB 权限**的原生 SQLite 程序仍能真实修改代码 Artifact；代码运行时检测 hash drift 返回 409，但物理写入没有被拦截。真正 Saltcorn 原生插件/CLI/Pack、系统内核漏洞、生产多实例及统一应用/代码发布快照未验证。G1-B01 **OPEN**；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**；G1 **NOT_PASSED**。
 - [PR #8](https://github.com/zealzhangz/OpenAILCAP/pull/8) 已合并 main，SHA `f18e9341be4af086bb1b1d69341e8789ecfdad58`。
+
+
+## 2026-11-21：S1 B7 真实 Linux 原生插件/CLI OS 权限隔离、可信 Domain Kernel 独立进程
+
+- [完整报告 40：实际跨 Linux UID 原生 SQLite 访问拒绝、信任边界、root/同 UID 旁路反例](01-research/40-s1-b7-real-linux-dac-domain-kernel-evidence.md)；[代码与 Linux DAC 复现指南](../experiments/g1-b01-b7/README.md)，[CI 工作流](../.github/workflows/s1-b7-os-dac-kernel.yml)。
+- **最终真实 [GitHub Actions #44897992713](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44897992713)** completed/success，Job **136827642934**，[Artifact #14704777950](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44897992713/artifacts/14704777950)：B7 **16/16** 可信配置单元、B2 **18/18** 回归、B5 **40/40** 回归、真正 Linux host UID + Plugin/Agent 原生 SQLite + Chromium + 独立 SQL **32/32** PASS；本轮 DeepSeek/LLM **0 次**。
+- 三个独立非 root 用户实际为 Kernel UID=999、Native Plugin UID=997、Native Agent UID=995；内核独占 SQLite 私有目录 `0700` 和 DB/配置 `0600`，其他用户的 DB 文件 O_RDONLY/O_RDWR、SQLite ro/rw/SQL UPDATE、内核配置与 /proc 敏感信息均真正 **DENIED**，但授权 Plugin 经 B5 v3 Broker 可编辑 View HTTP 200，Model/SQL/代码发布越权 403、跨 app 403、旧 Agent/浏览器写冲突 409，人工 Chromium 发布 v1 与合同业务 Workflow 保持正常。
+- **明确保留 P0**：同 Kernel UID 的第二进程或 root 仍能够**物理直接写入** SQLite；root 负对照篡改后核心检测 `RESOURCE_DRIFT`，草稿 HTTP 409/QUARANTINED，上次发布 Manifest v1 未损坏。这不能证明 root、Saltcorn 原生 CLI、Pack/插件加载器全部被拦截。B7 内核故意禁用 Docker Build，本轮不再额外验证 B4 通用构建。
+- [PR #9](https://github.com/zealzhangz/OpenAILCAP/pull/9) 已合并 `main`，SHA `8b4cd3e87135efe6744b9614e6673bcff439defb`。**G1-B01 OPEN，冻结 W01—W24 0/24 FULL PASS、TC01—TC18 0/18 FULL PASS，S1 IN_PROGRESS / G1 NOT_PASSED**。
