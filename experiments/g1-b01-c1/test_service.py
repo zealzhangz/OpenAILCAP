@@ -320,5 +320,29 @@ class HttpPreflight(StorePreflight):
                          ["state"], "QUARANTINED")
 
 
+
+class IndependentAppReceiptPreflight(unittest.TestCase):
+    def test_same_change_id_is_scoped_to_separate_applications(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Store(str(Path(tmp) / "isolated.sqlite"))
+            store.initialize()
+            for app in ("app-a", "app-b"):
+                store.bootstrap_for_test(app, "field.title",
+                                         {"label": "Start", "status": "Draft"})
+            receipts = []
+            for app in ("app-a", "app-b"):
+                actor = Principal("worker", app, "agent")
+                before = store.snapshot(actor, app, "field.title")
+                receipts.append(store.apply(
+                    actor, app, change_from(
+                        before, "same-key-001", "label", "From-" + app)
+                ))
+                self.assertEqual(store.raw_metrics_for_test(
+                    app, "field.title")["audit"], 1)
+            self.assertEqual([r["decision"] for r in receipts],
+                             ["APPLIED", "APPLIED"])
+            self.assertNotEqual(receipts[0]["contentHash"], receipts[1]["contentHash"])
+
+
 if __name__ == "__main__":
     unittest.main()
