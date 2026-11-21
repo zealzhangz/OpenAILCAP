@@ -174,3 +174,13 @@
 - [GitHub Actions #44887680474](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474) **completed/success**；真实 Chromium 对改造后的 Saltcorn 原生字段向导执行 B 新保存、A 旧表单提交，A 收到 HTTP **409**，B 值未丢；新表单仍能继续编辑。浏览器正向证据 **8/8**。
 - 同一个真实原生平台 [CLI Field.update 负对照](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474)：**1/1** 危险绕过可发生；仅拦截 Web 路由无法实现全渠道强制保护。原始 Artifact [#14699859357](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474/artifacts/14699859357)，实验 PR #2 已合并。
 - **限制**：通过临时修改 Runner npm 编译路由实现的签名检查，不是 Saltcorn 官方支持的插件机制，更**不是原子 CAS**；模型、插件真实隔离和发布均未验收。冻结 G1-B01 W01—W24 仍 **0/24 FULL PASS**，完整合同 TC 仍 **0/18 FULL PASS**，G1 **NOT_PASSED**。
+
+
+## 2026-11-21：S1 G1-B01 B1 真正人工设计器 + Agent/Plugin 统一命令入口
+
+- [报告 34：真实 B1 Chromium + Agent/Plugin 子进程统一编辑证据](01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md)；
+  [源代码与运行说明](../experiments/g1-b01-c1/README.md)，[CI 工作流](../.github/workflows/s1-g1-b01-b1.yml)。
+- [真实 GitHub Actions Run #44888692681](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44888692681) **completed/success**，**B1 18/18 独立端到端检查 PASS + C1 31/31 unittest 执行实例 PASS**；Job 136799528729，原始 [Artifact #14701406504](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44888692681/artifacts/14701406504)。
+- [PR #3](https://github.com/zealzhangz/OpenAILCAP/pull/3) 已合并，主线提交 `a0eff9d11ce4c96a0fed8bb53aac8afa0364b82a`；另有 [独立 C1 回归运行 #44888692722](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44888692722) completed/success。
+- 本轮在**自研最小 Web（不是 Saltcorn 原生）**的真实 Chromium 页面中验证多标签页旧版本 409；外部 Agent、Plugin 工具进程通过同一 C1 Store.apply 写入；Plugin 直接 HTTP 越权字段 403，两个独立 OS 进程竞争得到 [200,409]，真实 SQLite 最后 revision=5 / audit=5 / receipt=5，跨应用无串写。
+- **边界**：Plugin 是受控 Manifest+Token 的实验进程，**没有真正沙箱**；Agent 无 LLM；Web 只编辑两个字段，非成熟低代码设计器；未强制治理 Saltcorn CLI、直接 DB 及发布路径。**G1-B01 仍 OPEN，W01—W24 0/24 FULL PASS，合同 TC01—TC18 0/18 FULL PASS，G1 NOT_PASSED**。
