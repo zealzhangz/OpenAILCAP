@@ -52,7 +52,24 @@ python3 -u experiments/g1-b01-b16/experiment.py --output /tmp/s1-b16-evidence/re
 `results.json` 保存每一检查、HTTP/Chromium、退出状态、日志哈希及技术可行性判定；
 `b16-logs/` 保存原生启动失败与 CLI 写入拒绝日志。临时研究进程组会终止并清理。
 
-**执行状态：待真实 CI；不能把已编写的检查称为通过。**
+## 真实结果（2026-11-22）
+
+[Actions #44930503580](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44930503580)
+completed/success，Job **136925849194**，
+[Artifact #14717746712](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44930503580/artifacts/14717746712)。
+**18/18 研究检查符合预期，0 次模型调用；只读 Web 可行性为 false。**
+
+- Apply UID999 可写基线：HTTP200，真正 Chromium 显示合同。
+- Web UID997：可读，O_WRONLY/SQL UPDATE/chmod/unlink/replace 和原生 CLI 写入均拒绝。
+- 默认只读启动、`--nomigrate` + 分离 Session、Apply 更新后 Web 重启三次均 **exit1**，
+  `Unable to read pre_installed_module_infos: SQLITE_READONLY`，无可用 HTTP。
+- Web 攻击及启动后 Native 文件 SHA256 不变，Apply 仍能写并被 Web SQL 读回。
+- 错误部署负对照中，Web-owned 父目录内的 Apply-owned 0640 文件可被 Web 替换。
+
+**结论：OS 写权限隔离成立，但此版本不能靠上述配置直接作为只读 Native Web 运行。**
+Session 文件可写不等于 Saltcorn Session 集成成功，启动在更早的配置写入处失败。
+详见 [报告49](../../docs/01-research/49-s1-b16-native-web-apply-readonly-feasibility.md) 和
+[从 Job 日志解析的证据摘要](ci-observations.json)。完整原始文件在 Artifact。
 
 正式门禁保持：S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 PARTIALLY VALIDATED / OPEN；
 W01—W24 0/24 FULL PASS，TC01—TC18 0/18 FULL PASS。

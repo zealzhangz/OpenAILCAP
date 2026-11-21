@@ -1,0 +1,417 @@
+{
+  "source": "Parsed from GitHub Actions job logs; complete original results.json and logs are in the linked artifact.",
+  "runUrl": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44930503580",
+  "jobId": 136925849194,
+  "artifactId": 14717746712,
+  "codeCommit": "3be426307c3de8736c9b0d04c5f8c552e4004c57",
+  "testedMergeCommit": "fba532a88d043ab5823aee2e7f61cd9b84b1b295",
+  "formalG1Passed": false,
+  "b15Integrated": false,
+  "modelCalls": 0,
+  "passCount": 18,
+  "unmodifiedReadonlyWebFeasible": false,
+  "checks": [
+    {
+      "id": "B16-01-independent-nonroot-identities",
+      "status": "PASS",
+      "observed": {
+        "ailcapb16apply": 999,
+        "ailcapb16web": 997
+      }
+    },
+    {
+      "id": "B16-02-real-native-contract-fixture",
+      "status": "PASS",
+      "observed": {
+        "fixture": "synthetic native contract, not B2 signed projection"
+      }
+    },
+    {
+      "id": "B16-03-writable-native-browser-control",
+      "status": "PASS",
+      "observed": {
+        "uid": 999,
+        "flags": [],
+        "httpStatus": 200,
+        "businessVisible": true,
+        "browserVisible": true,
+        "exitBeforeCleanup": null,
+        "logSha256": "660890a2bab89a615101709ac306471591ef301f135345b1aacfc998cbe72fa0",
+        "readonlyError": false,
+        "cannotOpenError": false,
+        "logTail": "Saltcorn listening on http://127.0.0.1:3166/\n(node:4038) [DEP0044] DeprecationWarning: The `util.isArray` API is deprecated. Please use `Array.isArray()` instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\nSession terminated, killing shell... ...killed.\n"
+      }
+    },
+    {
+      "id": "B16-04-web-read-native-sql",
+      "status": "PASS",
+      "observed": {
+        "ok": true,
+        "value": [
+          [
+            "S1 Platform Contract"
+          ]
+        ],
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-05-web-write-open-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 13,
+        "sqliteCode": null,
+        "message": "[Errno 13] Permission denied: '/tmp/s1-b16-probe-y95drm__/derived/native.sqlite'",
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-06-web-sql-update-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "OperationalError",
+        "errno": null,
+        "sqliteCode": "SQLITE_READONLY",
+        "message": "attempt to write a readonly database",
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-07-web-chmod-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 1,
+        "sqliteCode": null,
+        "message": "[Errno 1] Operation not permitted: '/tmp/s1-b16-probe-y95drm__/derived/native.sqlite'",
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-08-web-unlink-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 13,
+        "sqliteCode": null,
+        "message": "[Errno 13] Permission denied: '/tmp/s1-b16-probe-y95drm__/derived/native.sqlite'",
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-09-web-replace-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 13,
+        "sqliteCode": null,
+        "message": "[Errno 13] Permission denied: '/tmp/s1-b16-probe-y95drm__/web-home/replacement.tmp' -> '/tmp/s1-b16-probe-y95drm__/derived/native.sqlite'",
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-10-real-native-cli-write-denied",
+      "status": "PASS",
+      "observed": {
+        "exitCode": 1,
+        "logTail": "    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+      }
+    },
+    {
+      "id": "B16-11-readonly-default-outcome-classified",
+      "status": "PASS",
+      "observed": {
+        "uid": 997,
+        "flags": [],
+        "httpStatus": null,
+        "businessVisible": false,
+        "browserVisible": false,
+        "exitBeforeCleanup": 1,
+        "logSha256": "2bb3262f5cf600197b34d0d0888bc900ba2739733f8f30738d20d4958bf42631",
+        "readonlyError": true,
+        "cannotOpenError": false,
+        "logTail": "Unable to read pre_installed_module_infos: SQLITE_READONLY: attempt to write a readonly database\n    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+      }
+    },
+    {
+      "id": "B16-12-default-and-attacks-db-unchanged",
+      "status": "PASS",
+      "observed": {
+        "beforeSha256": "f37573ad2a690373fabc2aff80de18cf44b1ca5dcea8510a637397d9add248cc",
+        "afterSha256": "f37573ad2a690373fabc2aff80de18cf44b1ca5dcea8510a637397d9add248cc"
+      }
+    },
+    {
+      "id": "B16-13-separate-session-writable",
+      "status": "PASS",
+      "observed": {
+        "ok": true,
+        "value": true,
+        "uid": 997
+      }
+    },
+    {
+      "id": "B16-14-split-session-outcome-classified",
+      "status": "PASS",
+      "observed": {
+        "uid": 997,
+        "flags": [
+          "--nomigrate"
+        ],
+        "httpStatus": null,
+        "businessVisible": false,
+        "browserVisible": false,
+        "exitBeforeCleanup": 1,
+        "logSha256": "2bb3262f5cf600197b34d0d0888bc900ba2739733f8f30738d20d4958bf42631",
+        "readonlyError": true,
+        "cannotOpenError": false,
+        "logTail": "Unable to read pre_installed_module_infos: SQLITE_READONLY: attempt to write a readonly database\n    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+      }
+    },
+    {
+      "id": "B16-15-split-session-db-unchanged",
+      "status": "PASS",
+      "observed": {
+        "beforeSha256": "f37573ad2a690373fabc2aff80de18cf44b1ca5dcea8510a637397d9add248cc",
+        "afterSha256": "f37573ad2a690373fabc2aff80de18cf44b1ca5dcea8510a637397d9add248cc"
+      }
+    },
+    {
+      "id": "B16-16-apply-uid-retains-write",
+      "status": "PASS",
+      "observed": {
+        "ok": true,
+        "value": true,
+        "uid": 999
+      }
+    },
+    {
+      "id": "B16-17-restart-outcome-and-integrity",
+      "status": "PASS",
+      "observed": {
+        "uid": 997,
+        "flags": [
+          "--nomigrate"
+        ],
+        "httpStatus": null,
+        "businessVisible": false,
+        "browserVisible": false,
+        "exitBeforeCleanup": 1,
+        "logSha256": "2bb3262f5cf600197b34d0d0888bc900ba2739733f8f30738d20d4958bf42631",
+        "readonlyError": true,
+        "cannotOpenError": false,
+        "logTail": "Unable to read pre_installed_module_infos: SQLITE_READONLY: attempt to write a readonly database\n    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+      }
+    },
+    {
+      "id": "B16-18-negative-control-writable-parent-replaces-readonly-file",
+      "status": "PASS",
+      "observed": {
+        "replacement": {
+          "ok": true,
+          "value": true,
+          "uid": 997
+        },
+        "meaning": "unsafe configuration reproduced, not security PASS"
+      }
+    }
+  ],
+  "variants": [
+    {
+      "variant": "writable-control",
+      "uid": 999,
+      "flags": [],
+      "httpStatus": 200,
+      "businessVisible": true,
+      "browserVisible": true,
+      "exitBeforeCleanup": null,
+      "logSha256": "660890a2bab89a615101709ac306471591ef301f135345b1aacfc998cbe72fa0",
+      "readonlyError": false,
+      "cannotOpenError": false,
+      "logTail": "Saltcorn listening on http://127.0.0.1:3166/\n(node:4038) [DEP0044] DeprecationWarning: The `util.isArray` API is deprecated. Please use `Array.isArray()` instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n\nSession terminated, killing shell... ...killed.\n"
+    },
+    {
+      "variant": "readonly-default",
+      "uid": 997,
+      "flags": [],
+      "httpStatus": null,
+      "businessVisible": false,
+      "browserVisible": false,
+      "exitBeforeCleanup": 1,
+      "logSha256": "2bb3262f5cf600197b34d0d0888bc900ba2739733f8f30738d20d4958bf42631",
+      "readonlyError": true,
+      "cannotOpenError": false,
+      "logTail": "Unable to read pre_installed_module_infos: SQLITE_READONLY: attempt to write a readonly database\n    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+    },
+    {
+      "variant": "readonly-nomigrate-split-session",
+      "uid": 997,
+      "flags": [
+        "--nomigrate"
+      ],
+      "httpStatus": null,
+      "businessVisible": false,
+      "browserVisible": false,
+      "exitBeforeCleanup": 1,
+      "logSha256": "2bb3262f5cf600197b34d0d0888bc900ba2739733f8f30738d20d4958bf42631",
+      "readonlyError": true,
+      "cannotOpenError": false,
+      "logTail": "Unable to read pre_installed_module_infos: SQLITE_READONLY: attempt to write a readonly database\n    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+    },
+    {
+      "variant": "readonly-after-apply-restart",
+      "uid": 997,
+      "flags": [
+        "--nomigrate"
+      ],
+      "httpStatus": null,
+      "businessVisible": false,
+      "browserVisible": false,
+      "exitBeforeCleanup": 1,
+      "logSha256": "2bb3262f5cf600197b34d0d0888bc900ba2739733f8f30738d20d4958bf42631",
+      "readonlyError": true,
+      "cannotOpenError": false,
+      "logTail": "Unable to read pre_installed_module_infos: SQLITE_READONLY: attempt to write a readonly database\n    Error: SQLITE_READONLY: attempt to write a readonly database\n    Code: SQLITE_READONLY\n"
+    }
+  ],
+  "upstream": [
+    {
+      "package": "@saltcorn/cli",
+      "version": "1.7.0-beta.5",
+      "path": "src/commands/serve.js",
+      "sha256": "4ad86a4026bed310ec3971b9ff6604828bcdbbfe805c03c61ac9f3d75961baa5",
+      "anchors": [
+        {
+          "line": 42,
+          "text": "if (flags.nomigrate) serveArgs.disableMigrate = true;"
+        },
+        {
+          "line": 43,
+          "text": "if (flags.noscheduler) serveArgs.disableScheduler = true;"
+        },
+        {
+          "line": 80,
+          "text": "nomigrate: Flags.boolean({ char: \"n\", description: \"No migrations\" }),"
+        },
+        {
+          "line": 81,
+          "text": "noscheduler: Flags.boolean({ char: \"s\", description: \"No scheduler\" }),"
+        }
+      ]
+    },
+    {
+      "package": "@saltcorn/server",
+      "version": "1.7.0-beta.5",
+      "path": "dist/serve.js",
+      "sha256": "8cac7fb41f671d831e3086ee2b481c92368350bd736bca9faae00fa0a626b0e0",
+      "anchors": [
+        {
+          "line": 192,
+          "text": "const initMaster = async ({ disableMigrate }, useClusterAdaptor = true, multiNodeClient) => {"
+        },
+        {
+          "line": 355,
+          "text": "const initOfflineStoreCfg = async () => {"
+        },
+        {
+          "line": 359,
+          "text": "await rootState.setConfig(\"pre_installed_module_infos\", []);"
+        },
+        {
+          "line": 363,
+          "text": "await rootState.setConfig(\"pre_installed_module_infos\", entries);"
+        },
+        {
+          "line": 366,
+          "text": "console.log(`Unable to read pre_installed_module_infos: ${e.message ? e.message : \"Unknown error\"}`);"
+        },
+        {
+          "line": 367,
+          "text": "await rootState.setConfig(\"pre_installed_module_infos\", []);"
+        },
+        {
+          "line": 535,
+          "text": "await initOfflineStoreCfg();"
+        },
+        {
+          "line": 550,
+          "text": "const initMasterListeners = () => {"
+        },
+        {
+          "line": 576,
+          "text": "setTimeout(initMasterListeners, 250);"
+        },
+        {
+          "line": 595,
+          "text": "initMaster(appargs, true, multiNodeClient).then(() => {"
+        },
+        {
+          "line": 597,
+          "text": "initMasterListeners();"
+        },
+        {
+          "line": 606,
+          "text": "await initMaster(appargs, forkAnyWorkers, multiNodeClient);"
+        }
+      ]
+    },
+    {
+      "package": "@saltcorn/server",
+      "version": "1.7.0-beta.5",
+      "path": "dist/routes/utils.js",
+      "sha256": "36c56cc1cf9d8973790a6df61b7f60ce814680e2cf11645929d5abd8f8fbb9bd",
+      "anchors": [
+        {
+          "line": 476,
+          "text": "const getSessionStore = (pruneInterval) => {"
+        },
+        {
+          "line": 490,
+          "text": "store: db.getExpressSessionStore(session, { pruneInterval }),"
+        },
+        {
+          "line": 834,
+          "text": "export { sqlsanitize, csrfField, loggedIn, isAdmin, isAdminOrHasConfigMinRole, rejectTenantDrift, dropTenantDriftUser, get_base_url, error_catcher, scan_for_page_title, pageWrapOpts, viewWrapOpts, getGitRevision, getSessionStore, validateHostAuthority, applyUserLocale, setTenant, get_tenant_from_req, addOnDoneRedirect, is_relative_url, normalize_relative_url, safe_redirect, is_ip_address, get_sys_info, admin_config_route, sendHtmlFile, sendHtmlStringWithGlobals, setRole, getEligiblePage, getRandomPage, tenant_letsencrypt_name, acme_directory_url, greenlock_notify, checkEditPermission, isSafeCustomHtml, };"
+        }
+      ]
+    },
+    {
+      "package": "@saltcorn/sqlite",
+      "version": "1.7.0-beta.5",
+      "path": "dist/sqlite.js",
+      "sha256": "63945f35e64b7fcad02ce8150e000681f72c85425e9a1aae8cd8fa1010954564",
+      "anchors": [
+        {
+          "line": 28,
+          "text": "sqliteDatabase = new sqlite3.Database(current_filepath);"
+        },
+        {
+          "line": 103,
+          "text": "sqliteDatabase = new sqlite3.Database(current_filepath);"
+        },
+        {
+          "line": 357,
+          "text": "sqliteDatabase = new sqlite3.Database(current_filepath);"
+        },
+        {
+          "line": 408,
+          "text": "export const get_session_filepath = () => current_filepath ? `${current_filepath}-sessions.sqlite` : \"sessions.sqlite\";"
+        },
+        {
+          "line": 418,
+          "text": "export const getExpressSessionStore = (session) => {"
+        },
+        {
+          "line": 420,
+          "text": "const db = new sqlite3.Database(get_session_filepath());"
+        }
+      ]
+    }
+  ]
+}

@@ -313,3 +313,11 @@ undefined
 - **剩余 P0**：Saltcorn Web **实时派生 SQLite 仍可被同 UID直接写**，只读的是第六 UID**独立发布快照**，并非 Saltcorn 自己的数据文件；Publisher仍由受信 CI Controller**显式触发**，不是自动生产发布；Netfilter仅单机固定端口，未覆盖全站/K8s/多租户/PII/删除/Schema Migration/TOCTOU/HA/生产密码学。
 - [PR #17](https://github.com/zealzhangz/OpenAILCAP/pull/17) 已合并 main，SHA **601e1bd201e673b82156d8aa59f6eca26619c783**。保留 [首次 CI #44927546949](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44927546949) Publisher主组 `chown`错误（210单测+130 E2E已通过）、[第二次 #44927817940](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44927817940) Chromium Native拒绝后导航竞争（210单测+138 E2E已通过），最终 [#44928087963](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44928087963) 全绿。
 - **正式冻结不变**：S1 **IN_PROGRESS** / G1 **NOT_PASSED** / G1-B01 **PARTIALLY VALIDATED / OPEN**；W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B16优先验证 Native Web 与 Apply 的真实 OS UID 分离和 Web 业务数据只读可能性。
+
+## 2026-11-22：S1 B16 Web/Apply 真实 UID 分离，原生只读启动被证伪
+
+- [报告49：只读 Native Web 可行性](01-research/49-s1-b16-native-web-apply-readonly-feasibility.md)、[可复现工程](../experiments/g1-b01-b16/README.md)、[结构化观察](../experiments/g1-b01-b16/ci-observations.json)、[PR #18](https://github.com/zealzhangz/OpenAILCAP/pull/18)。
+- [Actions #44930503580](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44930503580) completed/success，Job **136925849194**，[Artifact #14717746712](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44930503580/artifacts/14717746712)：**18/18 研究观察符合预期，0 次模型调用**。独立兼容性实验，未重跑或整合 B15 累计 E2E。
+- Apply UID999 / Web UID997，Apply-owned 0750 目录 + 0640 SQLite：Web 可读，直接 SQL、原生 CLI、改权限、删除与替换均拒绝；Apply 仍可写。可写 Native 基线 HTTP200/真实 Chromium 显示合同。
+- **技术可行性否定**：默认只读、关闭迁移并分离 Session、Apply 更新后重启三次均 exit1，`pre_installed_module_infos` 启动配置写入触发 `SQLITE_READONLY`；没有可用的只读 Native Web。CI 绿色含预期失败，不能等同于架构目标通过。另实证可写父目录可替换只读文件的危险反例。
+- **正式门禁不变**：S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 OPEN；W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。建议 B17 比较明确的只读 Native 适配成本与 B15 最小公开快照直接渲染路线，不继续假定 chmod/UID 分离即可直接复用原生运行时。
