@@ -19,3 +19,7 @@
 模式评估分离：① 6 个模型预测与预登记参考标签比较；② 选出的固定能力是否真正通过 Saltcorn 原生平台运行验证。研究仅衡量一个小样本批次的可行性，不声称统计推广、Prompt 鲁棒性、模型自主创建应用、生成 JavaScript、自动测试修复或人工/AI 双向编辑。
 
 **G1 仍 NOT_PASSED。** 冻结合同 18 项完整任务仍由原来的独立 TC01—TC18 验收评定，不能因这六项机制案例通过而修改。
+
+## 实际离线平台预检：2026-11-21
+
+[GitHub Actions #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) completed/success，两个 Job 成功；**20/20 项 Saltcorn 物理 SQL、原生 Trigger、校验失败负对照及 HTML View 断言通过**。模型预测来源为明确标注的 SEALED_ORACLE_PLATFORM_PREFLIGHT_ONLY，`model_inference_executed=false`；这仅证明预制配置/代码/混合路径均可真实执行，**不能将 6/6 计为 DeepSeek 准确率**。原始 Artifact：prediction 14699067484，native 14699037829。
