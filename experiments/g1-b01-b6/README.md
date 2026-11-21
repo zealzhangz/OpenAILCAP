@@ -86,3 +86,13 @@ python3 experiment.py --output /tmp/s1-b6-evidence.json
 **本轮若通过，仅支持这样的窄结论**：对于测试中的受限制、无额外宿主挂载/网卡和未授予系统特权的 Docker 插件，源代码可执行但不能直接接触真实宿主 SQLite、Docker Socket、宿主密钥或外部网络；允许的元数据编辑通过可信 Host Relay 和 B5 Broker 原子写入，而非直接 DB 写入。
 
 **尚无法称正式 G1 已通过**：攻击者可能有容器内核漏洞、供应链污染、容器逃逸、Docker 管理员、宿主代码被污染、插件安装阶段特权、Saltcorn 原生 Field/Pack/CLI 写通道、外部系统未知结果、生产多节点及实际业务授权等。尤其本试验中的 Python 插件载荷是专用研究 fixtures，并不是 Saltcorn/NocoBase/ToolJet 真正原生第三方插件生态。无需重复调用 DeepSeek。正式冻结 G1-B01 **W01—W24 仍 0/24 FULL PASS，TC01—TC18 仍 0/18 FULL PASS**；S1 **IN_PROGRESS**，G1 **NOT_PASSED**。
+
+
+## 2026-11-21 最终真实执行证据（已合并）
+
+- [完整报告 39](../../docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md)；[最终 Actions #44896786049](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44896786049) **completed/success**，Job **136824055360**、[原始 Artifact #14704775846](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44896786049/artifacts/14704775846)。
+- **25/25 B6 隔离/Host Relay 安全单测、18/18 B2 回归、27/27 B4 回归、40/40 B5 回归、32/32 实际 Docker Plugin + HTTP Broker + Chromium + SQL 集成检查全部通过**；本轮真实模型调用 **0 次**。
+- 补强后的插件 Docker 实际测试显示非 root UID **65534**，**sqlite3 host DB 连接/host DB O_RDONLY/O_RDWR 文件打开/host Secret O_RDONLY/Docker Socket/外网 TCP/只读挂载写入全部 DENIED**；宿主本身能访问真实 DB 与 world-readable Secret。实际受控 View Upsert 200、Model/SQL/Code/发布越权 403，旧浏览器页面 409，恢复同 changeId 回执无额外 Audit，管理员模拟可以经 B4 Docker 432 Oracle 发布代码并使合同风险得分 95。
+- **B6-32 明确的危险负对照：宿主有特权的原生 SQLite UPDATE 仍可修改代码 Artifact；仅后续运行哈希校验发现漂移 HTTP 409。这不能视作物理旁路已被阻止**。正式 G1-B01 W01—W24 及 TC01—TC18 完整通过口径仍为 0；G1 NOT_PASSED。
+- [补强前成功 Actions #44896682720](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44896682720) 仅测试密钥 O_RDWR，不能声称禁止读；已增加真正 O_RDONLY 数据库与 Secret 探针，并以本次最终 CI 结果为准。
+- [PR #8](https://github.com/zealzhangz/OpenAILCAP/pull/8) 已合并 main，SHA `f18e9341be4af086bb1b1d69341e8789ecfdad58`。
