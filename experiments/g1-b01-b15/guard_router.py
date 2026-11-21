@@ -19,6 +19,8 @@ from urllib.error import HTTPError,URLError
 from urllib.request import Request,urlopen
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b10"))
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b14"))
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b13"))
 from router import fetch_native,query_current_release,Refused,ROUTE
 from signed_projection import verify_event,SignatureRefused
 from publish_snapshot import read_published
