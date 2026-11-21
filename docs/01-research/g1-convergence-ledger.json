@@ -18,7 +18,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/33-g1-b01-c2-native-route-evidence.md"
+        "docs/01-research/33-g1-b01-c2-native-route-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "原生双标签旧表单在权威写路径原子 409 且物理读回"
     },
@@ -26,7 +27,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "完整元数据同字段 Web 先写 Agent 后写拒绝"
     },
@@ -34,7 +36,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "完整元数据同字段 Agent 先写 Web 后写拒绝"
     },
@@ -42,7 +45,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "跨资源或字段编辑后的显式重读合并保留双方值"
     },
@@ -68,7 +72,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "较新变更后原 changeId 返回原始回执且审计零增量"
     },
@@ -76,7 +81,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "跨主体和摘要复用 changeId 无任何业务副作用"
     },
@@ -93,7 +99,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md",
-        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "真实原生 CLI 与 Web 越界只能修改派生库且权威隔离"
     },
@@ -109,7 +116,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "模型伪造身份经可信宿主工具实际拒绝"
     },
@@ -126,7 +134,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "正式 Web CSRF 与过期撤销 Agent token 联合负例"
     },
@@ -183,7 +192,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "模型断线人工仍走正式权威写路径并独立读回"
     },
@@ -279,7 +289,8 @@
       "status": "NOT_RUN",
       "package": "P1-D",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "人工按钮背景与 AI 旧上下文文案冲突合并"
     },
@@ -288,7 +299,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
-        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "同一文案人工 Agent 并发唯一成功与冲突"
     },
@@ -304,7 +316,8 @@
       "status": "NOT_RUN",
       "package": "P1-D",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
       ],
       "missing_full_acceptance": "模型断开人工维护完整合同应用并可发布"
     },
