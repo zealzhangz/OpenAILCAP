@@ -200,8 +200,6 @@ def handler_for(store: SchemaStore, tokens: dict, sessions: dict,
                     return
                 if path == "/editor/app-a":
                     session = self._session()
-                    if not session or session[0].role if False else False:
-                        pass
                     if not session or session[0].name != web_actor.name or not session[0].active:
                         self.send_response(303)
                         self.send_header("Location", "/editor/login")
