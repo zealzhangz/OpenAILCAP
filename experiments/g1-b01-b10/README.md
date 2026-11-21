@@ -71,3 +71,14 @@ HTTP `X-B10-Test-Hold-Ms` 请求头**只为可重复验证在途请求**，在�
 S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 OPEN。B10 不能据此宣称 W17/W20/W24 FULL PASS：这里只验证**同宿主临时 HTTP Router 的内存原子指针**，没有代理集群切换/配置持久化恢复/生产网关/K8s 无中断滚动升级、跨服务事务与幂等外部动作补偿。原生 Saltcorn 的工作流仍**未**投影；审批是 B2 Kernel 独立处理的，Saltcorn 只展示自有 seed 生成的副本，与权威业务数据**尚未建立可验证同步协议**。
 
 后续研究应优先 B11：不再只拿同合同号的两个不同数据副本当成果；明确选择 **B2 Authority Business API + Saltcorn 只读业务视图** 或正式 CDC/outbox/物化数据投影的边界，验证真实合同新增/更新/审批后在 Saltcorn 页面跨版本可重放、幂等、脱敏、回滚不回退业务事实，并补全发布控制面崩溃恢复与故障切换行为。正式冻结 W01—W24、TC01—TC18 均不能直接按 B10 独立研究项数量升级。
+
+
+## 2026-11-21：最终 GitHub Actions 真正全绿的 B10 结果
+
+- [完整研究报告 43](../../docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md)；[Actions #44906374299](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906374299) **completed / success**，Job **136852721607**，[原始 Artifact #14708420037](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906374299/artifacts/14708420037)：Router **34/34** 单测、B2 **18/18** 回归、B5 **40/40** 回归、B10 真实 **44/44**，LLM **0 次**。
+- 真实 Kernel UID **999**、原生 Saltcorn UID **997**、第三独立 Router UID **995**。权威 B2 真实创建合同并完成超阈值两级审批，最终 SQL 记录 **Approved**。两套实际官方 Saltcorn v1/v2 在 localhost **3158/3159 同时在线**，各有独立 Native SQLite、物理 View 列分别为 3/4，真实 Chromium 通过 Router 访问合同页面。
+- 真实 Native v2 Readiness 失败、错误 Manifest SHA、匿名注册被拒；受信部署控制器按 B2 Verified Release SHA 和 Router `expectedEpoch` CAS 切换。**已捕获的在途 v1 HTTP GET** 在 v2 切换后仍按 v1/epoch1 返回，新请求按 v2/epoch2 返回；相同 changeId 重放仅返回先前结果、不重复更新 epoch。
+- 真实停止 v2 Saltcorn 后，前台返回 **503**（而不是悄悄回退），B2 权威业务仍 Approved。先对 B2 `app.rollback` 进行受信 CAS 回退，再切换 Router v2→v1，前台 GET 与真 Chromium 均恢复；app-b 状态不变，2 个 B2 release 的哈希继续有效。
+- **严禁超范围宣传**：Saltcorn 的合同记录来自自己的 seed fixture，标题与内核权威合同故意不同；**没有实现真实 B2→Saltcorn 的数据同步/审批工作流等价执行**。Router 内存态、无持久化切换日志/多机冗余、不包含生产网络/全路由/身份/持久连接；故障期间真实观测到 503，不能宣称零宕机或 W17/W24 FULL PASS。
+- 首次 [Actions #44906169071](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44906169071) 44/44 真实检查本身通过，但第三 UID Router 产生的就绪目录未被 sudo 控制器回收，进程退出清理失败，CI 因而合理标红；仅修复**实验结束后可信控制器清理 Router-owned 目录**，最终在 #44906374299 全路径重新确认成功，并未放宽权威 DB 权限。
+- [PR #12](https://github.com/zealzhangz/OpenAILCAP/pull/12) 已合并 main，SHA **d1b498699065de460ed1a3763aa0914066828fa0**。G1 NOT_PASSED、G1-B01 OPEN；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。
