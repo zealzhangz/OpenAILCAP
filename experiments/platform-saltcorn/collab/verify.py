@@ -19,9 +19,10 @@ def event(path):
     found=[]
     for line in Path(path).read_text(encoding="utf-8",errors="replace").splitlines():
         marker="S1_COLLAB_NATIVE_CAS|"
-        i=line.find(marker)
-        if i>=0:
-            found.append(json.loads(line[i+len(marker):]))
+        # Saltcorn CLI also echoes JavaScript source that contains the marker.
+        # Accept only actual emitted JSON events, not source-code snippets.
+        if line.startswith(marker):
+            found.append(json.loads(line[len(marker):]))
     if len(found)!=1:
         raise RuntimeError("NATIVE_CAS_LOG_EVENT_COUNT_NOT_ONE")
     return found[0]

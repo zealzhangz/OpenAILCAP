@@ -30,5 +30,18 @@ class CollabContract(unittest.TestCase):
     def test_no_leakage_of_extra_fields(self):
         self.rejects("AGENT_PATCH_SCHEMA_INVALID",{**P,"actor_id":"admin"})
 
+    def test_native_cli_log_parser_ignores_source_code_echo(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from verify import event
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/"cli.log"
+            path.write_text(
+              'const marker="S1_COLLAB_NATIVE_CAS|"; console.log(marker+JSON.stringify(...));\n'
+              + 'S1_COLLAB_NATIVE_CAS|'+json.dumps({"decision":"APPLIED"})+'\n',
+              encoding="utf-8")
+            self.assertEqual(event(path),{"decision":"APPLIED"})
+
 if __name__=="__main__":
     unittest.main()
