@@ -76,3 +76,7 @@
 - 形成反方评审和 Go/Conditional Go/No-Go 的正式记录。
 
 **当前结论**：Conditional Go 仅用于**继续受控的 S1 研究及小型实验**，不是允许进入 S2 的 G1 Go。下次复审只以实际原始数据变更门禁状态，不按文档数量估算百分比。
+
+## 2026-11-21 远端规范检查回填
+
+[合同规范 GitHub Actions #44868820335](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44868820335) completed/success，金额/状态机 oracle 及 18 项平台任务 NOT_RUN 的基线检查步骤均成功。见 [独立执行记录](13-contract-oracle-ci.md)。该结果不改变阶段 G1 未通过的结论。
