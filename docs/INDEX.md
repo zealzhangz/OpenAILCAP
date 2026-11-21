@@ -166,3 +166,11 @@
 - [离线工作流](../.github/workflows/s1-g1-b01-c1.yml)：无需 Saltcorn、Chromium 或 DeepSeek Key，避免额外 API 费用。
 
 **限制**：C1 仅为自研独立服务，Browser/Plugin 仍为研究测试身份而非 Saltcorn 原生 UI/实际插件；旧原生编辑路径未治理。G1-B01 从“仅规范”发展为“独立 C1 验证”，但 **W01—W24 仍 0/24 完整 PASS；TC01—TC18 仍 0/18 完整 PASS；G1 NOT_PASSED**。
+
+
+## 2026-11-21：S1 C2 真正 Saltcorn 原生编辑器 409 与旁路负对照
+
+- [研究报告 33：真实 Chromium / Saltcorn 原生字段向导的带签名旧基线保护](01-research/33-g1-b01-c2-native-route-evidence.md)，[可运行 C2 工程](../experiments/g1-b01-c2/README.md)。
+- [GitHub Actions #44887680474](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474) **completed/success**；真实 Chromium 对改造后的 Saltcorn 原生字段向导执行 B 新保存、A 旧表单提交，A 收到 HTTP **409**，B 值未丢；新表单仍能继续编辑。浏览器正向证据 **8/8**。
+- 同一个真实原生平台 [CLI Field.update 负对照](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474)：**1/1** 危险绕过可发生；仅拦截 Web 路由无法实现全渠道强制保护。原始 Artifact [#14699859357](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44887680474/artifacts/14699859357)，实验 PR #2 已合并。
+- **限制**：通过临时修改 Runner npm 编译路由实现的签名检查，不是 Saltcorn 官方支持的插件机制，更**不是原子 CAS**；模型、插件真实隔离和发布均未验收。冻结 G1-B01 W01—W24 仍 **0/24 FULL PASS**，完整合同 TC 仍 **0/18 FULL PASS**，G1 **NOT_PASSED**。
