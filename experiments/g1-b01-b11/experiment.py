@@ -663,6 +663,13 @@ def main():
                               "contract_no","title","amount_minor","status"],
                           {"nativeV1Port":3158,"nativeV2Port":3159,
                            "v1Cols":3,"v2Cols":4})
+                    check("B11-56-same-authoritative-business-different-v1-v2-view-shapes",
+                          native_inspect(v1native["db"])["rows"]==
+                          native_inspect(native2obj["db"])["rows"] and
+                          v1native["oracle"]["viewColumns"]!=
+                          native2obj["oracle"]["viewColumns"],
+                          {"businessRowsEqual":True,
+                           "v1ViewColumns":3,"v2ViewColumns":4})
                     still=web_call(route_base+ROUTE)
                     check("B11-22-before-commit-all-client-traffic-remains-v1",
                           still[0]==200 and
