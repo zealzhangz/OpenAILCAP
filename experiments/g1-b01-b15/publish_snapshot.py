@@ -9,6 +9,7 @@ This is a controller-invoked research publisher, not an HA/CDC daemon.
 from __future__ import annotations
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import sqlite3
@@ -20,8 +21,14 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b13"))
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b14"))
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b10"))
-from guard_router import source_events
 from native_ipc import native_snapshot
+# Load the actual B14 signed source validator by explicit path; avoid the
+# B15 guard_router.py module name collision/circular import.
+_b14=Path(__file__).resolve().parent.parent/"g1-b01-b14"/"guard_router.py"
+_spec=importlib.util.spec_from_file_location("b14_signed_source_validator",_b14)
+_mod=importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+source_events=_mod.source_events
 from router import query_current_release,Refused
 
 FIELDS={"contract_no","title","amount_minor","status"}
