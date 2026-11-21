@@ -209,3 +209,13 @@
 - [一次真正 DeepSeek 代码生成 Run #44894074280](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280)：**completed/success**，实际 1 次 DeepSeek `deepseek-flash` `submit_python_rule` 源代码 Function Calling；本次 B4 在线 E2E **27/27 PASS**；Job **136815855851**，[原始 Artifact #14702827817](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280/artifacts/14702827817)。AI 代码 hash `a6743bd...` 与离线人工样例 `2c866d...` 不同，绝非拿固定源码冒充在线生成。
 - 真实低代码 B2 缺少合同供应商信用/合作年限评分时，可信能力匹配选择 CUSTOM_CODE；模型只提出单纯函数源码，严格 AST 拒绝任意执行，Docker `--network=none`、`--read-only`、非 root、资源限额真实编译+运行 **432** 个风险边界组合。失败代码不入 Artifact 不发布；模拟授权人工发布绑定 B2 Manifest v1；真浏览器高风险 95 / 低风险 0；代码 v2 人工注释修改后重新构建并回滚 v1；B2 v2 不兼容返回 409，回滚 B2 v1 后恢复。
 - [PR #6](https://github.com/zealzhangz/OpenAILCAP/pull/6) 已合并 `main`，SHA `5dd3224893a87e1e7a77f91000c38fa023a98d07`。**限制**：固定纯函数 AST 及固定合同测试；无通用工程代码构建、真实多轮 AI 自动修复、人类实际审批或生产发布。**G1 NOT_PASSED；正式 W01—W24 仍 0/24 FULL PASS，TC01—TC18 仍 0/18 FULL PASS**。
+
+
+## 2026-11-21：S1 B5 架构对照——Domain Schema/Manifest 与 Application IR + 受控统一工具入口
+
+- [完整研究报告 38：可逆 IR 投影、同一内核受控 A/B、实际 Plugin/Agent 网关及特权 SQL 绕过负对照](01-research/38-s1-b5-ir-parity-tool-broker-evidence.md)；[可运行代码和诚实比较边界](../experiments/g1-b01-b5/README.md)，[CI 工作流](../.github/workflows/s1-b5-ir-parity-gateway.yml)。
+- [GitHub Actions Run #44895248552](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44895248552) completed/success；Job **136819389820**、[Artifact #14703169788](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44895248552/artifacts/14703169788)。**B5 IR/Broker 40/40 + B2 18/18 + B4 27/27 单测；真实 Chromium/双 App/Docker/Plugin OS 进程 29/29 E2E**；零 DeepSeek 调用。
+- 两种设计态表示对固定合同资源**无损**：JSON canonical 序列化 Domain **693 B** / IR **937 B**（仅单样例指标），编译后同一 B2 Schema Manifest SHA-256、Workflow 一二级审批轨迹与 B4 432 用例纯函数风险评分相同；**双方共用 B2/B4 运行内核，不能称为两套独立平台或决定 IR Native Kernel 胜负**。
+- B5 v3 类型化 Tool Broker 以 app、Actor、allowlisted tools 分别授权；插件仅 View、Agent 可 Docker 验证不许发布、人工模拟身份批准 Code Stage/Publish；旧人机改动 HTTP **409**，跨 app/越权/撤销明确 **403/401**；发布 B2 v2 使旧绑定代码执行 409，回滚 B2 v1 恢复。
+- **危险负对照**：具 SQLite 管理员权限的进程仍可直接 UPDATE 代码源码绕过 Broker；实际运行 hash drift 409、app-a 无串写，但该改写**并未被物理阻断**。真正插件 DB/宿主 Socket 权限隔离仍属 P0 阻断项。G1-B01 **OPEN**，冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**，G1 **NOT_PASSED**。
+- [PR #7](https://github.com/zealzhangz/OpenAILCAP/pull/7) 已合并 main，SHA `e8106e6214c0b75ad232c7d12a0a7a4aad794916`。
