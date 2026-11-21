@@ -94,3 +94,7 @@ flowchart LR
 | R-06 | 高 | IR vs 分域模型在真实低代码环境未比较 | 补数据库迁移、插件升级及平台级编辑测试后形成 ADR |
 
 **G1 决策**：已有第三方一手源码和本仓库的可复现实验，但仍缺真实低代码平台复现、真实数据与运行时端到端调用链和完整许可审查。本轮不宣称 G1/G3 通过。
+
+## 七、GitHub Actions 独立环境复现（已完成）
+
+本次 SQLite Spike 在 Commit [9fa2a2c](https://github.com/zealzhangz/OpenAILCAP/commit/9fa2a2ca6cbd602758492e2a7e3f59310211c9b9) 上由 [GitHub Actions Run #44867849367](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44867849367) 独立执行，状态 completed/success；单测和 JSON 结果生成步骤均成功，Artifact 已上传。详见 [CI 验收记录](08-sqlite-ci-validation.md)。这一结果增加可复现性，但不改变 G1 尚未通过的判断。
