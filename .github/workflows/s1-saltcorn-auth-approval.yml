@@ -1,0 +1,95 @@
+name: S1 Native Saltcorn authenticated approval HTTP and browser sessions
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-saltcorn-auth-approval.yml'
+      - 'experiments/platform-saltcorn/auth/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-real-auth:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual third-party Saltcorn and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+          python3 -m py_compile experiments/platform-saltcorn/auth/*.py
+      - name: Create native Saltcorn workflow Pack with server-side req.user binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/platform-saltcorn/workflow/generate.py \
+            --base-pack experiments/platform-saltcorn/contract-pack.json \
+            --benchmark experiments/contract-benchmark/spec.json \
+            --trigger-dir experiments/platform-saltcorn/workflow/triggers \
+            --driver-template experiments/platform-saltcorn/workflow/drive-template.js \
+            --pack-out "$RUNNER_TEMP/s1-base-auth-pack.json" \
+            --driver-out "$RUNNER_TEMP/s1-unused-driver.js"
+          python3 experiments/platform-saltcorn/auth/harden_pack.py \
+            --in-pack "$RUNNER_TEMP/s1-base-auth-pack.json" \
+            --validation-code experiments/platform-saltcorn/auth/trusted-validate.js \
+            --out-pack "$RUNNER_TEMP/s1-native-auth-pack.json"
+      - name: Real Saltcorn schema, native triggers, and native users with unique credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-auth-approval.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          export S1_CREATOR_PASSWORD="$(openssl rand -hex 28)"
+          export S1_APPROVER1_PASSWORD="$(openssl rand -hex 28)"
+          export S1_APPROVER2_PASSWORD="$(openssl rand -hex 28)"
+          export S1_VIEWER_PASSWORD="$(openssl rand -hex 28)"
+          for key in SALTCORN_SESSION_SECRET S1_CREATOR_PASSWORD S1_APPROVER1_PASSWORD S1_APPROVER2_PASSWORD S1_VIEWER_PASSWORD; do
+            echo "::add-mask::$(printenv "$key")"
+            echo "$key=$(printenv "$key")" >> "$GITHUB_ENV"
+          done
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 120s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f "$RUNNER_TEMP/s1-native-auth-pack.json"
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/auth/seed.js
+          saltcorn create-user --email s1-creator@example.invalid --password "$S1_CREATOR_PASSWORD" >/dev/null
+          saltcorn create-user --email s1-approver1@example.invalid --password "$S1_APPROVER1_PASSWORD" >/dev/null
+          saltcorn create-user --email s1-approver2@example.invalid --password "$S1_APPROVER2_PASSWORD" >/dev/null
+          saltcorn create-user --email s1-viewer@example.invalid --password "$S1_VIEWER_PASSWORD" >/dev/null
+          test -s "$SQLITE_FILEPATH"
+      - name: Start native Saltcorn HTTP and confirm readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/s1-native-auth-server.log" 2>&1 &
+          ready=0
+          for n in $(seq 1 90); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/auth/login;then ready=1;break;fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then tail -n 80 "$RUNNER_TEMP/s1-native-auth-server.log"; exit 1; fi
+      - name: Actual browser logins plus authorized/forged native API trigger submissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/platform-saltcorn/auth/acceptance.py \
+            --db "$SQLITE_FILEPATH" \
+            --base http://127.0.0.1:3100 \
+            --output /tmp/s1-native-auth-approval-results.json
+      - name: Upload scrubbed independent SQL/HTTP test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-native-authenticated-approval
+          path: /tmp/s1-native-auth-approval-results.json
+          if-no-files-found: warn
