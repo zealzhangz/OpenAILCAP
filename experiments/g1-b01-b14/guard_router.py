@@ -209,7 +209,7 @@ def main():
         "/v5/apps/app-a/projection/signed-pull"
     ) or not cfg["guardSocket"].startswith(
         "/tmp/s1-b13-project-"
-    ) or not cfg["guardSocket"].endswith("/ipc/guard.sock") or (
+    ) or not cfg["guardSocket"].endswith("/b14-audit-ipc/guard.sock") or (
         any(len(cfg[k])<24 for k in ("sourceToken","kernelReadToken"))
     ):
         raise SystemExit("GUARD_CONFIG_INVALID")
