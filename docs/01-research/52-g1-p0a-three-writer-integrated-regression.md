@@ -1,6 +1,6 @@
 # G1 P0-A／首个同实例三写入者联合回归（预注册）
 
-**状态：待 GitHub Actions 实际验收；不改变 G1 NOT_PASSED。**
+**状态：同实例局部实验 CI VERIFIED；不改变 G1 NOT_PASSED。**
 
 本次不再把 B1、B7、B9 的独立成功数字相加，而是直接**扩展 B9 原有的单个临时 B2 权威实例**：同一次启动、同一个 authority.sqlite、同一个原生 Saltcorn 派生库与真实 Chromium 会话。原 B9 的 36 项检查顺序保留；在真实原生 Web/CLI/Pack 旁路、污染重建以及 v1→v2→v1 发布回滚后，在**仍然运行的相同实例上**新增六项 P0-A 负例与竞态核验。
 
@@ -36,3 +36,13 @@
 ## 后续收敛，而非继续堆 B 编号
 
 首先审阅此 CI 原始证据，再将**真正沙箱 Plugin、正式受权人工 Web 的过时编辑冲突、原生 Pack 差异审批/源约束**纳入同实例 P0-A 验收。其后才进行 P0-B 的 B2 最新权威源 → Ed25519 签名发布 → B15 原子快照 → B17 只读渲染的同实例贯通和旧快照拒绝；最后按 P1-C/D/E 逐项执行 TC01—TC18。未经证据不得抬高 G1。
+
+## 实际 CI 结果（2026-11-22 UTC+8）
+
+- 本 PR 当前 head `560f93540b6fd0abd6a5753fbed48c3a919a12ef` 上的 [Actions #44960158202](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44960158202) **completed/success**，Job **137016972416**；Artifact **14729067688** 含原始 B9/P0-A JSON 与 CLI/Chromium/SQL 日志。
+- 同批 **B9 36/36 + P0A-01—06 6/6 = 42/42 局部运行检查通过**；另外严格 Pack 编译器 **25/25**、B2 **18/18**、B5 **40/40** 单元回归通过；**0 模型调用**。
+- 真实 Plugin UID（本次 CI 观察值 995）读取权威 DB/config、UPDATE 均被 OS 拒绝；限权工具读取 HTTP 200，而 Model 写、发布与跨 app-b 访问各 HTTP 403；三次被拒操作由独立 SQL Oracle 验证无额外事件、回执或版本变化。
+- Agent 与独立 Plugin OS 进程持有同一个旧修订并发写 View title：本次观测 Agent 200、Plugin 409；物理 revision 5→6，只有 1 个新 receipt/事件；获胜原 changeId 重放 200/replayed=true，没有新事件；当前发布仍为 v1，Native 浏览器仍显示原有已发布合同，app-b 未变。**两种竞态获胜顺序并未都覆盖**，不得由本次调度顺序得出公平性或冲突自动合并结论。
+- `G1 NOT_PASSED`、冻结 `W 0/24`、`TC 0/18 FULL PASS` 保持。尤其 W06/W07 的近似局部场景不能代替完整契约及正式 Plugin 安装/第三方运行边界。
+
+原始证据可直接从 [CI Artifact #14729067688](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44960158202/artifacts/14729067688) 复核，避免用本文文字代替日志和独立物理 Oracle。
