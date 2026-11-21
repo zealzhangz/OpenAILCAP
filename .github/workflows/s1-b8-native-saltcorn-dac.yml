@@ -1,0 +1,76 @@
+name: S1 B8 genuine Saltcorn native web Field.update CLI Pack vs host UID DAC
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b8-native-saltcorn-dac.yml'
+      - 'experiments/g1-b01-b8/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b8-native-saltcorn-dac.yml'
+      - 'experiments/g1-b01-b8/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-saltcorn-vs-domain-kernel-boundary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install exact native Saltcorn 1.7.0-beta.5 and real Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: Compile B8 and run source-contract checks
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b8/*.py
+          cd experiments/g1-b01-b8
+          python3 -u -m unittest -v test_native_contracts \
+            2>&1 | tee /tmp/s1-b8-unit.log
+      - name: Regress existing B2 Domain Kernel and B5 governed tools
+        run: |
+          set -euo pipefail
+          (cd experiments/g1-b01-b2 && python3 -u -m unittest -v test_schema) \
+            2>&1 | tee /tmp/s1-b8-b2-regression.log
+          (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
+            2>&1 | tee /tmp/s1-b8-b5-regression.log
+      - name: Create distinct Saltcorn DB owner and unprivileged native plugin users
+        run: |
+          set -euo pipefail
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb8core
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb8plug
+          id ailcapb8core
+          id ailcapb8plug
+          [[ "$(id -u ailcapb8core)" != "$(id -u ailcapb8plug)" ]]
+      - name: Run ACTUAL Saltcorn Field.update and Pack, native browser and independent SQLite checks
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b8/experiment.py \
+            --output /tmp/s1-b8-evidence.json \
+            2>&1 | tee /tmp/s1-b8-e2e.log
+      - name: Retain experiment failures and objective raw evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b8-real-saltcorn-native-write-path-dac-evidence
+          path: |
+            /tmp/s1-b8-unit.log
+            /tmp/s1-b8-b2-regression.log
+            /tmp/s1-b8-b5-regression.log
+            /tmp/s1-b8-evidence.json
+            /tmp/s1-b8-e2e.log
+          if-no-files-found: warn
