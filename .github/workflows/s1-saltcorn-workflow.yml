@@ -1,0 +1,90 @@
+name: S1 Saltcorn native Trigger contract workflow benchmark
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-saltcorn-workflow.yml'
+      - 'experiments/platform-saltcorn/workflow/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-business-triggers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual public Saltcorn platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 600s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          saltcorn --version
+      - name: Generate frozen native Pack with built-in code-action triggers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/platform-saltcorn/workflow/generate.py \
+            --base-pack experiments/platform-saltcorn/contract-pack.json \
+            --benchmark experiments/contract-benchmark/spec.json \
+            --trigger-dir experiments/platform-saltcorn/workflow/triggers \
+            --driver-template experiments/platform-saltcorn/workflow/drive-template.js \
+            --pack-out "$RUNNER_TEMP/s1-workflow-pack.json" \
+            --driver-out "$RUNNER_TEMP/s1-workflow-driver.js"
+          python3 -m py_compile experiments/platform-saltcorn/workflow/generate.py experiments/platform-saltcorn/workflow/verify.py
+      - name: Install native Table/Field/View/Trigger models in real Saltcorn SQLite
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-native-workflow.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          echo "::add-mask::$SALTCORN_SESSION_SECRET"
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$SALTCORN_SESSION_SECRET" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 180s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f "$RUNNER_TEMP/s1-workflow-pack.json"
+          test -s "$SQLITE_FILEPATH"
+      - name: Execute actual business transitions via native Saltcorn triggers
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 210s saltcorn run-js -f "$RUNNER_TEMP/s1-workflow-driver.js" \
+            > "$RUNNER_TEMP/s1-workflow-driver.log" 2>&1 || {
+              tail -n 140 "$RUNNER_TEMP/s1-workflow-driver.log"
+              exit 1
+            }
+          grep '^S1_DRIVER_COMPLETE|' "$RUNNER_TEMP/s1-workflow-driver.log"
+          grep '^S1_STATE|' "$RUNNER_TEMP/s1-workflow-driver.log" | head -n 12
+      - name: Launch real Saltcorn API and native List View
+        shell: bash
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/s1-workflow-server.log" 2>&1 &
+          ready=0
+          for n in $(seq 1 80); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ready=1;break;fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then tail -n 75 "$RUNNER_TEMP/s1-workflow-server.log"; exit 1; fi
+      - name: Independent oracle checks real database, 12 amount and 12 state cases, actual HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/platform-saltcorn/workflow/verify.py \
+            --spec experiments/contract-benchmark/spec.json \
+            --db "$SQLITE_FILEPATH" \
+            --log "$RUNNER_TEMP/s1-workflow-driver.log" \
+            --base-url http://127.0.0.1:3100 \
+            --output /tmp/s1-saltcorn-native-workflow-result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-saltcorn-real-trigger-workflow-results
+          path: /tmp/s1-saltcorn-native-workflow-result.json
+          if-no-files-found: warn
