@@ -460,8 +460,8 @@ def main():
                           {"approvalStates":transitions,
                            "businessOwner":"B2 Kernel ONLY"})
                     v1native=native_materialize("v1",v1)
-            feed1,applied1,native1_rows=sync_native(v1native["db"])
-            v1native["oracle"]=physical_native(v1native["db"])
+                    feed1,applied1,native1_rows=sync_native(v1native["db"])
+                    v1native["oracle"]=physical_native(v1native["db"])
                     check("B11-09-real-native-v1-physical-Oracle-and-test-record",
                           v1native["oracle"]["viewColumns"]==[
                               "contract_no","amount_minor","status"] and
