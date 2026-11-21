@@ -121,3 +121,7 @@ H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑
 ## 2026-11-21 H02/H04/H05 相关的原生业务 Trigger 实证
 
 [真实 Saltcorn 冻结合同审批运行报告](../01-research/21-saltcorn-native-workflow-evidence.md)、[Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097)：3 条真正 Pack 导入的 Validate/Insert run_js_code Trigger，12 项金额规则、12 项状态机、3 条连续审批路径均通过独立物理 SQL 与运行时 API 验证，说明**低代码元数据可以与代码扩展组合实现复杂业务**。这为“配置/代码混合执行模型”提供了真实机制证据，**没有验证 AI 能识别能力缺口并选择写代码**；没有编译隔离/代码自动生成/工具权限/插件发现，故 H02/H04/H05 的 AI 目标都未通过。可伪造 actor_role 是重大身份授权缺口；内置 run_js_code 是平台高权限脚本，不能直接给不受信 Agent。G1 未通过。
+
+## 2026-11-21 真实登录身份与原生领域 Trigger 证明了受限授权链条可行
+
+[真实身份合同审批报告 22](../01-research/22-native-identity-approval-evidence.md)（[GitHub Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055)，32/32 PASS）证实 Saltcorn 的原生 Session 用户能沿 /api/→Table.tryInsertRow→Validate/Insert Trigger 进入真正业务状态更新：如果 Trigger 用服务端 user.id/email 而不是信任请求的 actor_id/role，伪造审批人被拒绝，一级/二级审批和驳回可持久化，非管理员无法直接写审批明细及合同表。进一步证明 H05/H07 所需的**有身份上下文的类型化业务命令入口**具有原生平台机制基础，但没有实现 AI 自动规划/工具委托、企业 RBAC、强隔离或跨表原子性，因此相关平台级假设仍未验证通过。**新失败对照**：Session Cookie API 缺 CSRF 经重定向看似 200 但无业务修改，独立裁判不能仅检查 HTTP 200。G1 不通过。

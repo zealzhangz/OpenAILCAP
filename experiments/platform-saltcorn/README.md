@@ -67,3 +67,7 @@ CI 只上传不含密钥或数据库文件的结构化结果。若安装失败�
 ## 2026-11-21 冻结合同业务原生 Trigger 两级审批实验
 
 新增 [workflow/](workflow/README.md)，[GitHub Actions #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097) 在真实 Saltcorn 安装三个原生 Validate/Insert run_js_code Trigger，执行 12 项金额边界、12 项状态转移与三条连续真实审批路径，独立 SQLite+API+ListView 验证 **35/35 PASS**。重要偏差：金额 SQL TEXT 非 decimal(12,2)，角色字段可伪造非 HTTP 用户鉴权，业务逻辑由研究员预写而非 AI，动作使用研究 CLI SQL 事务，因此不等于完整合同或 G1 通过。[研究报告 21](../../docs/01-research/21-saltcorn-native-workflow-evidence.md)。
+
+## 2026-11-21 真正 Saltcorn 用户身份绑定的审批动作
+
+新增 [auth/](auth/README.md) 研究，最终 [GitHub Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) completed/success，**32/32 PASS**：Chromium 四人分别真实登录，使用同一会话 CSRF 通过 Saltcorn 原生 /api/ 提交审批动作；原生 Validate Trigger 比对服务端 user.id/email 与提交的身份声明，拦截伪造角色/ID，原生 Insert Trigger 持久化普通、高额两级审批和驳回。真实 Saltcorn 权限拒绝使用表级 401、领域业务 400；没有 HTTP 403 证据，冻结 TC04 尚未通过。CSRF 负对照揭示：已登录但漏 Token 可能重定向成 HTML 200 假成功，物理 DB 无变化。业务角色为硬编码邮箱映射（四人原生角色都是 80），无可视审批按钮、企业 RBAC 或真正 LLM Agent。详见 [研究报告 22](../../docs/01-research/22-native-identity-approval-evidence.md)。

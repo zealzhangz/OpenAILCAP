@@ -1,0 +1,264 @@
+{
+  "study": "S1 Real Saltcorn authenticated session-bound approvals via native REST and native triggers",
+  "date": "2026-11-21",
+  "tested_platform": "@saltcorn/cli@1.7.0-beta.5 / SQLite / Ubuntu 24.04 / Playwright 1.56 Chromium",
+  "upstream_inspected": "saltcorn/saltcorn@515254bee5a98df70530cc59846b1df02d5db350",
+  "experiment_commit": "748b39239ba001a6fbf496f42d5bfcfcd98685ac",
+  "ci": {
+    "run_id": 44879041055,
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055",
+    "job_id": 136770054918,
+    "status": "completed",
+    "conclusion": "success",
+    "artifact": {
+      "name": "s1-native-authenticated-approval",
+      "id": 14697420714
+    }
+  },
+  "previous_runs": [
+    {
+      "id": 44878238956,
+      "conclusion": "failure",
+      "finding": "Missing CSRF on logged-in native API causes HTML redirect; no business mutation"
+    },
+    {
+      "id": 44878430497,
+      "conclusion": "failure",
+      "finding": "Sanitized content-type/final-path diagnostics confirmed redirect to '/'"
+    },
+    {
+      "id": 44878664510,
+      "conclusion": "failure",
+      "finding": "All 32 individual assertions PASS but harness mistakenly demanded 28"
+    },
+    {
+      "id": 44878807173,
+      "conclusion": "failure",
+      "finding": "Transient Chromium GET navigation timeout during fourth login; no authorization result tested"
+    }
+  ],
+  "summary": {
+    "checks": 32,
+    "passed": 32,
+    "failed": 0
+  },
+  "cases": [
+    {
+      "id": "AUTH01-four-native-users",
+      "status": "PASS",
+      "observed": "4 native users have role_id 80"
+    },
+    {
+      "id": "AUTH02-S1-AUTH-HIGH-1",
+      "status": "PASS",
+      "observed": "Physical contract status Draft"
+    },
+    {
+      "id": "AUTH02-S1-AUTH-NORMAL-1",
+      "status": "PASS",
+      "observed": "Physical contract status Draft"
+    },
+    {
+      "id": "AUTH02-S1-AUTH-HIGH-REJECT",
+      "status": "PASS",
+      "observed": "Physical contract status Draft"
+    },
+    {
+      "id": "AUTH02-S1-AUTH-HIGH-FORGED",
+      "status": "PASS",
+      "observed": "Physical contract status Draft"
+    },
+    {
+      "id": "AUTH03-login-creator",
+      "status": "PASS",
+      "observed": "Real Chromium login; standard form CSRF present"
+    },
+    {
+      "id": "AUTH03-login-approver1",
+      "status": "PASS",
+      "observed": "Real Chromium login; standard form CSRF present"
+    },
+    {
+      "id": "AUTH03-login-approver2",
+      "status": "PASS",
+      "observed": "Real Chromium login; standard form CSRF present"
+    },
+    {
+      "id": "AUTH03-login-viewer",
+      "status": "PASS",
+      "observed": "Real Chromium login; standard form CSRF present"
+    },
+    {
+      "id": "AUTH04-anonymous-native-api-denied",
+      "status": "PASS",
+      "http": 401,
+      "physical_requests": 0
+    },
+    {
+      "id": "AUTH04b-authenticated-api-missing-csrf-fails-closed",
+      "status": "PASS",
+      "final_http": 200,
+      "final_path": "/",
+      "content_type": "text/html",
+      "physical_requests": 0,
+      "interpretation": "redirected HTML is NOT business success"
+    },
+    {
+      "id": "AUTH05-forged-role-and-identity-rejected",
+      "status": "PASS",
+      "http": 400,
+      "error": "IDENTITY_MISMATCH",
+      "status_after": "Draft"
+    },
+    {
+      "id": "AUTH06-forged-actor-id-rejected",
+      "status": "PASS",
+      "http": 400,
+      "error": "IDENTITY_MISMATCH"
+    },
+    {
+      "id": "AUTH07-native-creator-normal-submit",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Submitted"
+    },
+    {
+      "id": "AUTH08-wrong-authenticated-approver-normal",
+      "status": "PASS",
+      "http": 400,
+      "error": "FORBIDDEN"
+    },
+    {
+      "id": "AUTH09-authenticated-approver1-finishes-normal",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Approved",
+      "approval_count": 1
+    },
+    {
+      "id": "AUTH10-authenticated-creator-high-submit",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Submitted"
+    },
+    {
+      "id": "AUTH11-authenticated-viewer-rejected-high",
+      "status": "PASS",
+      "http": 400,
+      "error": "FORBIDDEN"
+    },
+    {
+      "id": "AUTH12-first-high-approval",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Level1Approved"
+    },
+    {
+      "id": "AUTH13-first-approver-cannot-finalize",
+      "status": "PASS",
+      "http": 400,
+      "error": "FORBIDDEN"
+    },
+    {
+      "id": "AUTH14-second-high-approval-final",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Approved",
+      "approval_roles": [
+        "approver1",
+        "approver2"
+      ],
+      "ids_match_authenticated_users": true
+    },
+    {
+      "id": "AUTH15-creator-reject-sequence-start",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Submitted"
+    },
+    {
+      "id": "AUTH16-authenticated-rejection",
+      "status": "PASS",
+      "http": 200,
+      "db_state": "Rejected"
+    },
+    {
+      "id": "AUTH17-viewer-direct-business-table-update-denied",
+      "status": "PASS",
+      "http": 401
+    },
+    {
+      "id": "AUTH18-native-approval-table-direct-insert-denied",
+      "status": "PASS",
+      "http": 401
+    },
+    {
+      "id": "AUTH19-replay-business-identity-spoof-denied",
+      "status": "PASS",
+      "http": 400,
+      "error": "IDENTITY_MISMATCH"
+    },
+    {
+      "id": "AUTH20-db-S1-AUTH-NORMAL-1",
+      "status": "PASS",
+      "requests": 2,
+      "approvals": 1
+    },
+    {
+      "id": "AUTH20-db-S1-AUTH-HIGH-1",
+      "status": "PASS",
+      "requests": 3,
+      "approvals": 2
+    },
+    {
+      "id": "AUTH20-db-S1-AUTH-HIGH-REJECT",
+      "status": "PASS",
+      "requests": 2,
+      "approvals": 1
+    },
+    {
+      "id": "AUTH20-db-S1-AUTH-HIGH-FORGED",
+      "status": "PASS",
+      "requests": 0,
+      "approvals": 0
+    },
+    {
+      "id": "AUTH21-authentication-bound-native-validate-trigger",
+      "status": "PASS",
+      "native_trigger_count": 3
+    },
+    {
+      "id": "AUTH22-table-access-native-role-boundary",
+      "status": "PASS",
+      "native_requests_min_role_write": 80
+    }
+  ],
+  "full_evidence": "Complete original machine JSON in Actions artifact; this JSON is a curated summary of verified stdout, not the raw artifact",
+  "scope": {
+    "real_authentication": true,
+    "real_browser_login": true,
+    "distinct_native_saltcorn_users": 4,
+    "real_native_http_api": true,
+    "real_native_validate_insert_triggers": true,
+    "real_sqlite_approval_persistence": true,
+    "browser_approval_form": false,
+    "custom_auth_gateway": false,
+    "llm_agent": false,
+    "organization_rbac": false,
+    "user_email_role_mapping": "hard-coded research fixture",
+    "saltcorn_users_role_ids": [
+      80,
+      80,
+      80,
+      80
+    ],
+    "saltcorn_table_permission_denial_http": 401,
+    "business_policy_denial_http": 400,
+    "frozen_tc04_requires_http": 403,
+    "full_contract_acceptance_passed": 0,
+    "full_contract_acceptance_total": 18,
+    "G1": "NOT_PASSED",
+    "amount_decimal_sql_type": "TEXT, NOT decimal(12,2)",
+    "native_sqlite_http_atomicity_proven": false
+  }
+}

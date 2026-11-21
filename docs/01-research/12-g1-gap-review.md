@@ -133,3 +133,11 @@
 仍无法 G1 Go 的具体原因：**(1)** actor_role 是业务请求字段而非受认证的审批人，错误角色的 FORBIDDEN 只在触发器中返回，不是已验收的真实 HTTP 403；**(2)** Saltcorn amount_decimal SQL 类型为 TEXT，冻结规格是 decimal(12,2)，精度需求仅在研究 JS 预处理校验；**(3)** 事务由研究 CLI 显式 SQL 包裹，没有验收原生 HTTP 动作本身的中断/并发保证；**(4)** 没有真正 LLM Agent 自动配置/生成/修复，也没有网页审批提交、插件和多应用隔离。
 
 **G1 维持 NOT_PASSED**，18 项完整平台合同任务继续 0/18；新实证仅为 TC01/02/03/05/18 的 PARTIAL 机制证据。建议下轮高价值工作：真实用户鉴权审批动作、通过最小特权 Agent Tool 执行同一应用变更、参考平台选型的定量反方评审，不再重复已有字段标签机制实验。
+
+## 2026-11-21 第六轮 G1 评审：真实 Saltcorn 登录身份与原生审批权限实证
+
+[研究报告 22](22-native-identity-approval-evidence.md)、[Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) completed/success，32/32 实测 PASS：四个真实 Saltcorn 用户 Chromium 登录，并用带当前会话 CSRF 的原生 API 写审批动作；平台原生 Validate/Insert Trigger 基于服务端 user.id/email 拒绝伪造身份，真实业务合同在一级/二级批准与驳回过程中产生正确的状态/审批明细；非管理员直接写受保护表失败。对先前“请求中的角色字符串可伪造”这一重要风险给出了限域、有效的正向修复证据。
+
+**仍不可 G1 GO**：（1）所有四个用户 Saltcorn role_id 都是 80，只通过研究代码硬编码邮箱映射业务审批岗位；与多组织 RBAC/人员离岗/行级授权差距明显。（2）Saltcorn 表层越权返回 HTTP **401**，业务不允许返回 HTTP **400**，与冻结 TC04 所需 403 不同；不得将 TC04 标 PASS。（3）合同金额仍是 TEXT + 分而非 decimal(12,2)。（4）没有真实审批网页表单、同一 Saltcorn HTTP 写请求的原子回滚/并发幂等、真正 LLM Agent 工具编排与发布。前两次 CI 还识别了 Session CSRF 缺失会导致重定向后 200 HTML 假成功的危险验收误判，应纳入 G1 的独立 HTTP 成功判据。
+
+因此仍 **S1 IN_PROGRESS、G1 NOT_PASSED，冻结 18 项完整业务任务 0/18 PASS**。新的前进方向：真实 LLM Agent + 带授权/审计的类型化工具；专业 RBAC/审批 UI；金额 SQL 语义与事务边界；正式 G1 对照选型，而不是继续扩大同字段元数据版本实验。

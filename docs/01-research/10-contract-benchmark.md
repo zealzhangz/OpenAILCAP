@@ -76,3 +76,7 @@
 ## 九、2026-11-21 原生 Saltcorn 业务规则实际复现：部分证据但不改冻结判定
 
 [Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097)、[报告 21](21-saltcorn-native-workflow-evidence.md) 与 [结果摘录](workflow-observations.json) 表明真正 Saltcorn 原生 Validate/Insert Trigger 及 Code Action 已运行原规范 AM01—AM12 12/12、ST01—ST12 12/12、正常/高额二级/拒绝连续路径 3/3（总 35/35 项独立验证）。这给 TC01、TC02、TC03、TC05、TC18 提供**部分机制性证据**，不是正式验收 PASS：金额实际存储为 TEXT canonical 字符串+Integer 分，并非要求的 decimal(12,2)；请求中的 actor_role 可伪造，不是 HTTP 403 身份授权；没有真实用户在网页提交审批动作，也没有真实 AI 开发。**原冻结 spec.json 中 18 个平台任务仍为 NOT_RUN，完整通过 0/18，G1 未通过。**
+
+## 十、2026-11-21 原生 Saltcorn 实际登录身份驱动审批：部分证据
+
+在已有 12 金额边界、12 状态机、3 条原生审批路径的基础上，[Run #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) 新增**四个真正 Saltcorn 用户登录+原生 REST+服务端认证 user 身份约束的业务 Trigger**，32/32 PASS。Creator 提交、Approver1/2 完成普通/高额审批，Viewer 不能审批，伪造 actor_id/actor_role 被拒绝，物理数据库审批行的 actor_id 等于真实登录人 ID。原生表级未授权是 HTTP 401，原生 Validate 业务 FORBIDDEN 是 HTTP 400；冻结 TC04 明确要求 HTTP 403，不能偷换状态码。因此增加 **TC03/TC04/TC05/TC18 部分真实身份授权证据**，但冻结 spec.json 不变、完整 18 项仍 0 PASS。见 [报告 22](22-native-identity-approval-evidence.md)。该研究的业务岗位映射为硬编码邮箱（真实 Saltcorn role_id 四人均 80），不是生产企业组织 RBAC；没有可视化审批操作及原生 SQLite 跨表事务验收。

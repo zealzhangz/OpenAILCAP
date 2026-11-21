@@ -97,3 +97,12 @@
 - [GitHub Actions #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097)，completed/success，Artifact 14695849924
 
 **实证结论**：12/12 金额边界（等于一百万不升级、超过升级）、12/12 状态迁移、3/3 连续普通/高额二级/驳回路径在真实 Saltcorn 表、Validate/Insert Trigger、审批记录和原生 List/REST 运行中得到物理验证。总 35/35 项测试符合预期。**限制**：角色是客户端可声明的业务字符串，没有真实身份授权/HTTP 403；amount_decimal SQL 类型为 TEXT，并非冻结 decimal(12,2)；动作事务由研究 CLI 显式 SQL 包裹；没有真实 LLM 或审批浏览器提交。冻结 18 项合同的完整通过仍为 0/18，**G1 继续 NOT_PASSED**。
+
+## 2026-11-21：S1 Saltcorn 真实登录身份驱动的原生合同审批实验
+
+- [实证报告 22：真正 Saltcorn 登录身份与原生审批 Trigger](01-research/22-native-identity-approval-evidence.md)
+- [32 项机器可读 HTTP/SQLite 验收摘要](01-research/auth-approval-observations.json)
+- [包含四用户登录、CSRF、身份伪造与业务数据验收的可复现源码](../experiments/platform-saltcorn/auth/README.md)
+- [最终成功 GitHub Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055)，**32/32 PASS，Artifact 14697420714**
+
+**新突破**：四个真实 Saltcorn 用户各有独立 Session，通过当前会话 CSRF 令牌调用原生 /api/ 审批，Validate Trigger 用可信 user.id/email 确认用户与业务角色匹配；合法普通/超额两级审批及驳回真实落库，角色/用户 ID 伪造请求不能修改业务，直接修改合同/审批明细被原生表权限拒绝。**新反例**：带 Session Cookie 缺 CSRF 的请求可被重定向至首页，自动跟随重定向后看似 HTTP 200，却并没有业务更新；独立验收必须检查最终 URL、Content-Type、JSON 和物理 SQL。此研究只用固定邮箱→业务角色映射，Saltcorn 原生角色仍均为 80；HTTP 拒绝码为表级 401、业务级 400，**非冻结 TC04 规定的 403**；尚无真正浏览器审批表单、AI Agent 或生产 RBAC。**G1 仍未通过，完整合同任务 0/18。**

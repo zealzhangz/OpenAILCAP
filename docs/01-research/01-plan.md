@@ -75,3 +75,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：S1 冻结合同业务实际运行而非继续字段标签测试
 
 [Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097) 实际安装了含 4 个业务表、1 个原生视图和 3 个真正 Saltcorn Validate/Insert JS Action Trigger 的原生 Pack，并通过 Table.insertRow/updateRow 执行金额阈值及审批；独立 Oracle 在物理 SQL、CLI 日志、运行时 REST/HTML 验收 **35/35**，包括 12 金额边界、12 状态机、3 连续审批轨迹，证实超额合同需要二级审批。完整报告见 [21](21-saltcorn-native-workflow-evidence.md)。这比单纯比较 API Schema 更直接满足 README 1.4，但**角色仍为可伪造的请求字段、金额为 TEXT+分、没有 LLM**，不标正式 TC 通过。下一阶段 S1 工作重点：真实审批身份/HTTP 和真实 Agent 类型化工具；G1 不通过。
+
+## 2026-11-21：真实登录身份/CSRF/原生业务审批写入的 S1 强化
+
+[Run #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) 真实 Saltcorn 登录与 REST 32/32 PASS；四个不同用户 Chromium 登录，在当前 Session Cookie+CSRF 下通过原生 API 触发 Validate/Insert 审批，伪造角色/用户 ID 返回业务 400，原生表级拒绝 401，正确审批写入物理状态与审批人记录。[报告 22](22-native-identity-approval-evidence.md)。前两次失败挖出了真实 CSRF/200 假成功问题；第三次虽 32 条逐条 PASS 但退出校验数误写为 28；第四次浏览器 GET 偶发超时；最终通过仅对非变更 GET 做重试，审批 POST 不自动重试。保留失败历史，仍不可宣称审批 SQL 原子性、企业角色/组织 RBAC、可视审批表单或 LLM Agent。下一 P0 转向**类型化 AI 工具授权与真实模型调用**，G1 不通过。

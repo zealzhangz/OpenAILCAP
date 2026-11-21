@@ -57,3 +57,7 @@ GitHub [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/
 ## 2026-11-21：Saltcorn 原生业务 Trigger 首次完整金额/审批轨迹
 
 [Run #44876882097](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44876882097) 已对冻结 spec.json 的 12 金额输入、12 状态迁移在真实 Saltcorn Table.insertRow/Validate/Insert Trigger/run_js_code 上执行，对三条持续状态路线完成独立物理 SQLite 验收，并核对原生 REST 和 List View。**35/35 断言符合预期**。其中 WF05 证实金额物理列是 TEXT 并非冻结 decimal(12,2)，属于负面差异证据。研究 CLI 强制 SQL 事务，不代表 Saltcorn 原生 HTTP 动作的默认原子性。模拟审批角色是调用方声明字段，不是真实用户身份。没有模型 Agent、浏览器审批提交，完整 TC 仍 0/18。详见 [报告 21](21-saltcorn-native-workflow-evidence.md)、[源码](../../experiments/platform-saltcorn/workflow/README.md)。
+
+## 2026-11-21 实际 Saltcorn 用户会话与合同原生审批 API
+
+[最终 Run #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) 实测 32/32 PASS：4 位真实 Saltcorn 用户通过 Chromium 原生登录表单，实际认证 Session Cookie + 从同一会话读取的 CSRF Token 请求原生 /api/s1_bench_action_requests/；Saltcorn Validate/Insert Trigger 将原生 req.user 绑定审批动作，伪造 ID/角色无法修改状态，普通与高金额两级审批、驳回均持久化；普通用户不能直接改合同/审批明细。前两次真实失败验证缺 CSRF 的请求经 HTTP 重定向最终出现**HTML 200 假成功**且数据库不变；应将最终 URL、Content-Type 和物理记录作为统一验收条件。代码 [auth](../../experiments/platform-saltcorn/auth/README.md)、[报告 22](22-native-identity-approval-evidence.md)。Saltcorn 原生只区分已登录 role 80 与管理员，业务审批角色由研究硬编码邮箱判定，HTTP 400/401 不满足冻结业务 TC04 要求的 403；没有正式审批 UI/真实 LLM/完整事务及多租户授权，G1 继续 NOT_PASSED。

@@ -19,7 +19,7 @@
 
 ## 预注册检查
 
-27 条断言涵盖真实用户身份/角色、4 次真实 Chromium 登录、匿名 REST 写入拒绝、Viewer 与 Creator 伪造 approver1/approver2 身份、Creator 提交、Approver1 普通合同终审、Approver1/Approver2 高金额合同分级审批、合法驳回、错误级别拒绝、限制普通用户直接更新合同状态/直接伪造审批记录、实际 4 组合同的请求和审批记录数量、3 条原生 Trigger 与表级权限元数据。
+32 条断言涵盖真实用户身份/角色、4 次真实 Chromium 登录、匿名 REST 写入拒绝、Viewer 与 Creator 伪造 approver1/approver2 身份、Creator 提交、Approver1 普通合同终审、Approver1/Approver2 高金额合同分级审批、合法驳回、错误级别拒绝、限制普通用户直接更新合同状态/直接伪造审批记录、实际 4 组合同的请求和审批记录数量、3 条原生 Trigger 与表级权限元数据。
 
 **注：原生 Saltcorn API 在当前版本的表级权限不足时返回 HTTP 401（不是 403）。** 合法登录但业务角色不足时，通过原生 Validate Trigger 返回业务错误，一般为 HTTP 400。测试必须记录实际状态码，不把 401/400 包装为 HTTP 403。状态与数据库都不变是独立验收条件。
 
@@ -38,3 +38,11 @@
 - [Saltcorn Table.ts](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/saltcorn-data/models/table.ts)：Table.insertRow/tryInsertRow 的用户/Validate/Insert 行为。
 - [Saltcorn Trigger.ts](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/saltcorn-data/models/trigger.ts)：Validate/Insert 调度与 user 传递。
 - [Saltcorn Auth routes.ts](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/server/auth/routes.ts)：原生用户登录 Session/Passport。
+
+## 实际运行结果（2026-11-21）
+
+最终 [GitHub Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) completed / success，32/32 个独立登录/HTTP/业务状态/审批记录/物理数据库断言符合预期，Artifact 14697420714。真实 Saltcorn 四用户登录、会话 CSRF、服务端 user.id/email 的 Validate Trigger、普通与高额两级审批、越权/伪造拒绝均经独立 CI 核验。正式报告：[22-native-identity-approval-evidence.md](../../../docs/01-research/22-native-identity-approval-evidence.md)。
+
+失败过程也是重要原始证据：最初带 Session Cookie 的 API POST 缺 CSRF 被重定向至首页，自动跟随之后呈现 HTTP 200 HTML，实际上没有任何审批持久化；增加 CSRF 后业务断言全部 PASS，但验收器误将 32 个检查写成 28 导致 CI failure；再一次重跑遇到 Chromium 只读 GET 导航偶发超时。已为**非变更 GET 导航**增加最多 3 次重试，审批 POST 绝不自动重试，最终绿色 CI 已取得。
+
+**这是受硬编码用户邮箱映射限制的实验，不是完整企业 RBAC；也不满足冻结 TC04 对 HTTP 403 的精确要求（实测原生表权限是 401，业务错误是 400）。**
