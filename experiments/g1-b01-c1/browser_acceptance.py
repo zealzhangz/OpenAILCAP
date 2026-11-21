@@ -98,7 +98,7 @@ def save_label(page, value, field="label"):
 
 
 def wait_message(page, needle):
-    page.locator("#message").get_by_text(needle, exact=False).wait_for(timeout=12000)
+    page.wait_for_function("(text) => document.getElementById('message').textContent.includes(text)", needle, timeout=12000)
 
 
 def main():
@@ -202,8 +202,7 @@ def main():
                     ) if r.request.method == "POST" and
                     r.url.endswith("/v1/apps/app-a/changes") else None)
                     save_label(tab_b, "Browser B Saved")
-                    tab_b.locator("#message").get_by_text("保存成功").wait_for(
-                        timeout=12000)
+                    tab_b.wait_for_function("document.getElementById('message').textContent.includes('保存成功')", timeout=12000)
                     after_b = raw_db(dbfile)
                     record("B1-04-actual-B-browser-saves-via-command",
                            after_b["revision"] == 1 and
@@ -243,8 +242,7 @@ def main():
                            "AI Reviewed",
                            {"browser_revision": 2, "visible_agent_status": True})
                     save_label(tab_a, "Human After AI")
-                    tab_a.locator("#message").get_by_text("保存成功").wait_for(
-                        timeout=12000)
+                    tab_a.wait_for_function("document.getElementById('message').textContent.includes('保存成功')", timeout=12000)
                     after_human = raw_db(dbfile)
                     record("B1-09-human-resumes-with-agent-change-preserved",
                            after_human["revision"] == 3 and
