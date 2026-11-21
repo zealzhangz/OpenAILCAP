@@ -17,8 +17,8 @@ import sys
 import uuid
 from pathlib import Path
 
-sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b14"))
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b13"))
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b14"))
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b10"))
 from guard_router import source_events
 from native_ipc import native_snapshot
