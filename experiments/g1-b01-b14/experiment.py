@@ -1718,7 +1718,7 @@ def main():
                           {"consumerHasPrivateKey":False})
                     # Give a FIFTH audit-only UID group-read (not write) of
                     # actual Native SQLite. Saltcorn still owns the file.
-                    run(["sudo","-n","chgrp","ailcapb14audit",
+                    run(["sudo","-n","chgrp","ailcapb14readers",
                          runtime,v1native["db"]])
                     run(["sudo","-n","chmod","0710",runtime])
                     run(["sudo","-n","chmod","0640",v1native["db"]])
