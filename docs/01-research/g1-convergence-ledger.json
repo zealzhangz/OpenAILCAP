@@ -50,7 +50,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
       ],
       "missing_full_acceptance": "真实受限插件和 Agent 并行同字段唯一提交"
     },
@@ -58,7 +59,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
       ],
       "missing_full_acceptance": "两进程在目标权威数据库事务中一次成功一次 409"
     },
@@ -90,7 +92,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md"
+        "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md",
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
       ],
       "missing_full_acceptance": "真实原生 CLI 与 Web 越界只能修改派生库且权威隔离"
     },
@@ -114,7 +117,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
       ],
       "missing_full_acceptance": "三写入者只读和跨应用拒绝且敏感内容不泄露"
     },
@@ -130,7 +134,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
       ],
       "missing_full_acceptance": "真实插件安装运行和数据库旁路无未管理写入"
     },
@@ -282,7 +287,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
       ],
       "missing_full_acceptance": "同一文案人工 Agent 并发唯一成功与冲突"
     },
