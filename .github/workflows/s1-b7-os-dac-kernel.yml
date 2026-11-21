@@ -1,0 +1,79 @@
+name: S1 B7 actual Linux host OS DAC and trusted Domain Kernel process
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b7-os-dac-kernel.yml'
+      - 'experiments/g1-b01-b7/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b7-os-dac-kernel.yml'
+      - 'experiments/g1-b01-b7/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-native-user-and-kernel-boundary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile B7 and test private bootstrap / SQLite probe contracts
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b7/*.py
+          cd experiments/g1-b01-b7
+          python3 -u -m unittest -v test_os_policy \
+            2>&1 | tee /tmp/s1-b7-unit.log
+      - name: Regress B2 typed transactional Domain Schema
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b2
+          python3 -u -m unittest -v test_schema \
+            2>&1 | tee /tmp/s1-b7-b2-regression.log
+      - name: Regress B5 unified tool gateway and schema/IR semantics
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b5
+          python3 -u -m unittest -v test_ir test_broker \
+            2>&1 | tee /tmp/s1-b7-b5-regression.log
+      - name: Install browser for actual human interleaving in trusted kernel
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Create truly different dedicated non-root Linux identities
+        run: |
+          set -euo pipefail
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb7kern
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb7plug
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb7agen
+          id ailcapb7kern
+          id ailcapb7plug
+          id ailcapb7agen
+          [[ "$(id -u ailcapb7kern)" != "$(id -u ailcapb7plug)" ]]
+          [[ "$(id -u ailcapb7kern)" != "$(id -u ailcapb7agen)" ]]
+      - name: Run root-controlled real DAC/CLI/Browser and physical SQL oracle
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b7/experiment.py \
+            --output /tmp/s1-b7-evidence.json \
+            2>&1 | tee /tmp/s1-b7-e2e.log
+      - name: Retain original data and failure logs for independent review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b7-real-linux-host-dac-domain-kernel-evidence
+          path: |
+            /tmp/s1-b7-unit.log
+            /tmp/s1-b7-b2-regression.log
+            /tmp/s1-b7-b5-regression.log
+            /tmp/s1-b7-evidence.json
+            /tmp/s1-b7-e2e.log
+          if-no-files-found: warn
