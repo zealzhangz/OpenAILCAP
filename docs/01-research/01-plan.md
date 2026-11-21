@@ -59,3 +59,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：针对 H01/H03 的原生编辑写入协议对照
 
 已从 [Saltcorn 真实合同 Pack](15-native-contract-platform-evidence.md) 进一步执行同一合同资源上的三阶段研究：[GitHub Actions #44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761) completed/success。非冲突局部 Field.update 能保留双方修改；旧完整 Pack 在仅需修改视图时却把无关人工标签和另一轮自动化标签还原，形成真实负对照；非原子旧基线检查可拒绝顺序冲突但不能支持真实并发。已生成 [源码+实测报告](16-saltcorn-roundtrip-evidence.md) 与 [候选 ADR](17-provisional-adr-guarded-editing.md)。**浏览器 UI 人工编辑、真实 LLM Agent、原子 CAS 和真实并发仍待验证，G1 未通过。**
+
+## 2026-11-21 S1 SQLite 适配器事务与双进程写入的实证深化
+
+已运行 [真正 Saltcorn + SQLite 两个独立 CLI 进程的原生 Field.update 实验](18-saltcorn-sqlite-atomic-evidence.md)：[GitHub Actions #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657)，completed/success。TX1 真实复现 Saltcorn SQLite withTransaction 抛异常但已更新字段未回滚；TX2/TX3 显式 BEGIN IMMEDIATE + 受控资源版本表支持不同字段并行和同字段旧版本拒绝；TX4 SQL 事务内原生写入后故障注入回滚；TX5 人工不走版本账本时后续自动化 CAS 误判成功并覆盖人工字段；TX6 真实 HTTP 读回。**七阶段 36 次断言符合预期，但 TX1/TX5 是危险负对照**。继续评估真实浏览器路由授权/保存和统一强制治理入口，G1 未通过。

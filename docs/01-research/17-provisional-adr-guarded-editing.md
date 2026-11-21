@@ -65,3 +65,9 @@ OpenAILCAP 必须同时允许人工编辑、AI 通过配置工具修改、AI 创
 - 同样合同业务分别以统一 IR 与分域 Schema 实现，比较引用更新、版本迁移成本和完整性；形成最终架构 ADR。
 
 目前状态：**排除风险路径 A；保留 C 作为优先验证方案，而非已经完成的选型**。
+
+## 2026-11-21 真实并发与绕过治理负例后的候选 ADR 更新
+
+[GitHub Actions 实证 #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 将证据从单进程模拟提升到真正两个独立 Saltcorn CLI 进程：显式 SQLite 事务内比较资源版本与原生 Field.update 可使同资源一胜一拒，故障注入回滚有效。**但是**：Saltcorn SQLite withTransaction 包装本身没有 SQL 事务（先前代码无法作原子性依据）；人工通过 native Field.update 绕过实验版本表后，Agent CAS 即使“原子正确”也会覆盖人工内容。
+
+**决策候选约束进一步收紧**：不接受“人工设计器继续原生写库，只有 Agent 工具通过 CAS sidecar”的过渡方案。应统一所有写入口，或者在 Agent 发布前完成经授权的外部版本采纳+内容指纹一致性检查并失败关闭；否则中止 AI 自动提交。这只是候选 ADR 修订，不等于最终决定元数据 IR 或技术栈。完整原始记录见 [报告 18](18-saltcorn-sqlite-atomic-evidence.md)。

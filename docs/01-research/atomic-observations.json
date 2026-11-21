@@ -1,0 +1,153 @@
+{
+  "study": "OpenAILCAP S1 actual Saltcorn SQLite transaction & concurrent CAS experiments",
+  "experiment_commit": "8c665961ce6f24be992387e1850540bf261cf4a1",
+  "upstream_source_sha_inspected": "515254bee5a98df70530cc59846b1df02d5db350",
+  "tested_published_package": "@saltcorn/cli@1.7.0-beta.5",
+  "node": "v24.22.3",
+  "github_actions": {
+    "run_id": 44872093657,
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657",
+    "job_id": 136748667634,
+    "status": "completed",
+    "conclusion": "success",
+    "artifact": {
+      "id": 14694034903,
+      "name": "s1-saltcorn-real-transactions-and-bypass"
+    }
+  },
+  "real_platform": true,
+  "original_evidence": "Github Actions job raw logs and seven JSON Artifact files. This committed JSON is a curated, explicitly incomplete transcription of observed fields.",
+  "groups": [
+    {
+      "id": "TX1",
+      "phase": "wrapper",
+      "checks_passed": 2,
+      "checks_total": 2,
+      "observation": {
+        "exception_raised": true,
+        "persisted_title_label": "Unrolled Back Label",
+        "unsafe_write_survived_exception": true
+      },
+      "architecture_semantics": "NEGATIVE_DEMONSTRATED: SQL wrapper did not roll back actual native field write"
+    },
+    {
+      "id": "TX2",
+      "phase": "disjoint",
+      "checks_passed": 6,
+      "checks_total": 6,
+      "observation": {
+        "processes": 2,
+        "title_label": "Human Checked",
+        "status_label": "Automation Checked",
+        "guarded_resource_revisions": {
+          "title": 1,
+          "status": 1
+        },
+        "outcomes": [
+          "APPLIED",
+          "APPLIED"
+        ]
+      },
+      "architecture_semantics": "POSITIVE_LIMITED: two distinct real CLI processes, disjoint fields kept under explicit SQLite SQL transaction"
+    },
+    {
+      "id": "TX3",
+      "phase": "collision",
+      "checks_passed": 5,
+      "checks_total": 5,
+      "observation": {
+        "processes": 2,
+        "request_expected_revisions": [
+          1,
+          1
+        ],
+        "winner": {
+          "id": "c-alpha",
+          "status": "APPLIED",
+          "new_title": "Writer Alpha"
+        },
+        "loser": {
+          "id": "c-beta",
+          "status": "STALE",
+          "actual_revision": 2
+        },
+        "final_title_revision": 2
+      },
+      "architecture_semantics": "POSITIVE_LIMITED: one real concurrent same-field update accepted, the other rejected"
+    },
+    {
+      "id": "TX4",
+      "phase": "injected",
+      "checks_passed": 5,
+      "checks_total": 5,
+      "observation": {
+        "id": "f-title",
+        "outcome": "ROLLED_BACK",
+        "injected_value": "INJECTED_INVALID",
+        "persisted_title": "Writer Alpha",
+        "title_revision": 2
+      },
+      "architecture_semantics": "POSITIVE_LIMITED: explicit real BEGIN IMMEDIATE plus ROLLBACK restores field and revision"
+    },
+    {
+      "id": "TX5a",
+      "phase": "bypass-human",
+      "checks_passed": 5,
+      "checks_total": 5,
+      "observation": {
+        "native_field_update": "Ungoverned Human",
+        "ledger_resource": "status",
+        "ledger_revision": 1,
+        "external_edit_not_registered": true
+      },
+      "architecture_semantics": "NEGATIVE_DEMONSTRATED: ungoverned native writer bypasses sidecar revisions"
+    },
+    {
+      "id": "TX5b",
+      "phase": "bypass-agent",
+      "checks_passed": 6,
+      "checks_total": 6,
+      "observation": {
+        "agent_expected_revision": 1,
+        "agent_outcome": "APPLIED",
+        "final_label": "Unaware Agent",
+        "human_label_lost": "Ungoverned Human",
+        "final_status_revision": 2
+      },
+      "architecture_semantics": "NEGATIVE_DEMONSTRATED: logically consistent CAS ledger can authorize stale overwrite when human writes bypass it"
+    },
+    {
+      "id": "TX6",
+      "phase": "http",
+      "checks_passed": 7,
+      "checks_total": 7,
+      "observation": {
+        "contract_rest_http": 200,
+        "contract_html_http": 200,
+        "existing_business_row": true,
+        "final_status_label": "Unaware Agent"
+      },
+      "architecture_semantics": "POSITIVE_LIMITED: API and rendered view still accessible after tests"
+    }
+  ],
+  "counts": {
+    "assertion_executions": 36,
+    "passed": 36,
+    "distinct_test_type_count_not_claimed": true
+  },
+  "forbidden_claims": [
+    "Green CI does NOT mean 36 independent security requirements passed",
+    "TX1 and TX5 are intentional observed unsafe behaviors",
+    "No real authenticated browser editor operation was executed",
+    "No actual LLM or Agent participated",
+    "The version ledger is a lab-only sidecar, not native Saltcorn version management",
+    "No production-grade API authentication, isolation, audit, cross-resource atomicity or HTTP CAS",
+    "Platform contract TC01-TC18 unchanged: 0/18 fully passed"
+  ],
+  "stage": {
+    "S1": "IN_PROGRESS",
+    "G1": "NOT_PASSED",
+    "contract_full_tasks_passed": 0,
+    "contract_full_tasks_total": 18
+  }
+}

@@ -63,3 +63,11 @@
 - [可重复运行的 Saltcorn A/B/C 对照测试代码](../experiments/platform-saltcorn/roundtrip/README.md)
 
 **本轮事实**：18 次数据库/HTTP 断言均符合预注册预期，其中 B 路径证明了危险的静默覆盖，属于负面结果而非 H03 通过。程序化人工/自动化均由原生 CLI 脚本执行，尚未涉及真正可视编辑器或 LLM Agent。**G1 未通过**。
+
+## 2026-11-21：S1 真实 SQLite 事务与双进程版本竞争
+
+- [真实 Saltcorn SQLite 包装事务、原子事务与绕过治理研究报告](01-research/18-saltcorn-sqlite-atomic-evidence.md)
+- [双进程测试执行结果机器可读摘录](01-research/atomic-observations.json)；原始 [GitHub Actions Run #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657)，Artifact 14694034903
+- [可复现的原生事务与双进程实验工程](../experiments/platform-saltcorn/atomic/README.md)
+
+**本轮 36 次阶段断言均符合预期，但同时复现两个危险问题**：Saltcorn SQLite withTransaction 异常后写入不回滚；人工绕过研究版本表后，Agent 侧 CAS 会错误接受旧版本并静默覆盖人工值。这是 H03 的强约束证据，**不是 H03/G1 通过**。冻结合同任务仍 0/18 完整 PASS。

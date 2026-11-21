@@ -89,3 +89,7 @@
 ## E19 — 实际第三方平台“旧 Pack 覆盖人工改动”负对照（S0）
 
 [GitHub Actions #44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761)，Saltcorn CLI 1.7.0-beta.5，Job #136745819984，Artifact 14694023138，真实 SQLite/HTTP 下三组对照 + 运行态读回 18 次断言全部符合预注册预期。A：原生 Field.update 不同字段改变均保留；B：旧完整 Pack 只希望调整视图，但同步把人工 title.label 和前轮 status.label 还原旧值；C：非原子应用层旧基线检查抛出 STALE_BASE 并保留人工修改；HTTP 200 页面/REST 读回仍正常。**B 是已复现的不安全覆盖，不可被 green CI 误认为 H03 正面通过**。证据/源码索引见 [研究报告 16](16-saltcorn-roundtrip-evidence.md) 和 [候选 ADR](17-provisional-adr-guarded-editing.md)。
+
+## E20 — Saltcorn SQLite 事务包装器与真实并发实验（S0 + 固定源码）
+
+固定上游 [db-common/sqlite-commons.ts](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/db-common/sqlite-commons.ts) 的 SQLite withTransaction 实现没有真实 BEGIN/COMMIT/ROLLBACK；[sqlite/sqlite.ts](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/sqlite/sqlite.ts) 则有实际 SQL 事务原语。[字段编辑路由](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/server/routes/fields.ts) 调用 withTransaction/Field.update（目前只静态追踪该路由）。GitHub [Run #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 真正执行 SQLite 桩事务故障注入、独立进程资源级 CAS 冲突、原子回滚，以及不受控人工编辑绕过版本表的真实丢失。**36 次断言符合预期但含两类危险负对照**。详见 [研究报告 18](18-saltcorn-sqlite-atomic-evidence.md)、[机器摘要](atomic-observations.json)。

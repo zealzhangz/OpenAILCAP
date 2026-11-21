@@ -103,3 +103,9 @@
 - 真正原子 CAS、业务应用权限、跨应用隔离和自动构建部署：仍待开展。
 
 **门禁决策保持 G1 未通过**。下一阶段优先验证实际浏览器设计器保存路径、原子 expectedRevision 接口，以及具有可信授权的真实 Agent 工具调用，而不是继续写大量静态功能分析。候选 ADR 位于 [研究文档 17](17-provisional-adr-guarded-editing.md)。
+
+## 2026-11-21 G1 再评审：真实事务与写入入口完整性
+
+新增 [报告 18](18-saltcorn-sqlite-atomic-evidence.md)、[原始 Run #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657)，观察到真实第三方平台本机 SQLite 两进程并发写入、资源级原子 revision 冲突拒绝、故障注入回滚，且**真实复现了两个负面风险**：（1）Saltcorn 的 SQLite withTransaction 包装层无真实事务回滚，（2）未走治理账本的人工原生修改会被随后的 Agent 侧 CAS 误认为合法并覆盖。
+
+**G1 状态维持 NOT_PASSED**：这次测试验证的是低层协议和真实原生模型 API，不是浏览器登录后的设计器人工保存，不是实际模型 Agent。冻结合同 TC01—TC18 全部仍待完整端到端业务验收，不能借此计入通过。下一个严格门禁是先让真实浏览器/HTTP 人工写入进入同一不可绕过的版本历史，再观察 AI 工具调用的同步、冲突、授权及回滚。强制身份、租户、插件路径与部署仍为后续阻断。

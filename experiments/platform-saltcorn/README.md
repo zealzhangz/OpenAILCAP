@@ -51,3 +51,7 @@ CI 只上传不含密钥或数据库文件的结构化结果。若安装失败�
 ## S1 实际资源多轮编辑试验
 
 新增 [roundtrip/](roundtrip/README.md) 三阶段真实平台编辑实验，GitHub [Actions #44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761)，18 次断言符合预注册预期。B 阶段**实测旧完整 Pack 会把人工/其他程序保存的无关字段标签改回旧值**，属于已识别的不安全集成路径。A 阶段验证局部字段修改的串行保留；C 阶段验证非原子前置冲突检查，不等于并发 CAS。测试全部通过不意味着人机协作产品通过；没有真实 AI Agent 或浏览器设计器会话。见 [研究报告](../../docs/01-research/16-saltcorn-roundtrip-evidence.md)。
+
+## 真实 SQLite 事务语义、双进程并发与绕过版本账本负例
+
+新增 [atomic/](atomic/README.md) 研究，Run [#44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 成功执行。TX1 真实验证 Saltcorn SQLite withTransaction 的异常后写入不回滚；TX2/TX3 由两个独立 CLI 进程通过显式 SQLite BEGIN IMMEDIATE 和研究用 CAS 表实现本场景不同字段合并、同字段冲突拒绝；TX4 中途失败回滚；TX5 绕过版本表的人工原生字段修改又被 Agent CAS 错误覆盖；TX6 实际 HTTP 读回。**两项危险反例成功复现**，并非安全验收通过；尚无真实人工浏览器/LLM Agent，G1 未通过。

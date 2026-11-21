@@ -41,3 +41,7 @@ R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C
 ## 2026-11-21：真实 Saltcorn 多轮编辑协议对照（阶段 S1）
 
 独立工作流 [#44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761) 已实际执行 A/B/C 和 C-HTTP 四组验证，18/18 次断言符合预期，四份 JSON 作为 GitHub Artifact 14694023138 上传。最重要的是 B 路径：恢复基于旧上下文的完整 Pack 会覆盖人工已保存的 title.label，属于显著**负面证据**；A 仅证实不同字段的串行 Field.update 不相互影响；C 仅证实应用层旧基线检测能拒绝一例顺序冲突，**不是原子 CAS**。实验没有真正调用大模型或浏览器人工编辑。见 [实测报告](16-saltcorn-roundtrip-evidence.md) 和 [源码工程](../../experiments/platform-saltcorn/roundtrip/README.md)。
+
+## 2026-11-21 SQLite 真实原生事务与并发回填
+
+[Run #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 实测七组 36 次断言，包含两个不同 CLI 进程并发写入相同/不同 Saltcorn Field、真正 SQLite BEGIN IMMEDIATE 和 Field.update 同事务、事务内注入失败后 ROLLBACK、浏览器编辑器类似的直接原生更新绕过研究版本账本。实际同字段竞争一胜一旧版本拒绝；但 sidecar 账本被绕过时后续 CAS 仍错误接受覆盖。Saltcorn SQLite withTransaction 内真实事务语句被注释，异常后修改保留。**实验代码/审计报告**见 [atomic/README](../../experiments/platform-saltcorn/atomic/README.md)、[报告](18-saltcorn-sqlite-atomic-evidence.md)。没有真实认证浏览器会话或 LLM Agent。**G1 未通过**。

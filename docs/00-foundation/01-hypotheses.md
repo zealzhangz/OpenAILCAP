@@ -101,3 +101,9 @@ H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑
 [Saltcorn @ 1.7.0-beta.5 实际运行研究](../01-research/16-saltcorn-roundtrip-evidence.md)，[GitHub Actions #44871169761](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44871169761) 在实际第三方 SQLite 资源上复现了三种路径。A）人工预编写的 Field.update 和独立程序化 Field.update 串行修改不同标签都保留；B）使用人工变更前的完整 Pack 作为自动化写入时，目标仅修改视图列，却把人工标签和先前自动化标签恢复旧值，**真实证伪了“无保护全量恢复可作默认 AI 编辑工具”的集成假设**；C）非原子先读后写可在顺序冲突时抛出 STALE_BASE，但不具备并发 CAS 保证。
 
 **H01/H03 仍不能判定平台级通过**：没有真实可视设计器会话、真实模型规划及 Agent 工具调用、原子事务 CAS 或真实并发修改。优先排除默认全量导入方案，研究精确 Patch + 服务端原子基线验证。不能预先决定统一 Application IR 是否必要。[候选 ADR](../01-research/17-provisional-adr-guarded-editing.md) 记录证据、风险和迁移门槛。
+
+## 2026-11-21 H03：两进程原子比较与“版本表可被绕过”反例
+
+在真正 Saltcorn 1.7.0-beta.5 + 真实 SQLite 数据库上运行 [TX1—TX6](../01-research/18-saltcorn-sqlite-atomic-evidence.md)。[GitHub Actions #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 确认：不同资源两个独立进程都能提交；同一资源同旧 revision 两个进程只能一个提交；显式事务里的原生字段更新可因故障回滚。但 **Saltcorn SQLite withTransaction 只是包装回调，没有事务 SQL，故障后单字段写入保留**；并且**绕过研究用 CAS 版本表的人工原生 Field.update 会让 Agent 下一轮错误接受旧 revision 并覆盖人工编辑**。
+
+新增 H03 验收硬约束：不能只对 Agent 写入做版本检查，所有人工/Agent/插件写入必须共享强制治理 API 或可靠处理外部写入漂移；事务语义必须跨真实数据库适配层进行故障注入。实验仍没有浏览器真实会话、LLM Agent、生产鉴权/应用隔离。H03 仍未通过，G1 仍未通过。
