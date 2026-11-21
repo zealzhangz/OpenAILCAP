@@ -1,0 +1,33 @@
+test_delete_referenced_resource_is_rejected (test_roundtrip.DefensiveTests.test_delete_referenced_resource_is_rejected) ... ok
+test_immutable_id_field_is_rejected (test_roundtrip.DefensiveTests.test_immutable_id_field_is_rejected) ... ok
+test_manifest_hash_detects_raw_corruption (test_roundtrip.DefensiveTests.test_manifest_hash_detects_raw_corruption) ... ok
+test_negative_control_is_expected_to_lose_human_style (test_roundtrip.DefensiveTests.test_negative_control_is_expected_to_lose_human_style) ... ok
+test_parallel_disjoint_writes_preserved (test_roundtrip.DefensiveTests.test_parallel_disjoint_writes_preserved) ... ok
+test_parallel_same_field_conflict (test_roundtrip.DefensiveTests.test_parallel_same_field_conflict) ... ok
+test_rollback_revision_is_monotonic (test_roundtrip.DefensiveTests.test_rollback_revision_is_monotonic) ... ok
+test_untrusted_base_is_rejected (test_roundtrip.DefensiveTests.test_untrusted_base_is_rejected) ... ok
+test_A_unified_ir_C01 (test_roundtrip.RoundTripTests.test_A_unified_ir_C01) ... ok
+test_A_unified_ir_C02 (test_roundtrip.RoundTripTests.test_A_unified_ir_C02) ... ok
+test_A_unified_ir_C03 (test_roundtrip.RoundTripTests.test_A_unified_ir_C03) ... ok
+test_A_unified_ir_C04 (test_roundtrip.RoundTripTests.test_A_unified_ir_C04) ... ok
+test_A_unified_ir_C05 (test_roundtrip.RoundTripTests.test_A_unified_ir_C05) ... ok
+test_A_unified_ir_C06 (test_roundtrip.RoundTripTests.test_A_unified_ir_C06) ... ok
+test_A_unified_ir_C07 (test_roundtrip.RoundTripTests.test_A_unified_ir_C07) ... ok
+test_A_unified_ir_C08 (test_roundtrip.RoundTripTests.test_A_unified_ir_C08) ... ok
+test_A_unified_ir_C09 (test_roundtrip.RoundTripTests.test_A_unified_ir_C09) ... ok
+test_A_unified_ir_C10 (test_roundtrip.RoundTripTests.test_A_unified_ir_C10) ... ok
+test_B_domain_manifest_C01 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C01) ... ok
+test_B_domain_manifest_C02 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C02) ... ok
+test_B_domain_manifest_C03 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C03) ... ok
+test_B_domain_manifest_C04 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C04) ... ok
+test_B_domain_manifest_C05 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C05) ... ok
+test_B_domain_manifest_C06 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C06) ... ok
+test_B_domain_manifest_C07 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C07) ... ok
+test_B_domain_manifest_C08 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C08) ... ok
+test_B_domain_manifest_C09 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C09) ... ok
+test_B_domain_manifest_C10 (test_roundtrip.RoundTripTests.test_B_domain_manifest_C10) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.025s
+
+OK

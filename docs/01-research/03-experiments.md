@@ -1,4 +1,4 @@
-# 最小技术实验协议（尚未执行）
+# 最小技术实验协议（模型层部分已执行；真实平台验证未执行）
 
 日期：2026-11-21。所有用例先冻结输入、预期、版本和评价器，再运行生成器；AI 不能修改验收脚本。每次记录 commit、模型版本、工具/环境版本、操作轨迹、耗时、Token、状态快照、测试结果、回滚与失败原因。
 
@@ -23,3 +23,9 @@
 每条运行记录：test_case_id、repo_sha、environment、input、operations、expected、actual、test_report、rollback_report、result（PASS/FAIL/BLOCKED/NOT_RUN）、evidence_paths。
 
 禁止把存在测试代码当成测试已执行；禁止只筛选成功样例；不得让生成 Agent 自行宣布验收通过。第一阶段最小模型试验成功只支持模型层可行性，第三阶段还需要真实运行时 PoC。
+
+## 2026-11-21 实验执行回填
+
+C 组（H01/H03）已完成模型级 C01—C10：Unified IR 10/10、分域 Schema + Manifest 10/10；含防御性单测共 28/28 通过。复现了旧快照整页覆盖导致人工样式丢失的负对照。具体命令、机器可读结果和暴露的可信基线问题见 [实验报告](05-roundtrip-results.md) 与 [实验工程](../../experiments/roundtrip/README.md)。
+
+R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C 的真实低代码运行时版本也未执行。不能宣称 G1 或 G3 通过。

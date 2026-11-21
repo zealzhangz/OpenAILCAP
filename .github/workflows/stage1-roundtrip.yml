@@ -1,0 +1,33 @@
+name: S1 Roundtrip Spike
+on:
+  push:
+    paths:
+      - 'experiments/roundtrip/**'
+      - '.github/workflows/stage1-roundtrip.yml'
+  pull_request:
+    paths:
+      - 'experiments/roundtrip/**'
+      - '.github/workflows/stage1-roundtrip.yml'
+permissions:
+  contents: read
+jobs:
+  model-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run independent scenario and defensive tests
+        working-directory: experiments/roundtrip
+        run: python3 -m unittest discover -s tests -v
+      - name: Generate model experiment evidence
+        working-directory: experiments/roundtrip
+        run: python3 run_experiment.py --output results-ci.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: roundtrip-model-results
+          path: experiments/roundtrip/results-ci.json
+          if-no-files-found: warn

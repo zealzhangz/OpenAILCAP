@@ -12,3 +12,12 @@
 **当前状态**：已静态阅读核心源码并固定五个外部项目的 Commit；八项假设验证 0/8；完整 PoC 0/4；第三方运行复现 0；G1 未通过。
 
 推荐后续目录：`docs/02-product`、`docs/03-architecture`、`docs/04-specification`、`prototype`、`platform`、`experiments`、`benchmarks`、`manual`；按实际进度增量建立，不制造空目录。
+
+## 2026-11-21：第一组实测补充
+
+- [ToolJet MCP 真实源码同步调用链](01-research/04-tooljet-sync-trace.md)
+- [H01/H03 首轮模型实验结果](01-research/05-roundtrip-results.md)
+- [可执行实验源码、28 项单测及结果 JSON](../experiments/roundtrip/README.md)
+- [GitHub Actions 模型实验检查](../.github/workflows/stage1-roundtrip.yml)
+
+**更新后的状态**：模型层对照 A/B 各通过 10/10 场景，防御测试总计 28/28 通过；旧快照覆盖负例已复现。仅完成模型层 Spike，尚无真实低代码平台复现；H01/H03 平台级仍未验证，G1 未通过。

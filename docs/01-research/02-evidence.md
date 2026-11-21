@@ -49,3 +49,11 @@
 ## 证据边界和后续行动
 
 本次未部署或运行上述第三方项目；未逐文件核查许可证；缺乏编译日志、测试报告、业务场景复现。**已验证假设数 0/8，G1 未通过。** 后续必须补齐源码调用链、官方许可、可复现实测及独立断言。
+
+## E10 — ToolJet MCP Code mode 实际调用链进一步追踪（静态）
+
+固定版本 [src/tools/codeApp.ts](https://github.com/ToolJet/tooljet-mcp/blob/8a178ad34f6e3326b6957503ca4ed4f555d23096/src/tools/codeApp.ts) 中，约第 713 行 syncEditorEdits 调用 CLI source-pull；约第 1006—1030 行读取文件及更新 readHashes；约第 1074—1114 行写入前重新同步并检查文件哈希及文本修改定位，冲突则拒绝。证据等级仍为 S1，不代表已运行第三方测试。详细解读见 [ToolJet 调用链](04-tooljet-sync-trace.md)。
+
+## E11 — OpenAILCAP 自主模型级实测（S0，但范围受限）
+
+运行了 [内存模拟对照实验](../../experiments/roundtrip/README.md)，A/B 各 10/10 场景通过，28 项单元测试通过；[机器可读结果](../../experiments/roundtrip/results.json)。实验证明的是本仓库**模拟模型**，不是 ToolJet/NocoBase 运行时，也不是实际 AI Agent。见 [实验报告](05-roundtrip-results.md)。

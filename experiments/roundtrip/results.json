@@ -1,0 +1,229 @@
+{
+  "experiment": "OpenAILCAP H01/H03 model-only roundtrip spike",
+  "scope": "in-memory deterministic simulator, NOT a real low-code runtime",
+  "python": "3.13.5",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "cases": [
+    {
+      "design": "A-unified-ir",
+      "case": "C01-disjoint-same-resource",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 576353,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 882
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C02-overlap-conflict",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 323930,
+      "resource_count": 6,
+      "final_revision": 1,
+      "serialized_bytes": 882
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C03-equal-revision-content-drift",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 525117,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 882
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C04-deleted-reference",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 415915,
+      "resource_count": 5,
+      "final_revision": 1,
+      "serialized_bytes": 727
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C05-cross-domain-disjoint",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 360664,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 882
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C06-unknown-plugin-fields",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 365621,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 889
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C07-transaction-and-rollback",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 573859,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 882
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C08-idempotency",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 303139,
+      "resource_count": 7,
+      "final_revision": 1,
+      "serialized_bytes": 995
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C09-human-code-preservation",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 399411,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 902
+    },
+    {
+      "design": "A-unified-ir",
+      "case": "C10-manual-no-ai-required",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 657573,
+      "resource_count": 7,
+      "final_revision": 3,
+      "serialized_bytes": 1028
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C01-disjoint-same-resource",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 535733,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 1633
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C02-overlap-conflict",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 433752,
+      "resource_count": 6,
+      "final_revision": 1,
+      "serialized_bytes": 1633
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C03-equal-revision-content-drift",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 811101,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 1633
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C04-deleted-reference",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 553930,
+      "resource_count": 5,
+      "final_revision": 1,
+      "serialized_bytes": 1370
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C05-cross-domain-disjoint",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 534562,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 1633
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C06-unknown-plugin-fields",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 537806,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 1640
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C07-transaction-and-rollback",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 797630,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 1633
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C08-idempotency",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 445119,
+      "resource_count": 7,
+      "final_revision": 1,
+      "serialized_bytes": 1859
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C09-human-code-preservation",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 684883,
+      "resource_count": 6,
+      "final_revision": 2,
+      "serialized_bytes": 1653
+    },
+    {
+      "design": "B-domain-manifest",
+      "case": "C10-manual-no-ai-required",
+      "status": "PASS",
+      "error": null,
+      "elapsed_ns": 904048,
+      "resource_count": 7,
+      "final_revision": 3,
+      "serialized_bytes": 1891
+    }
+  ],
+  "summary": {
+    "A-unified-ir": {
+      "pass": 10,
+      "total": 10
+    },
+    "B-domain-manifest": {
+      "pass": 10,
+      "total": 10
+    }
+  },
+  "negative_control": {
+    "name": "stale-full-replace-loses-human-edit",
+    "failure_reproduced": true
+  },
+  "limitations": [
+    "No persisted database or crash recovery",
+    "No application editor or runtime",
+    "No authentication boundary or real multi-user access",
+    "No AI model was called",
+    "Shared merge algorithm; A/B compares representation, not full architectures"
+  ]
+}

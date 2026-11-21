@@ -36,3 +36,7 @@
 ## 当前状态
 
 已确认用户仓库 README 任务和初始空白目录；取得五个外部仓库固定 commit 并静态读取关键文件。**尚未完成**：实际部署运行、许可逐文件核实、端到端调用链、同场景复现、G1 决策。
+
+## 2026-11-21 实施进展补充
+
+WP2 已完成 ToolJet MCP Code mode 文件写入保护的首条源码调用链（[文档](04-tooljet-sync-trace.md)）；WP5 已完成 H01/H03 的可执行**模型层** A/B Spike（[报告](05-roundtrip-results.md)，[代码与结果](../../experiments/roundtrip/README.md)）。28 项 Python 单测通过，负对照覆盖缺陷复现。尚未部署任何第三方低代码系统、未执行其测试套件，**G1 尚未达到真实运行验证条件**。
