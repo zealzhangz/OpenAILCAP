@@ -1,0 +1,57 @@
+name: S1 B16 real Native Web Apply UID read-only feasibility
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b16-readonly-native-web.yml'
+      - 'experiments/g1-b01-b16/**'
+      - 'experiments/platform-saltcorn/contract-pack.json'
+      - 'experiments/platform-saltcorn/seed-contract.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readonly-native-web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned real Saltcorn and Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: Create independent Apply and Web UIDs
+        run: |
+          set -euo pipefail
+          sudo -n groupadd --system ailcapb16read
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -g ailcapb16read ailcapb16apply
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -g ailcapb16read ailcapb16web
+          id ailcapb16apply
+          id ailcapb16web
+      - name: Real UID permissions native CLI HTTP Chromium and startup matrix
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b16/*.py
+          mkdir -p /tmp/s1-b16-evidence
+          python3 experiments/g1-b01-b16/inspect_upstream.py /tmp/s1-b16-evidence/upstream
+          python3 -u experiments/g1-b01-b16/experiment.py --output /tmp/s1-b16-evidence/results.json \
+            2>&1 | tee /tmp/s1-b16-evidence/experiment.log
+      - name: Preserve positive and negative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b16-readonly-native-web-evidence
+          path: /tmp/s1-b16-evidence/
+          if-no-files-found: warn
