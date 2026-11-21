@@ -31,3 +31,12 @@
 4. 多租户行级 ACL、PII、删除/Schema Migration、跨主机 mTLS/HA、长连接/故障切换、W17/W24 正式门禁没有通过。
 
 **正式判定始终**：S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 PARTIALLY VALIDATED / OPEN；冻结 W01—W24 0/24 FULL PASS，TC01—TC18 0/18 FULL PASS。**测试通过不等于正式 G1 门禁通过。**
+
+
+## 最终真实验证与合并结果（2026-11-22）
+
+- [完整报告 47](../../docs/01-research/47-s1-b14-ed25519-independent-sql-auditor-evidence.md)、[最终 Actions #44926315233](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926315233) **completed/success**，Job **136913068933**，[Artifact #14716390392](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926315233/artifacts/14716390392)：B14 **24/24**、B13 **22/22**、B12 **22/22**、B11 **28/28**、B10 **34/34**、B2 **18/18**、B5 **40/40** 单元/契约，共 **188/188**；真实 B11 62 + B12 17 + B13 25 + B14 24 = **128/128 E2E PASS**；**0 次 DeepSeek**。
+- **真实 Ed25519 修复 B13 受控 IPC 事件伪造 P0**：旧 B13 Broker 先实际接受伪造事件；受信 CI Controller 关闭旧无签名 Broker、清空**一次性 Native 派生库**，Kernel UID999 独占0600 Ed25519 私钥签名28条 B2 原始 Outbox 事件，Native UID997 固定公钥验签后原子提交28条/幂等回放28条；旧 SHA256 伪造事件及篡改重算哈希、复用旧签名均被拒绝。无 sudo Consumer UID994 自动同步第八份 B2 合同4条签名事件，Cursor28→32；Consumer 伪造 seq33 事件被 Native 拒绝，Cursor32不变。
+- **第五独立 UID 物理 SQL 审计**：审计 UID993 与 Native UID997 不同；实际 `O_RDONLY` 读取 Native SQLite 成功、`O_WRONLY` PermissionError；审计 Socket 0660、SO_PEERCRED 仅 Router UID995；Native UID 连接拒绝。真实 Saltcorn/Chromium 受控入口200；Native UID 直接 SQL 污染后**独立审计 clean=false、Guard503、Native 原生直连200**；人工修复后 Guard200。**不等于 Native UID 无法直接改写派生库，原生 HTTP 直连仍是旁路。**
+- [PR #16](https://github.com/zealzhangz/OpenAILCAP/pull/16) 已合并 main，SHA **1dabeba18450adbd09196e6f21acb32cb7e080a2**。保留 [首次 CI #44925890843](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44925890843) Ubuntu User/Group 同名冲突，以及 [第二次 #44926049128](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926049128) Guard 临时目录 B13 前缀误用导致进程拒绝；最终 [#44926315233](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926315233) 全绿。
+- **正式门禁不变**：S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 PARTIALLY VALIDATED / OPEN；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**。下一步 B15：强制网络入口、派生 SQLite 只读快照/受控发布，保留 Native 直连与直接 SQL 负对照。
