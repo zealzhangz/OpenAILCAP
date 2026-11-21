@@ -223,7 +223,9 @@ def main():
                 check("upstream-restored", json.loads(restored)["sha256"] == ORIGINAL_SHA, json.loads(restored))
                 publish(4)
                 denied_native = probe(VIEW, "read")
-                check("snapshot-web-cannot-read-native-db", not denied_native["ok"] and denied_native["errno"] == 13, denied_native)
+                raw_open = run(as_user(VIEW, [sys.executable, "-c", "import os,sys; os.close(os.open(sys.argv[1],os.O_RDONLY))", db]))
+                denied_native["rawOpenPermissionDenied"] = raw_open.returncode != 0 and "PermissionError" in raw_open.stderr
+                check("snapshot-web-cannot-read-native-db", not denied_native["ok"] and denied_native["rawOpenPermissionDenied"], denied_native)
                 for operation in ("write-open", "unlink"):
                     denied = probe(VIEW, operation, snapshot)
                     check("snapshot-web-" + operation + "-denied", not denied["ok"] and denied["errno"] == 13, denied)
