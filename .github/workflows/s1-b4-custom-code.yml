@@ -1,0 +1,90 @@
+name: S1 B4 custom code - Docker sandbox, hidden oracle, B2 release binding
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b4-custom-code.yml'
+      - 'experiments/g1-b01-b4/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-preflight-then-one-model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile and adversarial AST and model-tool tests - no API
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b4/*.py
+          cd experiments/g1-b01-b4
+          python3 -u -m unittest -v test_policy \
+            2>&1 | tee /tmp/s1-b4-policy.log
+      - name: Verify B2 existing metadata-runtime and release baseline
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b2
+          python3 -u -m unittest -v test_schema \
+            2>&1 | tee /tmp/s1-b4-b2-regression.log
+      - name: Pull one sandbox base image and capture immutable local image ID
+        run: |
+          set -euo pipefail
+          timeout 300s docker pull python:3.13-alpine
+          IMAGE_ID="$(docker image inspect python:3.13-alpine --format '{{.Id}}')"
+          [[ "$IMAGE_ID" =~ ^sha256:[a-f0-9]{64}$ ]]
+          echo "S1_B4_IMAGE_ID=$IMAGE_ID" >> "$GITHUB_ENV"
+          echo "S1_B4_SANDBOX_IMAGE|$IMAGE_ID"
+      - name: Install Chromium + pinned Playwright for real human UI
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Offline true Docker build and Chromium application E2E
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b4/experiment.py \
+            --mode offline --output /tmp/s1-b4-offline.json \
+            2>&1 | tee /tmp/s1-b4-offline.log
+      - name: Authorize ONLY one specially-marked same-repository PR head
+        id: live_gate
+        env:
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]] && \
+             [[ "$GITHUB_REPOSITORY" == "zealzhangz/OpenAILCAP" ]] && \
+             [[ "$PR_HEAD_REPO" == "$GITHUB_REPOSITORY" ]] && \
+             [[ "$(git log -1 --format=%s)" == "research(s1): authorize exactly one B4 DeepSeek code [b4-deepseek-once]" ]]; then
+            echo "authorized=true" >> "$GITHUB_OUTPUT"
+            echo "S1_B4_MODEL_GATE|AUTHORIZED_SINGLE_REQUEST"
+          else
+            echo "authorized=false" >> "$GITHUB_OUTPUT"
+            echo "S1_B4_MODEL_GATE|OFFLINE_ONLY"
+          fi
+      - name: One real DeepSeek code proposal -> AST -> isolated build -> browser runtime
+        if: steps.live_gate.outputs.authorized == 'true'
+        env:
+          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b4/experiment.py \
+            --mode live --output /tmp/s1-b4-live.json \
+            2>&1 | tee /tmp/s1-b4-live.log
+      - name: Upload immutable observations and negative-case logs even on failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b4-real-custom-code-sandbox
+          path: |
+            /tmp/s1-b4-policy.log
+            /tmp/s1-b4-b2-regression.log
+            /tmp/s1-b4-offline.json
+            /tmp/s1-b4-offline.log
+            /tmp/s1-b4-live.json
+            /tmp/s1-b4-live.log
+          if-no-files-found: warn
