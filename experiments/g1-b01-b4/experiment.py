@@ -118,6 +118,9 @@ def main():
                   select_mode(REQUIRED)=="CUSTOM_CODE",
                   {"missing":REQUIRED,"decision":"CUSTOM_CODE"})
             defs=json.loads((HERE.parent/"g1-b01-b2"/"contract_spec.json").read_text())
+            # Existing B2 fixture has three visible columns; this B4 browser
+            # observation requires the visible title, as in verified B3.
+            defs["view.contracts"]["columns"]=["contract_no","title","amount_minor","status"]
             for n,(rid,spec) in enumerate(defs.items(),1):
                 draft=b2.draft(agent,"app-a")
                 b2.mutate(agent,"app-a",{
