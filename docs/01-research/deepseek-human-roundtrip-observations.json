@@ -1,0 +1,172 @@
+{
+  "title": "S1 real Saltcorn Chromium human ↔ real DeepSeek scoped field patch ↔ human",
+  "date": "2026-11-21",
+  "tested_commit": "c73b0319348070f670833310fb54cfa781cc17a4",
+  "platform": "Saltcorn @saltcorn/cli@1.7.0-beta.5 / real Playwright Chromium 1.56.0 / SQLite",
+  "real_model": {
+    "provider": "DeepSeek",
+    "model": "deepseek-flash",
+    "secret_source": "GitHub Actions secret DEEPSEEK_KEY, never logged",
+    "actual_https_model_requests": 1,
+    "function_calls": 1,
+    "function_name": "propose_native_field_patch",
+    "observed_snapshot": {
+      "title": "Human First Saved",
+      "status": "Status"
+    },
+    "requested_delta": {
+      "field": "status",
+      "expected_title": "Human First Saved",
+      "expected_status": "Status",
+      "new_label": "AI Reviewed Status"
+    },
+    "usage_tokens": {
+      "prompt_tokens": 491,
+      "completion_tokens": 92,
+      "total_tokens": 583
+    },
+    "no_model_source_code": true,
+    "no_model_mutating_tool_access": true
+  },
+  "independent_native_execution": {
+    "first_human_browser_post_count": 3,
+    "second_human_browser_post_count": 3,
+    "native_CAS_first": "APPLIED",
+    "native_CAS_replay": "STALE_REJECTED",
+    "native_write_attempted_on_replay": false,
+    "final_physical_fields": {
+      "title": "Human Second Saved",
+      "status": "AI Reviewed Status"
+    },
+    "AI_label_visible_in_original_field_editor": true,
+    "existing_business_row_preserved": true,
+    "http_contract_rest": 200,
+    "http_contract_html": 200,
+    "checks": [
+      {
+        "id": "COL01-real-first-human-browser",
+        "result": "PASS",
+        "observation": "actual Chromium native editor POST with contextEnc and CSRF 3 times"
+      },
+      {
+        "id": "COL02-initial-physical-browser-state",
+        "result": "PASS",
+        "observation": "title Title→Human First Saved; status remained Status"
+      },
+      {
+        "id": "COL03-real-model-source",
+        "result": "PASS",
+        "observation": "actual DeepSeek deepseek-flash, 1 model request and 1 typed function call"
+      },
+      {
+        "id": "COL04-model-reflected-current-human-title",
+        "result": "PASS",
+        "observation": "model exact expected_title Human First Saved; expected_status Status"
+      },
+      {
+        "id": "COL05-strictly-scoped-model-patch",
+        "result": "PASS",
+        "observation": "status-only label AI Reviewed Status; no model write tools"
+      },
+      {
+        "id": "COL06-first-agent-native-CAS-applied",
+        "result": "PASS",
+        "observation": "Field.update under BEGIN IMMEDIATE, APPLIED, human title preserved"
+      },
+      {
+        "id": "COL07-real-second-human-browser",
+        "result": "PASS",
+        "observation": "actual native Chromium field wizard POST 3 times"
+      },
+      {
+        "id": "COL08-browser-did-not-lose-AI-modification",
+        "result": "PASS",
+        "observation": "title Human First Saved→Human Second Saved; AI status label visible in original editor"
+      },
+      {
+        "id": "COL09-stale-model-patch-blocked",
+        "result": "PASS",
+        "observation": "STALE_REJECTED; native_write_attempted=false"
+      },
+      {
+        "id": "COL10-stale-patch-observed-latest-human",
+        "result": "PASS",
+        "observation": "physical title Human Second Saved and status AI Reviewed Status"
+      },
+      {
+        "id": "COL11-final-physical-human-label-preserved",
+        "result": "PASS",
+        "observation": "physical _sc_fields title Human Second Saved"
+      },
+      {
+        "id": "COL12-final-physical-AI-label-preserved",
+        "result": "PASS",
+        "observation": "physical _sc_fields status AI Reviewed Status"
+      },
+      {
+        "id": "COL13-existing-business-record-preserved",
+        "result": "PASS",
+        "observation": "HT-2026-000001 and 100000001 cents still persisted"
+      },
+      {
+        "id": "COL14-runtime-/api/s1_contracts/",
+        "result": "PASS",
+        "observation": "native HTTP 200 and expected contract number returned"
+      },
+      {
+        "id": "COL14-runtime-/view/s1_contract_list",
+        "result": "PASS",
+        "observation": "native HTML 200 with expected contract number"
+      },
+      {
+        "id": "COL16-model-supplied-no-source-code",
+        "result": "PASS",
+        "observation": "LLM did not supply JavaScript; native browser editor bypass remains"
+      }
+    ],
+    "checks_total": 16,
+    "checks_passed": 16,
+    "offline_security_unit_tests_total": 8,
+    "offline_security_unit_tests_passed": 8
+  },
+  "evidence": {
+    "real_model_run": {
+      "run_id": 44885275152,
+      "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152",
+      "status": "completed",
+      "conclusion": "success",
+      "job_id": 136789099373,
+      "artifact_name": "s1-chromium-deepseek-collab-evidence",
+      "artifact_id": 14699991457
+    },
+    "offline_platform_preflight": {
+      "run_id": 44885046889,
+      "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889",
+      "status": "completed",
+      "conclusion": "success",
+      "model_inference_executed": false,
+      "artifact_id": 14699452051
+    },
+    "original_test_harness_failure": {
+      "run_id": 44884822563,
+      "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884822563",
+      "root_cause": "JSON parser matched CLI source-code echo, fixed by only matching emitted prefix lines"
+    }
+  },
+  "strict_scope": {
+    "real_browser_actions_are_playwright_simulated_human": true,
+    "actual_human_manual_edit_confirmed": false,
+    "native_browser_editor_write_path_uses_unified_CAS": false,
+    "native_browser_stale_form_can_still_overwrite": true,
+    "agent_side_guarded_patch_proven": true,
+    "distributed_transaction_or_all_concurrent_interleavings_proven": false,
+    "model_generated_code": false,
+    "model_generated_app_schema": false,
+    "production_identity_delegation_or_human_signing": false,
+    "frozen_contract_tc_complete_pass": 0,
+    "frozen_contract_tc_total": 18,
+    "phase": "S1",
+    "G1": "NOT_PASSED"
+  },
+  "source": "Verified Github Actions stdout and separate raw CI artifact files; curated summary not a substitution for artifact"
+}

@@ -69,3 +69,7 @@ GitHub [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/
 ## 2026-11-21：单次 DeepSeek 模式路由 + 原生执行端到端证据
 
 [Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495)：DeepSeek `deepseek-flash` 1 次 Function Calling 推理批量选择 6 个固定需求的 CONFIG/CODE/HYBRID 模式，**6/6 预登记参考标签匹配**，实际 Saltcorn Native Pack/Model/Trigger/View/SQLite/HTML **20/20 PASS**，只消耗 994 Tokens；原始预测与平台验收分开保存在两个 Artifact 中。独立 [离线无模型平台预检 #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) 20/20，不计模型分数。禁区：这不是模型生成代码/Schema、不涉及真实人工设计器，也没有多次任务的可靠性/准确率验证。[报告 26](26-deepseek-mode-route-evidence.md)。
+
+## 2026-11-21 真正 Saltcorn 人工浏览器 → DeepSeek → 受限字段修改 → 人工浏览器
+
+[实测 Run #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152) completed/success，**1 次真实 deepseek-flash Function Calling（583 Tokens）、8/8 单元 + 16/16 真实浏览器/原生平台数据校验**。首个 Chromium 原生向导通过 CSRF 与 contextEnc 修改标题；模型观察真实 _sc_fields 后只提议 status 标签；可信控制器以 BEGIN IMMEDIATE 双字段快照检查、原生 Field.update 更新；第二次浏览器编辑 title 后在原生 status 编辑器核对 AI 字段，旧提议再次执行为 STALE_REJECTED、未写。独立从 SQLite 及 HTTP 业务页面验收。对照 [无模型预检 #44885046889](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889) 完整 16/16。仍未对**原生浏览器写入**实现 CAS，先前危险覆盖真实负例保留。源码 [collab](../../experiments/platform-saltcorn/collab/README.md)、[报告 27](27-real-deepseek-human-roundtrip-evidence.md)。G1 NOT_PASSED。

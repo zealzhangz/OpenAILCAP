@@ -132,3 +132,12 @@
 - [Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495)：**真正 DeepSeek 1 次 Function Call，6/6 路由正确，Saltcorn 20/20 独立运行验证通过**；模型输入 876、输出 118、总计 994 Tokens。参照 [无模型平台预检 #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) 同样 20/20，明确不将预检的 6/6 当作 AI 成果。
 
 **严格边界**：模型只选择 CONFIG/CODE/HYBRID 枚举；Saltcorn 原生 Pack、字段和代码 Trigger 都是研究员预写，**没有 AI 自动生成代码/Schema 或人工—AI 双向编辑**。小样本单次成功不是泛化准确率证明。G1 NOT_PASSED，完整合同 18 项仍 0/18 PASS。
+
+## 2026-11-21：S1 真实 DeepSeek × Saltcorn 原生浏览器人机交替编辑正向证据
+
+- [报告 27：真实 Chromium → DeepSeek → 守卫式原生 Field.update → Chromium](01-research/27-real-deepseek-human-roundtrip-evidence.md)
+- [机器可读 16 项实证结果与真实模型用量](01-research/deepseek-human-roundtrip-observations.json)
+- [可运行的受限字段 Patch、浏览器操作与冲突负对照](../experiments/platform-saltcorn/collab/README.md)
+- [最终真实模型 GitHub Actions #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152)：**8/8 单元 + 16/16 实际 Saltcorn/Chromium/LLM/SQLite/HTTP 验收**，仅 1 次 DeepSeek Function Calling，共 583 Tokens，Artifact ID 14699991457。另有 **零模型预检** [#44885046889](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889)，同样 16/16，不能计为 AI 证据。
+
+**已验证**：真实浏览器模拟人工先改 title，DeepSeek 从真实最新元数据提出 status-only Patch，可信执行器事务内检查旧快照并调用原生 Field.update，第二次浏览器编辑后 AI 字段不丢，旧 AI Patch 被拒。**未验证**：真实自然人手工授权、原生浏览器编辑路径的版本门禁、所有并发交错/插件写入、AI 自动建模/代码。S1 仍在进行，G1 NOT_PASSED，冻结 TC 完整 0/18。

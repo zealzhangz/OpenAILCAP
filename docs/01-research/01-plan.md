@@ -87,3 +87,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：S1 配置 / 代码 / 混合模式的真实模型选择最小实验完成
 
 在真实只读 Function Calling 之后，新增六项预冻结模式分类研究：[真实 DeepSeek CI #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495) completed/success，**1 次调用/994 Tokens，六个模型选择 6/6 正确；真正 Saltcorn 执行验证 20/20**。代码仅预装允许的原生字段、List View、校验触发器和跨表审计，模型只选择受限枚举；此结果是 S1“能否做开发模式路由”的小样本正向证据，**不是 AI 自动开发应用**。离线预检先取得 [20/20](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751)，避免一次推理中的平台失败产生额外费用。下一优先投入**真实人工编辑器和 AI 接手的安全正向闭环**，再整合 G1 正式选型，不再重复模式分类连通性收费测试。
+
+## 2026-11-21：三项核心 S1 AI 机制均取得真实平台限域证据
+
+工具选择：[报告 25](25-deepseek-real-tool-call.md)；模式选择：[报告 26](26-deepseek-mode-route-evidence.md)；真实浏览器/AI 交替编辑：[报告 27](27-real-deepseek-human-roundtrip-evidence.md)。最新 [Actions #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152) 8/8 单元 + 16/16 真实平台，通过一次 583 Tokens DeepSeek 调用读取 H1 的真实元数据并生成受限 status Patch，H2 浏览器继续修改后仍保留 AI 状态，旧 Patch 拒绝。三项虽都有**小范围正向实验**，但现有低代码功能、代码触发器和 CAS 都由研究人员预写；并未证明 AI 自主生成应用/代码，原生编辑器仍绕过版本门禁。后续优先集中剩余 S1 1.1—1.5 综合交付、候选 ADR 与正式 G1 决策，谨慎将完整 PoC 留到 S3。G1 NOT_PASSED。

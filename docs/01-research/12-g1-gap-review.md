@@ -163,3 +163,11 @@
 本轮 [报告 26](26-deepseek-mode-route-evidence.md) 和 [Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495) **completed/success**：真实 DeepSeek `deepseek-flash` 单次推理、单个结构化 Function Call 在预先固定的 6 项需求中分别正确选择 CONFIG 两项、CODE 两项、HYBRID 两项，**6/6 与独立冻结标签一致**。模型决策实际驱动 Saltcorn 受控预装能力，平台 `_sc_tables`、`_sc_triggers`、实际 SQLite、校验码拒绝、跨表审计及 HTML List View 的 **20/20 独立断言通过**；模型本次共 994 Tokens，GitHub Secret `DEEPSEEK_KEY` 未暴露。先进行 [无模型预检 #44883844751](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44883844751) 20/20，再进行唯一一次模型推理，保证平台问题不会导致重复付费。
 
 因此 G1 中“真实模型能否基于能力清单作模式路由”已有**小样本正向机制性证据**，不再是 NOT_RUN。但不能把六项手选、描述清晰的案例推导为实际陌生需求上的准确率；代码/模型/页面均由研究员预装，**还没有模型自主创建业务模型/生成代码、失败自动修复、自动发布或与原生人工设计器多轮双向编辑**。对 S1 阶段尤其重要的尚缺项是：**真实原生人工编辑—Agent 安全接手的正向闭环**、模式/代码扩展失败后的重新规划、四平台证据综合选型与正式最终 G1 决策。完整冻结合同仍为 **0/18 完整 PASS，G1 仍 NOT_PASSED**。
+
+## 2026-11-21 第十轮 G1：真实 DeepSeek 感知人工编辑并受控接手的限域正向研究
+
+[报告 27](27-real-deepseek-human-roundtrip-evidence.md) 与 [GitHub Actions #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152)：完成真实 Saltcorn Chromium 原生设计器写入 → 最新 SQLite 字段快照 → **真正 DeepSeek 单次 Function Calling（583 Tokens）** → 守卫式原生 Field.update → Chromium 再次修改 → 原始过时 AI Patch 被拒，**8/8 单元、16/16 独立浏览器/元数据/HTTP 断言成功**。模型引用了第一个浏览器真实保存后的 Human First Saved；最后真实 title=Human Second Saved、status=AI Reviewed Status，页面可见，既有合同与 HTTP 仍正常。先进行 [无模型预检 #44885046889](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889) 16/16 再使用 DEEPSEEK_KEY，避免付费模型替平台环境排障。最初 [#44884822563](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884822563) 因验收器错误解析 CLI 代码回显失败，已修复并保留记录。
+
+**证据重要性**：S1 中“人工界面修改 → 真正 LLM 观察并返回类型化增量 Patch → 原生平台执行 → 人工继续”已具备可复现的、**顺序非冲突小范围**正向验证。相比此前仅 CLI 模拟 Agent 和真实浏览器负例，首次有实际 DeepSeek 模型参与交接。研究仍需明确 Saltcorn 原生浏览器 POST **没有接入 Agent 使用的事务 CAS**，此前旧浏览器表单覆盖事实依然成立，**不可将完整 H03、企业级安全协同或所有编辑路径无丢失判定通过**。Playwright 模拟操作真实网页，不是自然人的手工点击或签字授权。模型也没有生成源码、Page、Schema 或插件。
+
+**G1 决策保持 NOT_PASSED，冻结 TC01—TC18 完整 PASS 仍是 0/18。** S1 三项最关键的机制性研究（真实工具选择、配置/代码/混合路径选择、小范围 AI-浏览器交替编辑）已各有真实第三方平台证据。下一应减少重复新增脚本，集中完成开源平台综合对比、可借鉴与不可复用机制、正式候选 ADR/最小技术内核/阶段边界及 G1 综合审查；完整原生统一版本写入是后续 PoC 高优先风险。

@@ -121,3 +121,9 @@
 ## E27 — DeepSeek 真实 CONFIG/CODE/HYBRID 分类与 Saltcorn 原生运行（S0 单次小样本实证）
 
 [Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495) completed/success，被测 Commit 4e9307b876db94c96ddc4f179353e7beccd40352，模型 Job 136785281254 / Artifact 14698694770，真实 Saltcorn Job 136785345227 / Artifact 14699311128。DeepSeek `deepseek-flash` 一次真实 HTTPS Function Call，6 个固定合同需求中 CONFIG/CODE/HYBRID **各 2/2，共 6/6 分类正确**，876 输入 +118 输出 = **994 Tokens**。受限路由确实驱动预装原生 Table、Field、List View、Validate/Insert Code Action Trigger，独立 SQL/HTML 检查 **20/20 PASS**：模 7 不合法校验码被真实平台拒绝，超过 100 万与恰好 100 万分别产生 HIGH/NORMAL 跨表审计。**仅预装能力选择，未由 AI 创建任何字段或代码**。单次六样本不足以推断泛化准确率，人机双向编辑未验收；G1 仍未通过。[完整报告](26-deepseek-mode-route-evidence.md)。
+
+## E28 — 真正 DeepSeek 在实际人工浏览器编辑后接手并执行增量 Patch（S0，限定路径）
+
+[GitHub Actions #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152) completed/success，被测 Commit c73b0319348070f670833310fb54cfa781cc17a4，Job 136789099373，Artifact 14699991457。**8/8 安全 Schema 单元 + 16/16 真实 Saltcorn/Chromium/DeepSeek/SQLite/HTTP 验收通过**。真实浏览器原生设计器保存 Human First Saved 之后，真正 deepseek-flash 根据最新物理元数据通过一次类型化 Tool Call 提议 status=AI Reviewed Status（491 输入 + 92 输出 = 583 Tokens）；守卫执行器在 SQLite BEGIN IMMEDIATE 中比对 title/status，再通过原生 Field.update 保存；第二次真实浏览器把 title 改为 Human Second Saved，原生字段页同时仍可见 AI status，旧 Patch 重放输出 STALE_REJECTED 且未写入。先做无模型 [平台预检 #44885046889](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889) 16/16 以免重复模型付费。[完整报告 27](27-real-deepseek-human-roundtrip-evidence.md)。
+
+**严格限定**：Playwright 在真正浏览器模拟人工操作，不是真实人员亲自点击；模型只提议而不生成代码/Schema；CAS 只覆盖研究 Agent CLI，不包括 Saltcorn 原生表单，旧浏览器继续可能覆盖新值。不得宣称全通道编辑安全、正式人工授权、完整 G1/TC 通过。

@@ -133,3 +133,7 @@ H01/H03 在 SQLite 文件型持久化层完成 23 项受限事务及隔离逻辑
 ## 2026-11-21 配置/代码/混合自主路由假设的首次真实模型小样本证据
 
 [报告 26](../01-research/26-deepseek-mode-route-evidence.md)、[Actions #44884021495](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884021495)：模型在不见 expected_mode 和 fixture 的条件下，依据固定 Saltcorn 能力目录，在一个批次中对 6 项需求分别选出 CONFIG×2/CODE×2/HYBRID×2（6/6）；确定性执行器根据模型选择调用实际原生 Table/Validate/Insert Trigger，独立检查 20/20。这个实验为**可描述的能力清单 + 受约束实现路径选择**提供可复现、限域正向证据。但 6 项手选样本无法支持模型综合泛化，模型没有自生成扩展代码/页面、也没有在失败时重规划；不能将 AI 原生完整开发的 H02/H04 等假设标已全面通过。G1 不通过。
+
+## 2026-11-21 H03：真正 DeepSeek 接手真实人工编辑的部分成功证据，仍不全面通过
+
+[报告 27](../01-research/27-real-deepseek-human-roundtrip-evidence.md)、[Run #44885275152](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885275152) 证明在真实 Saltcorn Chromium 浏览器模拟人工先改 title 后，真正 DeepSeek 从实际 _sc_fields 快照中获取标题并提出仅修改 status 的类型化 Patch；受控 Native CAS 在同一 SQLite 事务内复查两个字段后应用 Field.update；真实浏览器再编辑 title，AI 字段不丢，原旧 Patch 被拒。8/8 单元、16/16 真实集成成功。**但先前浏览器 stale-form 覆盖负例并未消除**：原生 Web 编辑器写路径没有 CAS，无法认为 H03 的全路径人机编辑一致性已经证明。真实用户身份委托、全部同时并发写路径、自然人审核与多应用兼容仍待完整验证。S1/G1 仍不通过。
