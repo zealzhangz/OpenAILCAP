@@ -30,7 +30,7 @@ jobs:
       - name: Inspect native compiled route before instrumentation
         run: |
           set -euo pipefail
-          python3 experiments/g1-b01-c2/inspect.py > /tmp/s1-c2-route-probe.txt
+          python3 experiments/g1-b01-c2/inspect_route.py > /tmp/s1-c2-route-probe.txt
           grep -q 'Field.findOne({ id: context.id' /tmp/s1-c2-route-probe.txt
       - name: Prepare isolated native metadata and authenticated temporary admin
         run: |
