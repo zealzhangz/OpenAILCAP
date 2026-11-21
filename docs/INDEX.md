@@ -192,3 +192,11 @@
 - [真实 GitHub Actions #44889712124](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44889712124) completed/success：**18/18 SQLite 模型单测 PASS + 27/27 真正 Chromium + 独立 Agent 子进程集成检查 PASS**，原始 [Artifact #14700803450](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44889712124/artifacts/14700803450)，Job 136802678273。
 - [PR #4](https://github.com/zealzhangz/OpenAILCAP/pull/4) 已合并 main，SHA `3ed689c12ea2b466a25c0af6e38cb51bc8b4e2bf`。模型→表单→视图→审批 Workflow 四类真实资源经 app-level CAS、hash Manifest 与引用校验，Agent 旧草稿 409、人类旧标签页 409；真运行态数据完成 100000001 分二级和 100000000 分一级审批；v1/v2 不可变发布与回滚指针以及草稿 SQL 漂移隔离均有数据库/浏览器证据。
 - **限制**：B2 是独立泛化机制实验，不直接复用 C1 Store.apply 代码；Agent 只是确定性工具而非大模型自主开发，界面只是 JSON Schema 编辑器；没有生产部署、插件沙箱和通用迁移。B2 27 项与冻结 W01—W24 不同口径。**S1/G1 NOT_PASSED，W01—W24 0/24 FULL PASS，合同 TC01—TC18 0/18 FULL PASS**。
+
+
+## 2026-11-21：S1 B3 真正 DeepSeek 一次受限生成并运行四类低代码 Schema
+
+- [报告 36：真实 DeepSeek → Typed Application Plan → 独立 Agent 执行 → 真 Chromium 人机协作与运行态](01-research/36-s1-b3-real-deepseek-typed-plan-evidence.md)；[可复现代码及单次调用门禁](../experiments/g1-b01-b3/README.md)，[Actions Workflow](../.github/workflows/s1-b3-deepseek-app.yml)。
+- [真实 GitHub Actions #44891826332](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332) **completed/success**（Job **136809104025**），[Artifact #14702700418](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332/artifacts/14702700418)，模型实际执行 **一次 DeepSeek `deepseek-flash` Function Calling**，生成合同 Model/Form/View/Workflow 四类定义并经可信类型化工具提交；**Live 24/24** 真 Chromium/Agent/SQL 独立验证 PASS。
+- 只有在之前 [零模型完整预检 #44891709859](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891709859) 的 **B3 18/18 恶意提议测试 + B2 18/18 单测 + Chromium 离线 24/24** 通过后，才通过精确 HEAD Commit 标记执行**唯一一次**外部模型调用。真实模型 CI 同样复跑全部离线闸门再进入 live。模型无 SQL/CLI/发布权限；实际工具进程 HTTP 创建四资源，浏览器可编辑、Agent 409 重基、人工发布、金额 100万元审批与视图运行成功。
+- [PR #5](https://github.com/zealzhangz/OpenAILCAP/pull/5) 已合并 main（`8e7951eadfd634bc2334995d4d49256b6938bd3e`）。**研究限制**：高度受限的固定合同能力目录，不是任意自然语言自动开发、自定义代码构建、真正插件沙箱或生产发布。**S1 G1 NOT_PASSED；冻结 W01—W24 仍 0/24 FULL PASS、合同 TC01—TC18 仍 0/18 FULL PASS**。
