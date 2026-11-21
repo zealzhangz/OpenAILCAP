@@ -36,3 +36,9 @@
 - 冻结合同 18 项完整 TC 未改变，G1 仍 NOT_PASSED。
 
 研究通过**必须**同时满足真实平台、真实浏览器人工模拟、真实模型提议、真实 Native Field.update 和过时 Patch 拒绝；不得将仅离线预检的通过说成“真实 DeepSeek 人机协同已通过”。
+
+## 2026-11-21 实际平台离线预检
+
+[GitHub Actions #44885046889](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44885046889) completed/success，8/8 审查单元、16/16 浏览器/原生 Field.update/物理 SQLite/API/HTTP 验收。真实 Chromium 第一次保存 `Human First Saved`，由明确标注 `model_inference_executed=false` 的固定 Patch 将 status 改为 `AI Reviewed Status`，第二次原生浏览器将 title 改为 `Human Second Saved`，AI status 标签在原生设计器真实可见，旧 Agent Patch 再次执行输出 `STALE_REJECTED`，没有尝试写入。原始 Artifact **14699452051**。此结果只是**无模型平台预检**，并非 DeepSeek 的人机协同成功证据。
+
+第一次 [Run #44884822563](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44884822563) 实际浏览器操作和 Native CAS 均已成功，但独立解析器误将 Saltcorn CLI 回显的 JavaScript 源码事件标记当成 JSON，造成 CI failure；后续修正为严格匹配日志行起始标记并增加单元测试，完整预检才成功。失败历史保留。
