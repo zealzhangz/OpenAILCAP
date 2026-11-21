@@ -1,0 +1,78 @@
+name: S1 B3 one-shot DeepSeek typed application plan (offline gate first)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b3-deepseek-app.yml'
+      - 'experiments/g1-b01-b3/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-first-then-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Compile and adversarial offline plan preflight (never touches model API)
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b2/*.py experiments/g1-b01-b3/*.py
+          cd experiments/g1-b01-b3
+          python3 -u -m unittest -v test_plan \
+            2>&1 | tee /tmp/s1-b3-plan-tests.log
+      - name: Revalidate B2 typed runtime / publishing core (offline)
+        run: |
+          set -euo pipefail
+          cd experiments/g1-b01-b2
+          python3 -u -m unittest -v test_schema \
+            2>&1 | tee /tmp/s1-b3-b2-regression.log
+      - name: Install pinned real Chromium and Playwright (no model key)
+        run: |
+          set -euo pipefail
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Real Chromium plus deterministic plan full offline E2E
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b3/experiment.py \
+            --mode offline --output /tmp/s1-b3-offline.json \
+            2>&1 | tee /tmp/s1-b3-offline.log
+      - name: Recognize only exact one-shot authorized PR head commit message
+        id: live_marker
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]] && \
+             [[ "$(git log -1 --format=%s)" == "research(s1): authorize exactly one DeepSeek B3 smoke [b3-deepseek-once]" ]]; then
+            echo "authorized=true" >> "$GITHUB_OUTPUT"
+            echo "S1_B3_LIVE_GATE|AUTHORIZED_ONE_SHOT_PR_COMMIT"
+          else
+            echo "authorized=false" >> "$GITHUB_OUTPUT"
+            echo "S1_B3_LIVE_GATE|NO_MODEL_REQUEST"
+          fi
+      - name: Real DeepSeek single function-call request after all offline gates
+        if: steps.live_marker.outputs.authorized == 'true'
+        env:
+          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b3/experiment.py \
+            --mode live --output /tmp/s1-b3-live.json \
+            2>&1 | tee /tmp/s1-b3-live.log
+      - name: Preserve machine-readable evidence even when a check fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b3-deepseek-typed-plan-evidence
+          path: |
+            /tmp/s1-b3-plan-tests.log
+            /tmp/s1-b3-b2-regression.log
+            /tmp/s1-b3-offline.json
+            /tmp/s1-b3-offline.log
+            /tmp/s1-b3-live.json
+            /tmp/s1-b3-live.log
+          if-no-files-found: warn
