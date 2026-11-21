@@ -141,3 +141,14 @@ G1 已能回答“值得借鉴什么、要避免什么、何处自主开发、�
 **仍然存在同一阻断风险**：B6-32 再次让**具 DB 文件权限的可信宿主**直接 `UPDATE extension_artifacts.source`，物理写入确实成功，随后已发布风险运行只在 hash drift 时 409；因此不存在无条件“所有主体都无法直写 DB”的证据。Docker 内的研究插件尚非 Saltcorn/NocoBase/ToolJet 的真实原生插件，宿主原生 Field/CLI/Pack 与任何多节点写路径未被强制接入 OS 沙箱。仍需基于系统权限实际验证 DB 仅被可信核心进程持有、其他插件/本机 CLI 无权直接访问，并覆盖原生编辑器/导入、应用+代码统一快照与回滚、外部未知结果。
 
 **正式决策不变**：S1 IN_PROGRESS，G1 **NOT_PASSED**，G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。本轮 32/32 实验项不替代正式门禁。下一个 P0 是真正隔离**宿主低代码原生写路径**和证明最终权威数据库只可由不可绕过的 Domain Kernel 访问，不能再仅增加外围 HTTP 拦截。
+
+
+## 2026-11-21：B7 非容器原生 Linux CLI/插件独立 UID 与可信 Domain Kernel 持久化边界复审
+
+[报告 40](40-s1-b7-real-linux-dac-domain-kernel-evidence.md) / [真实 GitHub CI #44897992713](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44897992713) completed/success，Job 136827642934 / Artifact 14704777950；B7 可信 OS/配置单测 **16/16**，B2 **18/18** 回归、B5 **40/40** 回归、B7 实际非 root 多 UID/原生 SQLite/HTTP/真实 Chromium/物理审计 **32/32**，0 次模型。PR #9 已合并 `main`，SHA `8b4cd3e87135efe6744b9614e6673bcff439defb`。
+
+**新的可复现实证**：用真正不同的 Linux 宿主 UID 运行可信 B2/B4 Domain Kernel（UID 999）、原生 Plugin（UID 997）和 Agent（UID 995），前者独占 mode `0700` 目录和 mode `0600` 的 SQLite/配置文件，后两者尝试原生 `os.open` 读写、sqlite3 read/UPDATE、读取 Kernel 私有配置和 /proc 凭据实际被操作系统拒绝。合法 Agent/Plugin 只能经 B5 v3 类型化工具写入 Model/View/Workflow；本机插件请求非法 SQL/发布/跨 app 返回 403，真实 Chromium 与原生 Plugin 并发修改时 B2 CAS 返回 409，独立 SQL 验证审计、不可变发布和实际合同审批结果。此项相比 B5 子进程及 B6 Docker 插件，为“**非特权宿主原生代码的 DB 权限可被真实 OS DAC 限制**”提供了直接正向证据，而不是仅靠 Broker 逻辑判断。
+
+**必须保留的反例**：B7-28 再次实际运行与 Kernel **相同 UID** 的 native SQLite 程序，直接读配置并成功 SQL UPDATE；B7-29 则让受信 root 控制器直接篡改已存储资源，物理写入真实成功。B2 读草稿时能识别资源 Hash drift、HTTP 409 和 QUARANTINED，已发布最后有效 v1 可读，但**同 UID/root 写入本身没有被阻止**，而且 root 可同时修改 Hash/版本指针避开此检测。B7 没有运行真正 Saltcorn Field.update、原生 CLI/Pack，也没有隔离业务应用 installer 与 Kernel 同 UID，生产级全入口强制治理仍未收口。B4 独立 Build Worker/制品可信回执与统一发布快照同样未在本轮测试。
+
+**G1 审核保持**：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。下一 P0：结合真实 Saltcorn C2 原生 CLI/Field/Pack 写入的证据和宿主 Unix 用户、实际 DB 身份边界，证明普通生产插件/代码安装器没有任何同 UID/root/DB 直写通道；再审查强制 Kernel 变更、镜像/制品和 B2/B4 统一发布快照，以及远端动作的未知结果与补偿协议。32 项研究实验不替代正式冻结门禁。
