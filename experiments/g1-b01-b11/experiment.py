@@ -257,19 +257,22 @@ def main():
                             projection_token if token is None else token)
 
         def native_apply(db,batch,fail=False,allow_fail=False):
-            args=[sys.executable,
+            args=["sudo","-n","runuser","-u",SALT,"--",
+                  sys.executable,
                   str(stage/"g1-b01-b11"/"apply_worker.py"),
                   "--db",db]
             if fail:args.append("--fail-before-commit")
-            p=native_command(args,db,timeout=20,allow_fail=allow_fail,
-                             stdin_payload=json.dumps(batch))
+            # Native process receives ONLY event batch via stdin, never
+            # a Kernel bearer, authority DB path, or publisher credential.
+            p=run(args,cwd=stage,timeout=20,ok=not allow_fail,
+                  stdin=json.dumps(batch)+"\n")
             tag="S1_B11_NATIVE_REJECT" if allow_fail else "S1_B11_NATIVE_APPLY"
             return one(p.stdout,tag)
 
         def native_inspect(db):
-            p=native_command([sys.executable,
-                str(stage/"g1-b01-b11"/"apply_worker.py"),
-                "--db",db,"--inspect"],db,timeout=15)
+            p=run(["sudo","-n","runuser","-u",SALT,"--",
+                sys.executable,str(stage/"g1-b01-b11"/"apply_worker.py"),
+                "--db",db,"--inspect"],cwd=stage,timeout=15)
             return one(p.stdout,"S1_B11_NATIVE_APPLY")
 
         def sync_native(db,after=0):
