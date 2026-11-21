@@ -219,3 +219,13 @@
 - B5 v3 类型化 Tool Broker 以 app、Actor、allowlisted tools 分别授权；插件仅 View、Agent 可 Docker 验证不许发布、人工模拟身份批准 Code Stage/Publish；旧人机改动 HTTP **409**，跨 app/越权/撤销明确 **403/401**；发布 B2 v2 使旧绑定代码执行 409，回滚 B2 v1 恢复。
 - **危险负对照**：具 SQLite 管理员权限的进程仍可直接 UPDATE 代码源码绕过 Broker；实际运行 hash drift 409、app-a 无串写，但该改写**并未被物理阻断**。真正插件 DB/宿主 Socket 权限隔离仍属 P0 阻断项。G1-B01 **OPEN**，冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**，G1 **NOT_PASSED**。
 - [PR #7](https://github.com/zealzhangz/OpenAILCAP/pull/7) 已合并 main，SHA `e8106e6214c0b75ad232c7d12a0a7a4aad794916`。
+
+
+## 2026-11-21：S1 B6 真正 Docker 插件 OS 隔离与宿主专属 Tool Relay 的安全验证
+
+- [研究报告 39：真实恶意 Python 插件容器试图直接访问宿主 SQLite、Docker Socket、外网与 Secret，拒绝结果、工具受控写入、危险宿主旁路完整证据](01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md)；[代码与复现指南](../experiments/g1-b01-b6/README.md)，[CI 工作流](../.github/workflows/s1-b6-plugin-isolation.yml)。
+- **最终成功 [GitHub Actions #44896786049](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44896786049)**，Job **136824055360**，[Artifact #14704775846](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44896786049/artifacts/14704775846)：B6 **25/25** 隔离单元，B2 **18/18** 回归，B4 **27/27** 回归，B5 **40/40** 回归，真实 B6 Docker/Chromium/Broker/独立 SQL **32/32**，**0 次 DeepSeek/LLM**。
+- 与 B5 “独立插件 OS 进程仍有宿主 DB 权限”的危险负对照相比，本轮已真正在 `--network=none --read-only --cap-drop=ALL --user=65534:65534` Docker 中运行插件；数据库 `sqlite3.connect`、数据库 `O_RDONLY/O_RDWR`、宿主世界可读 Secret 的 `O_RDONLY`、Docker Socket、互联网 TCP、挂载写入，全部 **DENIED**；插件未继承宿主临时 secret 和 Tool Broker Bearer。宿主本身仍能访问 DB 与 Secret，证明测试路径确实存在。
+- 真正插件只能向可信宿主提交单次 JSON 工具提议，再由可信 Host Relay 携自己的有限 Bearer 调用 B5 v3 Broker：View 修改 HTTP 200 + SQL Audit，Model/SQL/Code/发布越权 403、跨应用拒绝、撤销 token 401；真 Chromium 旧表单保存 409，B2 合同发布后可运行、B4 432 组测试并在模拟人工批准后运行高风险评分 95。
+- **重要缺口未关闭**：B6-32 中**具有宿主 DB 权限**的原生 SQLite 程序仍能真实修改代码 Artifact；代码运行时检测 hash drift 返回 409，但物理写入没有被拦截。真正 Saltcorn 原生插件/CLI/Pack、系统内核漏洞、生产多实例及统一应用/代码发布快照未验证。G1-B01 **OPEN**；冻结 W01—W24 **0/24 FULL PASS**，TC01—TC18 **0/18 FULL PASS**；G1 **NOT_PASSED**。
+- [PR #8](https://github.com/zealzhangz/OpenAILCAP/pull/8) 已合并 main，SHA `f18e9341be4af086bb1b1d69341e8789ecfdad58`。
