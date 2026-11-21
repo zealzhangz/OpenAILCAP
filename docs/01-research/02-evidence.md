@@ -109,3 +109,7 @@
 ## E24 — 实际 Saltcorn 登录用户与原生 REST 审批权限（S0，限域）
 
 真实 [Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) completed/success，32/32 独立断言，Job 136770054918，Artifact 14697420714。Chrome 浏览器四个真实 role_id=80 用户登录并取得当前 Session CSRF；原生 [api.ts](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/server/routes/api.ts) 将认证用户传给 Table.tryInsertRow，研究 [Validate Trigger](../../experiments/platform-saltcorn/auth/trusted-validate.js) 不相信客户端 actor_id/actor_role 而基于真正 user.id/email 检查：伪造身份 HTTP 400 IDENTITY_MISMATCH，错误业务级别 HTTP 400 FORBIDDEN；原生受限合同/审批表直接 POST 为 HTTP 401；有效一级/二级审批实际改变物理合同状态和审批行。重要实测缺令牌负对照：Session Cookie 请求缺 CSRF 经重定向后得到 HTML 200，但不写入；依据上游 [app.js](https://github.com/saltcorn/saltcorn/blob/515254bee5a98df70530cc59846b1df02d5db350/packages/server/app.js) 的 CSRF middleware 边界。**同一原生角色 80 + 硬编码邮箱映射，不是正式组织 RBAC，也不是冻结 TC04 要求的 HTTP 403**。报告及失败历史：[22](22-native-identity-approval-evidence.md)。
+
+## E25 — 受限工具协议的真实 Saltcorn 实证（S0，限域）
+
+[Actions #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333) completed/success，代码 Commit 109dd420e48f2cd545f120ede450c47d5c82917e，Job 136776285247、Artifact 14698057458。**21 个工具对抗性单元测试 + 29 个原生 Saltcorn/Chromium/物理 SQLite 验收**全部通过：manifest 白名单新增只读路由工具，未知系统命令、额外身份参数、权限范围外、跨用户/合同、过期及重复授权被拒；独立授权后经真实 Saltcorn Session+CSRF 的原生 API 完成三次合同状态写入，最终 Approved/2 审批行，工具审计 16 条（10 次拒绝）。**模型推理 NOT_RUN；人工授权由研究控制器模拟，不等于真实签名授权；生产并发/事务、组织 RBAC、应用隔离均未证明。** 见 [报告 23](23-agent-tool-contract-evidence.md)。

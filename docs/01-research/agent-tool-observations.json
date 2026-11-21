@@ -1,0 +1,194 @@
+{
+  "study": "S1 typed Agent tool broker over actual Saltcorn with deterministic orchestrator",
+  "date": "2026-11-21",
+  "platform": "@saltcorn/cli@1.7.0-beta.5 + SQLite + Playwright Chromium on Ubuntu 24.04",
+  "executed_code_commit": "109dd420e48f2cd545f120ede450c47d5c82917e",
+  "ci": {
+    "run": 44881082333,
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333",
+    "head_sha": "109dd420e48f2cd545f120ede450c47d5c82917e",
+    "status": "completed",
+    "conclusion": "success",
+    "job_id": 136776285247,
+    "artifact": {
+      "id": 14698057458,
+      "name": "s1-agent-tool-broker-acceptance"
+    }
+  },
+  "validation": {
+    "stdlib_security_tests": {
+      "passed": 21,
+      "total": 21,
+      "stderr": "Ran 21 tests ... OK"
+    },
+    "real_native_integration": {
+      "passed": 29,
+      "total": 29,
+      "cases": [
+        {
+          "id": "AT01-login-creator",
+          "result": "PASS"
+        },
+        {
+          "id": "AT01-login-approver1",
+          "result": "PASS"
+        },
+        {
+          "id": "AT01-login-approver2",
+          "result": "PASS"
+        },
+        {
+          "id": "AT01-login-viewer",
+          "result": "PASS"
+        },
+        {
+          "id": "AT02-least-privilege-catalog",
+          "result": "PASS"
+        },
+        {
+          "id": "AT03-reject-dangerous-plugin-handler",
+          "result": "PASS"
+        },
+        {
+          "id": "AT04-manifest-registered-without-core-rewrite",
+          "result": "PASS"
+        },
+        {
+          "id": "AT05-real-native-REST-contract-read",
+          "result": "PASS"
+        },
+        {
+          "id": "AT06-new-plugin-routes-against-physical-native-data",
+          "result": "PASS"
+        },
+        {
+          "id": "AT07-no-shell-or-credential-tools",
+          "result": "PASS"
+        },
+        {
+          "id": "AT08-forged-actor-in-LLM-arguments-rejected",
+          "result": "PASS"
+        },
+        {
+          "id": "AT09-no-write-without-separate-human-grant",
+          "result": "PASS"
+        },
+        {
+          "id": "AT10-viewer-cannot-do-mutating-tool",
+          "result": "PASS"
+        },
+        {
+          "id": "AT11-agent-cannot-mint-approval-grant",
+          "result": "PASS"
+        },
+        {
+          "id": "AT12-approver-cannot-submit",
+          "result": "PASS"
+        },
+        {
+          "id": "AT13-forged-application-session-rejected",
+          "result": "PASS"
+        },
+        {
+          "id": "AT15-actual-expired-grant-no-write",
+          "result": "PASS"
+        },
+        {
+          "id": "AT16-cross-user-grant-denied",
+          "result": "PASS"
+        },
+        {
+          "id": "AT17-cross-resource-grant-denied",
+          "result": "PASS"
+        },
+        {
+          "id": "AT18-stale-base-rejected-before-HTTP",
+          "result": "PASS"
+        },
+        {
+          "id": "AT19-real-human-delegated-submit-via-native-Saltcorn",
+          "result": "PASS"
+        },
+        {
+          "id": "AT20-one-time-grant-replay-denied",
+          "result": "PASS"
+        },
+        {
+          "id": "AT21-creator-cannot-directly-edit-contract",
+          "result": "PASS"
+        },
+        {
+          "id": "AT22-real-delegated-first-approval",
+          "result": "PASS"
+        },
+        {
+          "id": "AT23-wrong-level-native-business-policy-denied",
+          "result": "PASS"
+        },
+        {
+          "id": "AT24-real-delegated-second-approval",
+          "result": "PASS"
+        },
+        {
+          "id": "AT25-read-after-real-Saltcorn-approval",
+          "result": "PASS"
+        },
+        {
+          "id": "AT26-persistent-redacted-tool-audit",
+          "result": "PASS"
+        },
+        {
+          "id": "AT27-model-not-implicitly-claimed",
+          "result": "PASS"
+        }
+      ]
+    }
+  },
+  "observations": {
+    "real_users_logged_in": 4,
+    "real_low_code_contract": "S1-AGENT-HIGH-1",
+    "actual_cents": 100000001,
+    "native_physical_approval_route": "HIGH",
+    "app_scoped_catalog_viewer_before": [
+      "contract.read"
+    ],
+    "app_scoped_catalog_viewer_after": [
+      "contract.read",
+      "contract.route"
+    ],
+    "declared_plugin": "route-inspector 1.0.0 / allowlisted handler route_inspector_v1",
+    "grant_policy": "host minted TTL, principal, app, contract, action bound; one-use and not visible to model",
+    "real_native_status_transition": [
+      "Draft",
+      "Submitted",
+      "Level1Approved",
+      "Approved"
+    ],
+    "native_approval_records": 2,
+    "actual_native_mutating_http_accepted": 3,
+    "audit_event_count": 16,
+    "audit_denied_count": 10,
+    "model_provider_call": false,
+    "model_tool_choice_validated": false,
+    "external_model_probe": "NOT_RUN",
+    "llm_api_secret_used": false
+  },
+  "security_boundaries": [
+    "Request JSON cannot select actor/role, authorization from fixed trusted controller bound to real Saltcorn session",
+    "Trusted controller's human confirmation is simulated; no actual signed user consent UI",
+    "Native web API still returns 401 table-level and 400 business-level for forbidden; frozen TC04 expects 403",
+    "Native SQL transaction/atomicity and concurrency not established by this experiment",
+    "Model default NOT_RUN; deterministic test calls are not an LLM selection",
+    "Plugin manifest is allowlist dispatch, not third-party code execution isolation",
+    "Static APP_ID and test user mapping: no production organization multi-app RBAC",
+    "No autonomous low-code data/page/workflow creation, no AI codegen/build/deploy"
+  ],
+  "frozen_benchmark": {
+    "tasks": 18,
+    "complete_pass": 0,
+    "unaltered": true
+  },
+  "phase": "S1",
+  "G1": "NOT_PASSED",
+  "evidence_type": "curated authenticated GitHub CI stdout summary; original result JSON provided in GitHub Actions Artifact"
+}

@@ -79,3 +79,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21：真实登录身份/CSRF/原生业务审批写入的 S1 强化
 
 [Run #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) 真实 Saltcorn 登录与 REST 32/32 PASS；四个不同用户 Chromium 登录，在当前 Session Cookie+CSRF 下通过原生 API 触发 Validate/Insert 审批，伪造角色/用户 ID 返回业务 400，原生表级拒绝 401，正确审批写入物理状态与审批人记录。[报告 22](22-native-identity-approval-evidence.md)。前两次失败挖出了真实 CSRF/200 假成功问题；第三次虽 32 条逐条 PASS 但退出校验数误写为 28；第四次浏览器 GET 偶发超时；最终通过仅对非变更 GET 做重试，审批 POST 不自动重试。保留失败历史，仍不可宣称审批 SQL 原子性、企业角色/组织 RBAC、可视审批表单或 LLM Agent。下一 P0 转向**类型化 AI 工具授权与真实模型调用**，G1 不通过。
+
+## 2026-11-21：Agent 工具执行契约阶段性实证
+
+新增 [报告 23](23-agent-tool-contract-evidence.md)、[Run #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333)：类型化 Broker 的 **21/21 安全单元 + 29/29 真实平台集成**成功。固定只读工具/Manifest 能力发现，参数白名单、可信四用户 Saltcorn Session、跨主体与跨资源拒绝、短时单次授权、审计和真实状态读回；宿主模拟人工签发后的 3 次 Saltcorn 原生变更最终得到 Approved/2 审批行。无实际外部 LLM 选择或自主开发，下一工作继续验证持久化幂等、未知远端结果和真正模型接口。G1 不通过。

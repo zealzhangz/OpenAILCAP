@@ -106,3 +106,12 @@
 - [最终成功 GitHub Actions #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055)，**32/32 PASS，Artifact 14697420714**
 
 **新突破**：四个真实 Saltcorn 用户各有独立 Session，通过当前会话 CSRF 令牌调用原生 /api/ 审批，Validate Trigger 用可信 user.id/email 确认用户与业务角色匹配；合法普通/超额两级审批及驳回真实落库，角色/用户 ID 伪造请求不能修改业务，直接修改合同/审批明细被原生表权限拒绝。**新反例**：带 Session Cookie 缺 CSRF 的请求可被重定向至首页，自动跟随重定向后看似 HTTP 200，却并没有业务更新；独立验收必须检查最终 URL、Content-Type、JSON 和物理 SQL。此研究只用固定邮箱→业务角色映射，Saltcorn 原生角色仍均为 80；HTTP 拒绝码为表级 401、业务级 400，**非冻结 TC04 规定的 403**；尚无真正浏览器审批表单、AI Agent 或生产 RBAC。**G1 仍未通过，完整合同任务 0/18。**
+
+## 2026-11-21：S1 类型化 Agent 工具与可信执行层
+
+- [报告 23：工具权限及真实 Saltcorn 运行证据](01-research/23-agent-tool-contract-evidence.md)
+- [21 项安全单元 + 29 项真实集成的机器可读摘要](01-research/agent-tool-observations.json)
+- [可复现的工具 Broker/独立验收与可选外部模型探针](../experiments/agent-tools/README.md)
+- [GitHub Actions #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333)，completed/success，Artifact ID 14698057458。
+
+**边界**：本轮 50 项独立断言通过，真实平台完成提交/一级/二级审批、阻止伪造/越权/过期/重复授权；调用由确定性测试控制器发起，**外部 LLM 推理没有运行**，人工确认也是可信测试宿主模拟。G1 尚未通过，冻结的 18 项完整合同任务仍为 0/18。

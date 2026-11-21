@@ -61,3 +61,7 @@ GitHub [Run #44874668928](https://github.com/zealzhangz/OpenAILCAP/actions/runs/
 ## 2026-11-21 实际 Saltcorn 用户会话与合同原生审批 API
 
 [最终 Run #44879041055](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44879041055) 实测 32/32 PASS：4 位真实 Saltcorn 用户通过 Chromium 原生登录表单，实际认证 Session Cookie + 从同一会话读取的 CSRF Token 请求原生 /api/s1_bench_action_requests/；Saltcorn Validate/Insert Trigger 将原生 req.user 绑定审批动作，伪造 ID/角色无法修改状态，普通与高金额两级审批、驳回均持久化；普通用户不能直接改合同/审批明细。前两次真实失败验证缺 CSRF 的请求经 HTTP 重定向最终出现**HTML 200 假成功**且数据库不变；应将最终 URL、Content-Type 和物理记录作为统一验收条件。代码 [auth](../../experiments/platform-saltcorn/auth/README.md)、[报告 22](22-native-identity-approval-evidence.md)。Saltcorn 原生只区分已登录 role 80 与管理员，业务审批角色由研究硬编码邮箱判定，HTTP 400/401 不满足冻结业务 TC04 要求的 403；没有正式审批 UI/真实 LLM/完整事务及多租户授权，G1 继续 NOT_PASSED。
+
+## 2026-11-21 类型化 Agent 工具 Broker、权限和真实 Saltcorn 适配
+
+[Run #44881082333](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44881082333) 中 21/21 stdlib 单元与 29/29 原生 Saltcorn 集成均成功；并非 Prompt 自我声明：实际 Browser Session/CSRF 和 SQL 主表/审批明细/工具审计共同裁判。白名单 Handler Manifest 能增加只读能力，危险 handler 被拒绝；宿主单独模拟授权后，真实 Saltcorn 原生触发器完成 Draft→Submitted→Level1Approved→Approved。**实际模型推理 NOT_RUN，人工确认仍属实验模拟**。代码见 [实验工程](../../experiments/agent-tools/README.md) 和 [报告 23](23-agent-tool-contract-evidence.md)；G1 不通过。
