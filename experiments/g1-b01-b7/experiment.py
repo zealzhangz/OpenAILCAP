@@ -18,6 +18,7 @@ import json
 import os
 import pwd
 import secrets
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -33,6 +34,7 @@ HERE=Path(__file__).resolve().parent
 KERNEL="ailcapb7kern"
 PLUGIN="ailcapb7plug"
 AGENT="ailcapb7agen"
+USER_SCRIPT_DIR=HERE
 
 
 def run(cmd,*,input=None,timeout=25):
@@ -46,7 +48,7 @@ def run(cmd,*,input=None,timeout=25):
 
 def user_process(username,script,args=(),*,input=None):
     return run(["sudo","-n","runuser","-u",username,"--",
-                sys.executable,str(HERE/script),*list(map(str,args))],
+                sys.executable,str(USER_SCRIPT_DIR/script),*list(map(str,args))],
                input=input,timeout=25)
 
 
@@ -117,6 +119,25 @@ def main():
     with tempfile.TemporaryDirectory(prefix="s1-b7-osdac-") as scratch:
         home=Path(scratch)
         home.chmod(0o755)
+        # GitHub checkout is under a Runner-private home. Stage trusted
+        # source files only in readable, nonsecret directories; keep the
+        # authoritative SQLite DB and credentials in separate mode 0700.
+        stage=home/"sandbox-source"/"experiments"
+        copied={
+            "g1-b01-b2":("schema_core.py","schema_http.py"),
+            "g1-b01-b4":("registry.py","policy.py","sandbox.py","worker.py"),
+            "g1-b01-b5":("tool_broker.py",),
+            "g1-b01-b7":("kernel_service.py","direct_probe.py",
+                         "native_client.py","physical_sql_oracle.py")
+        }
+        for name,filenames in copied.items():
+            target=stage/name
+            target.mkdir(parents=True,exist_ok=True)
+            for filename in filenames:
+                shutil.copyfile(HERE.parent/name/filename,target/filename)
+                (target/filename).chmod(0o644)
+        global USER_SCRIPT_DIR
+        USER_SCRIPT_DIR=stage/"g1-b01-b7"
         private=home/"private"
         ready_dir=home/"readiness"
         private.mkdir(mode=0o700)
@@ -149,7 +170,7 @@ def main():
                 # Do NOT inject secrets through argv, env, log, or ready file.
                 svc=subprocess.Popen([
                     "sudo","-n","runuser","-u",KERNEL,"--",
-                    sys.executable,"-u",str(HERE/"kernel_service.py"),
+                    sys.executable,"-u",str(USER_SCRIPT_DIR/"kernel_service.py"),
                     "--config",str(cfgfile),"--ready",str(readyfile)
                 ],stdout=stream,stderr=subprocess.STDOUT,
                   stdin=subprocess.DEVNULL)
@@ -545,6 +566,12 @@ def main():
                 try:svc.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     svc.terminate()
+            # Trusted runner can use sudo for cleanup; plugin/Agent cannot.
+            subprocess.run([
+                "sudo","-n","chown","-R",
+                str(os.getuid())+":"+str(os.getgid()),
+                str(private),str(ready_dir)
+            ],text=True,capture_output=True,timeout=10,check=False)
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
