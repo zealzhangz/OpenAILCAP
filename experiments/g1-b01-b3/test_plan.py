@@ -62,7 +62,7 @@ class B3Preflight(unittest.TestCase):
     def test_wrong_model_type_rejected(self):
         p=copy.deepcopy(self.base)
         p["operations"][0]["definition"]["fields"][2]["type"]="string"
-        self.check_error("SEMANTIC_MODEL_MISMATCH",lambda:check_plan(p))
+        self.check_error("BROKEN_WORKFLOW_FIELD_TYPE",lambda:check_plan(p))
 
     def test_wrong_minor_units_rejected(self):
         p=copy.deepcopy(self.base)
