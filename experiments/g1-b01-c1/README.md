@@ -55,3 +55,40 @@ python3 run_suite.py ./c1-observations.json
 ## 2026-11-21：C1 CI 首次独立核查
 
 [Run #44886944054](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054) completed/success；Job 136794151797，**31/31 unittest 执行通过，零失败/零错误**；[Artifact #14699494263](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054/artifacts/14699494263) 包含 JSON 观察和原始 unittest log。31 次执行来自 18 个不同测试方法定义（共享父类测试在 HttpPreflight 中再次运行），不能计为 31 个互异业务场景。PR #1 跨应用幂等键隔离测试已合并至 main。完整证据与限制见 [报告 32](../../docs/01-research/32-g1-b01-c1-real-ci-evidence.md)。没有使用 DeepSeek API。Saltcorn 原生 Web/插件仍 NOT_RUN，G1-B01 未关闭。
+
+# S1 G1-B01 · B1：自有最小人工设计器与 C1 统一领域写入（真实浏览器验证）
+
+> **研究原型，不是生产系统，也不是 Saltcorn 原生编辑器。** 这是对 [C2 报告](../../docs/01-research/33-g1-b01-c2-native-route-evidence.md) 所发现“修补第三方浏览器仍被 CLI 绕过”风险的一种对照替代：让自有 Web 编辑器、Agent 工具、Plugin 工具通过同一个受控 HTTP / Store.apply 写入。**B1 不测试生产插件沙箱、不调用真实 LLM。**
+
+## 工程结构
+
+- [service.py](service.py)：已实测的 C1 核心命令服务；额外在可信 Principal 上增加 `fields` 允许范围，让服务端（不是只在插件 manifest）执行字段级 403 授权。
+- [web_editor.py](web_editor.py)：独立 localhost-only 真正 HTML 页面，实验密码登录后服务器签发随机 HttpOnly、SameSite Cookie 与 CSRF；页面通过 `GET /v1/apps/app-a/resources/field.title` 取得 revision、hash 和字段快照，并通过 `POST /v1/apps/app-a/changes` 发送精确 typed Patch。**没有另写数据库修改逻辑。** 两个浏览器标签页保留各自旧快照，409 冲突需要明确点击“重新加载”。
+- [tool_client.py](tool_client.py)：受限 Agent/Plugin **确定性工具客户端**，在独立 Python 进程经 Bearer HTTP 读取并提交同构 Patch，无直接 SQL；本轮无模型调用。
+- [plugin_manifest.json](plugin_manifest.json)：固定状态字段的实验 capability 宣告；服务器依该 manifest 创建 `Principal(name='status-helper', fields=('status',), resources=('field.title',))`，因此插件即使绕过自身 manifest 校验而直接发 HTTP，仍由服务端 403。
+- [browser_acceptance.py](browser_acceptance.py)：真实 Chromium、密码登录、双标签页、Agent 子进程、Plugin 子进程、双工具子进程争抢同一 revision、独立只读 SQLite、跨应用隔离与撤销测试。
+- [原始 C1 回归测试](test_service.py)：复跑原有独立 CAS/SQL/HTTP 机制；本轮不得降低通过标准。
+- [Actions Workflow](../../.github/workflows/s1-g1-b01-b1.yml)：固定 Ubuntu 24.04、Python 3.13、Playwright 1.56/Chromium。无需 Saltcorn、DeepSeek、外部模型 API；Artifact 内保留逐条观察但不保存 Cookie、Token 或密码。
+
+## 本地复现
+
+在一次性隔离的 Linux 环境，安装 Python 3.13 + Playwright 1.56 及 Chromium：
+
+~~~bash
+python3 -m pip install 'playwright==1.56.0'
+python3 -m playwright install --with-deps chromium
+python3 -m py_compile experiments/g1-b01-c1/*.py
+cd experiments/g1-b01-c1
+python3 run_suite.py /tmp/s1-b1-c1-regression.json
+python3 browser_acceptance.py --output /tmp/s1-b1-browser-agent-plugin.json
+~~~
+
+自动化脚本只在本地监听 `127.0.0.1`，创建一次性数据库及随机账号，执行完自动停止服务并清理数据库。脚本自动启动真实 Chromium 执行界面；无需手工设置密码，也**无需 DeepSeek Key**。不要将 `serve_b1` 服务暴露到公网。
+
+## 预期安全证明（由真正 CI 结果决定是否 PASS）
+
+浏览器真实会话 → B 保存 → A 用旧页面保存返回 409 → Agent 进程经 typed HTTP 修改 → B 旧页面 409 → A 显式刷新继续保存 → Plugin 进程修改状态 → 插件越权改 label 被服务端拒绝 → Agent 旧快照 409 → Agent/Plugin 两个 OS 子进程同 revision 争抢一胜一拒 → 物理 SQL 审计/回执/资源版本与最新浏览器 DOM 一致。负例拒绝用 403/409 等实际 HTTP 判断，不能把 200 HTML 登录重定向误认为成功。
+
+**关键限制**：Web UI 是 OpenAILCAP 自研两字段研究表单，没有低代码页面 Schema 设计能力；“Agent”是确定性 typed tool 进程，不是自主规划 LLM；“Plugin”是带 manifest 的受限进程，没有运行时沙箱、数字签名、供应链约束和代码执行隔离；所有身份只用于 localhost 测试，不是生产 SSO/RBAC。C1 SQLite 存储仍可被数据库管理员直接改动，不能据此宣称全路径不可绕过。
+
+冻结 [W01—W24](../../docs/01-research/31-g1-b01-acceptance-matrix.md) 与合同 TC01—TC18 原标准不变；任何完整 PASS 的认定必须由相应平台级验收独立决定。**G1 仍 NOT_PASSED**。

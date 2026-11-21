@@ -38,6 +38,7 @@ class Principal:
     can_write: bool = True
     resources: tuple[str, ...] = ("*",)
     active: bool = True
+    fields: tuple[str, ...] = ("*",)  # permission enforced server-side, not only manifest
 
 
 class Store:
@@ -168,6 +169,9 @@ class Store:
         self._validate(change)
         resource_id = change["resourceId"]
         self.authorize(principal, app_id, resource_id, write=True)
+        target_field = change["operations"][0]["path"][1:]
+        if "*" not in principal.fields and target_field not in principal.fields:
+            raise GateError(403, "FIELD_FORBIDDEN")
         request_digest = digest(change)
         db = self._connect()
         try:
