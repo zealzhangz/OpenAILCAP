@@ -934,6 +934,295 @@ def main():
                           {"sourceEvents":8,"authorityRows":2,
                            "appBunchanged":True,
                            "nativeBusinessDataFromB2":True})
+                    # B12: a genuine long-lived *separate OS process* now
+                    # replaces the B11 trusted controller's manual sync.
+                    # Source proxy can return a real HTTP 503 while B2 stays up.
+                    source_paused=threading.Event()
+                    class SourceProxy(BaseHTTPRequestHandler):
+                        def log_message(self,*_):
+                            pass
+                        def do_POST(self):
+                            if self.path!="/v4/apps/app-a/projection/pull":
+                                self.send_error(404);return
+                            length=int(self.headers.get("Content-Length","0"))
+                            if length>4096:
+                                self.send_error(413);return
+                            raw=self.rfile.read(length)
+                            if source_paused.is_set():
+                                self.send_response(503)
+                                self.end_headers()
+                                self.wfile.write(b'{"error":"INJECTED_SOURCE_OUTAGE"}')
+                                return
+                            upstream=Request(
+                                core_base+self.path,data=raw,method="POST",
+                                headers={
+                                    "Authorization":self.headers.get(
+                                        "Authorization",""),
+                                    "Content-Type":"application/json"
+                                })
+                            try:
+                                with urlopen(upstream,timeout=3) as upstream_resp:
+                                    body=upstream_resp.read(128*1024)
+                                    status=upstream_resp.status
+                            except HTTPError as exc:
+                                status=exc.code
+                                body=exc.read(128*1024)
+                            except Exception:
+                                status=503
+                                body=b'{"error":"UPSTREAM_UNAVAILABLE"}'
+                            self.send_response(status)
+                            self.send_header("Content-Type","application/json")
+                            self.send_header("Content-Length",str(len(body)))
+                            self.end_headers()
+                            self.wfile.write(body)
+
+                    proxy_server=ThreadingHTTPServer(
+                        ("127.0.0.1",0),SourceProxy)
+                    proxy_thread=threading.Thread(
+                        target=proxy_server.serve_forever,daemon=True)
+                    proxy_thread.start()
+                    proxy_url=("http://127.0.0.1:"+
+                        str(proxy_server.server_port)+
+                        "/v4/apps/app-a/projection/pull")
+                    controller=home/"controller-private"
+                    controller.mkdir(mode=0o700)
+                    consumer_cfg=controller/"consumer.json"
+                    consumer_status=controller/"consumer-status.json"
+                    consumer_log=home/"consumer.log"
+                    consumer_cfg.write_text(json.dumps({
+                        "sourceUrl":proxy_url,
+                        "token":projection_token,
+                        "nativeUser":SALT,
+                        "nativeDb":str(v1native["db"]),
+                        "sourceDir":str(stage/"g1-b01-b12"),
+                        "intervalMs":180
+                    }))
+                    consumer_cfg.chmod(0o600)
+                    def start_consumer():
+                        nonlocal consumer_proc
+                        with consumer_log.open("a") as output:
+                            consumer_proc=subprocess.Popen([
+                                sys.executable,"-u",
+                                str(stage/"g1-b01-b12"/"consumer_daemon.py"),
+                                "--config",str(consumer_cfg),
+                                "--status",str(consumer_status)
+                            ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                              stdout=output,stderr=subprocess.STDOUT)
+                    def wait_consumer(predicate,seconds=24):
+                        until=time.monotonic()+seconds
+                        latest={}
+                        while time.monotonic()<until:
+                            if consumer_status.exists():
+                                try:
+                                    latest=json.loads(
+                                        consumer_status.read_text())
+                                    if predicate(latest):return latest
+                                except (ValueError,OSError):pass
+                            if consumer_proc and consumer_proc.poll() is not None:
+                                raise AssertionError("CONSUMER_EXITED "+
+                                    consumer_log.read_text()[-800:])
+                            time.sleep(.12)
+                        raise AssertionError("CONSUMER_WAIT_TIMEOUT "+
+                                             json.dumps(latest))
+                    def create_approved(number):
+                        no="HT-2026-"+str(number).zfill(6)
+                        response=required("form.submit",runtime_token,{
+                            "formId":"form.contracts",
+                            "values":{"contract_no":no,
+                                      "title":"B2 autonomous contract "+str(number),
+                                      "amount_minor":200000000+number}})
+                        rid=response["recordId"]
+                        statuses=[]
+                        for action,version in (
+                            ("submit",1),("approve",2),("approve",3)
+                        ):
+                            event=required("workflow.advance",runtime_token,{
+                                "workflowId":"workflow.approval",
+                                "recordId":rid,"action":action,
+                                "expectedVersion":version})
+                            statuses.append(event["status"])
+                        if statuses!=["PendingLevel1",
+                                     "PendingLevel2","Approved"]:
+                            raise AssertionError("B12_WORKFLOW_NOT_APPROVED")
+                        return no
+
+                    start_consumer()
+                    first_status=wait_consumer(
+                        lambda x:x["state"]=="CAUGHT_UP" and
+                                 x["cursor"]==8)
+                    check("B12-63-background-daemon-autostarts-from-native-cursor8",
+                          consumer_proc.poll() is None and
+                          first_status["lag"]==0,
+                          {"daemonPid":consumer_proc.pid,
+                           "nativeDurableCursor":8})
+                    denied_cfg=run(["sudo","-n","runuser","-u",SALT,
+                        "--",sys.executable,"-c",
+                        "import os,sys\n"
+                        "try:\n"
+                        " f=os.open(sys.argv[1],os.O_RDONLY)\n"
+                        " os.close(f)\n"
+                        " raise SystemExit(3)\n"
+                        "except PermissionError:\n"
+                        " raise SystemExit(0)\n",
+                        str(consumer_cfg)],cwd=stage,ok=False)
+                    check("B12-64-native-UID-cannot-open-controller-source-token",
+                          denied_cfg.returncode==0 and
+                          projection_token not in
+                          consumer_status.read_text(),
+                          {"controllerConfigMode":"0600",
+                           "nativeTokenOpen":"DENIED"})
+                    third=create_approved(3)
+                    st12=wait_consumer(
+                        lambda x:x.get("cursor")==12 and
+                                 x["state"]=="CAUGHT_UP")
+                    rows12=native_inspect(v1native["db"])
+                    check("B12-65-true-background-auto-applies-third-B2-contract",
+                          st12["head"]==12 and
+                          len(rows12["rows"])==3 and
+                          rows12["receipts"]==12 and
+                          any(r["contract_no"]==third and
+                              r["status"]=="Approved"
+                              for r in rows12["rows"]),
+                          {"nativeCursor":12,"rows":3,
+                           "manualSyncInvocations":0})
+                    native3=web_call(native1+ROUTE)
+                    route3=web_call(route_base+ROUTE)
+                    check("B12-66-running-real-native-HTTP-shows-auto-synced-row",
+                          native3[0]==route3[0]==200 and
+                          third.encode() in native3[2] and
+                          third.encode() in route3[2],
+                          {"realSaltcorn":200,"routerRelease":1})
+                    dead_pid=consumer_proc.pid
+                    consumer_proc.kill()
+                    consumer_proc.wait(timeout=10)
+                    check("B12-67-real-consumer-SIGKILL-not-saltcorn",
+                          consumer_proc.returncode!=0 and
+                          native_processes["v1"].poll() is None and
+                          web_call(native1+ROUTE)[0]==200,
+                          {"consumerKilled":dead_pid,
+                           "saltcornStillAlive":True})
+                    fourth=create_approved(4)
+                    before_restart=native_inspect(v1native["db"])
+                    check("B12-68-authority-advances-while-consumer-dead",
+                          pull_events(after=12)[1]["head"]==16 and
+                          before_restart["lastSeq"]==12 and
+                          len(before_restart["rows"])==3,
+                          {"sourceHead":16,"nativeCursor":12,
+                           "sourceWritesNotBlocked":True})
+                    start_consumer()
+                    st16=wait_consumer(
+                        lambda x:x.get("cursor")==16 and
+                                 x["state"]=="CAUGHT_UP")
+                    check("B12-69-restarted-daemon-resumes-from-native-receipt",
+                          st16["head"]==16 and
+                          any(r["contract_no"]==fourth
+                              for r in native_inspect(
+                                  v1native["db"])["rows"]),
+                          {"recoveredCursor":16,
+                           "separateNewProcess":consumer_proc.pid!=dead_pid})
+                    chk16=native_inspect(v1native["db"])
+                    check("B12-70-restart-does-not-duplicate-native-business",
+                          chk16["receipts"]==16 and
+                          chk16["mappings"]==4 and
+                          len(chk16["rows"])==4,
+                          {"receipts":16,"rows":4,"duplicates":0})
+                    source_paused.set()
+                    outage=api_json(proxy_url,"POST",{
+                        "after":16,"limit":20},projection_token)
+                    check("B12-71-real-source-HTTP-proxy-returns-503",
+                          outage[0]==503 and
+                          outage[1]["error"]=="INJECTED_SOURCE_OUTAGE",
+                          {"consumerSourceHttp":503,
+                           "kernelBusinessEndpointStillAvailable":True})
+                    fifth=create_approved(5)
+                    unavailable=wait_consumer(
+                        lambda x:x["state"]=="SOURCE_UNAVAILABLE")
+                    still16=native_inspect(v1native["db"])
+                    check("B12-72-real-source-outage-does-not-advance-checkpoint",
+                          unavailable["failures"]>=1 and
+                          still16["lastSeq"]==16 and
+                          len(still16["rows"])==4 and
+                          pull_events(after=16)[1]["head"]==20,
+                          {"sourceHead":20,"nativeCursor":16,
+                           "failClosedOnSourceOutage":True})
+                    source_paused.clear()
+                    st20=wait_consumer(
+                        lambda x:x.get("cursor")==20 and
+                                 x["state"]=="CAUGHT_UP",seconds=35)
+                    chk20=native_inspect(v1native["db"])
+                    check("B12-73-network-recovers-daemon-auto-catches-up",
+                          st20["head"]==20 and
+                          chk20["receipts"]==20 and
+                          chk20["mappings"]==5 and
+                          len(chk20["rows"])==5,
+                          {"sourceHead":20,"nativeCursor":20,
+                           "manualSyncInvocations":0})
+                    check("B12-74-live-native-HTTP-shows-fifth-B2-contract",
+                          fifth.encode() in web_call(native1+ROUTE)[2] and
+                          fifth.encode() in web_call(route_base+ROUTE)[2],
+                          {"nativeHTTP":"updated","routeHTTP":"updated"})
+                    corrupt_sql=(
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title='B12_TAMPERED' "
+                        "WHERE contract_no='HT-2026-000005'\")\n"
+                        "c.commit()\n"
+                    )
+                    native_command([sys.executable,"-c",corrupt_sql],
+                                   v1native["db"])
+                    drift=wait_consumer(
+                        lambda x:x["state"]=="DERIVED_DRIFT")
+                    check("B12-75-idle-daemon-detects-native-UID-row-drift",
+                          drift["failures"]>=1 and
+                          native_inspect(v1native["db"])["lastSeq"]==20,
+                          {"periodicFullMappedRowAudit":"DRIFT",
+                           "noNewSourceEvents":True})
+                    raw_dirty=web_call(native1+ROUTE)
+                    check("B12-76-negative-raw-native-HTTP-not-read-guarded",
+                          raw_dirty[0]==200 and
+                          b"B12_TAMPERED" in raw_dirty[2] and
+                          native_inspect(v1native["db"])["lastSeq"]==20,
+                          {"unsafeDirectNativeReadStillPossible":True,
+                           "readTimeFailClosedNotImplemented":True})
+                    repair_sql=(
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B2 autonomous contract 5' "
+                        "WHERE contract_no='HT-2026-000005'\")\n"
+                        "c.commit()\n"
+                    )
+                    native_command([sys.executable,"-c",repair_sql],
+                                   v1native["db"])
+                    healed=wait_consumer(
+                        lambda x:x["state"]=="CAUGHT_UP" and
+                                 x.get("cursor")==20)
+                    check("B12-77-after-authorized-native-repair-daemon-heals",
+                          healed["lag"]==0 and
+                          native_inspect(v1native["db"])["receipts"]==20,
+                          {"audit":"CLEAN","cursor":20,
+                           "repairWasManualNotAutomatic":True})
+                    last_source=pull_events(after=0)[1]
+                    last_core=physical_core()
+                    check("B12-78-independent-B2-oracle-20-events-5-contracts",
+                          last_source["head"]==20 and
+                          len(last_source["events"])==20 and
+                          len(last_core["app-a"]["records"])==5 and
+                          all(r["value"]["status"]=="Approved"
+                              for r in last_core["app-a"]["records"]) and
+                          last_core["app-b"]==init["app-b"],
+                          {"sourceEvents":20,"approvedContracts":5,
+                           "appBunchanged":True})
+                    final_browser=context.new_page()
+                    final_browser.goto(route_base+ROUTE,
+                                       wait_until="domcontentloaded")
+                    check("B12-79-real-Chromium-renders-auto-recovered-contract",
+                          fifth in final_browser.content() and
+                          api_json(route_base+"/_health")[1][
+                              "activeVersion"]==1,
+                          {"chromium":"fifth-authority-contract",
+                           "activeUIRelease":1,
+                           "noProductionHAClaim":True})
                     data["final"]={
                         "v1Manifest":v1["manifestHash"],
                         "v2Manifest":v2["manifestHash"],
