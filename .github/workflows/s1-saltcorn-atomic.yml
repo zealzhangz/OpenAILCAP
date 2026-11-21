@@ -1,0 +1,140 @@
+name: S1 Saltcorn real SQLite transaction and native CAS concurrency
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-saltcorn-atomic.yml'
+      - 'experiments/platform-saltcorn/atomic/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-native-atomic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned real Saltcorn platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          saltcorn --version
+      - name: Initialize real native application metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-atomic.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$SALTCORN_SESSION_SECRET" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 120s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f experiments/platform-saltcorn/contract-pack.json
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/seed-contract.js
+          test -s "$SQLITE_FILEPATH"
+          mkdir -p "$RUNNER_TEMP/s1-atomic-logs"
+          echo "CAS_LOG_DIR=$RUNNER_TEMP/s1-atomic-logs" >> "$GITHUB_ENV"
+      - name: Negative control - sqlite withTransaction does not roll back native write
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/atomic/transaction-negative.js \
+            > "$CAS_LOG_DIR/wrapper.log" 2>&1
+          grep '^S1_WRAPPER_RESULT|' "$CAS_LOG_DIR/wrapper.log"
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase wrapper \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" \
+            --output /tmp/s1-atomic-wrapper.json
+      - name: Prepare application-scoped version ledger for limited research fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/atomic/prepare.js \
+            > "$CAS_LOG_DIR/prepare.log" 2>&1
+          grep '^S1_PREPARED|' "$CAS_LOG_DIR/prepare.log"
+          python3 experiments/platform-saltcorn/atomic/generate.py --output-dir "$RUNNER_TEMP/s1-atomic-generated"
+          echo "CAS_GENERATED=$RUNNER_TEMP/s1-atomic-generated" >> "$GITHUB_ENV"
+      - name: Two independent processes modify disjoint fields under real SQL transactions
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f "$CAS_GENERATED/d-title.js" > "$CAS_LOG_DIR/d-title.log" 2>&1 &
+          p1=$!
+          timeout 120s saltcorn run-js -f "$CAS_GENERATED/d-status.js" > "$CAS_LOG_DIR/d-status.log" 2>&1 &
+          p2=$!
+          wait "$p1"
+          wait "$p2"
+          grep '^S1_ATOMIC_' "$CAS_LOG_DIR/d-title.log"
+          grep '^S1_ATOMIC_' "$CAS_LOG_DIR/d-status.log"
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase disjoint \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" \
+            --output /tmp/s1-atomic-disjoint.json
+      - name: Two independent processes compete for same resource revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f "$CAS_GENERATED/c-alpha.js" > "$CAS_LOG_DIR/c-alpha.log" 2>&1 &
+          p1=$!
+          timeout 120s saltcorn run-js -f "$CAS_GENERATED/c-beta.js" > "$CAS_LOG_DIR/c-beta.log" 2>&1 &
+          p2=$!
+          wait "$p1"
+          wait "$p2"
+          grep '^S1_ATOMIC_' "$CAS_LOG_DIR/c-alpha.log"
+          grep '^S1_ATOMIC_' "$CAS_LOG_DIR/c-beta.log"
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase collision \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" \
+            --output /tmp/s1-atomic-collision.json
+      - name: Inject failure after real native field update inside explicit transaction
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f "$CAS_GENERATED/f-title.js" \
+            > "$CAS_LOG_DIR/f-title.log" 2>&1
+          grep '^S1_ATOMIC_ROLLED_BACK|' "$CAS_LOG_DIR/f-title.log"
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase injected \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" \
+            --output /tmp/s1-atomic-injected.json
+      - name: Negative control - ungoverned native edit bypasses a sidecar CAS ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/atomic/bypass-human.js \
+            > "$CAS_LOG_DIR/bypass-human.log" 2>&1
+          grep '^S1_BYPASS_HUMAN|' "$CAS_LOG_DIR/bypass-human.log"
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase bypass-human \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" \
+            --output /tmp/s1-atomic-bypass-human.json
+          timeout 120s saltcorn run-js -f "$CAS_GENERATED/b-status.js" \
+            > "$CAS_LOG_DIR/b-status.log" 2>&1
+          grep '^S1_ATOMIC_' "$CAS_LOG_DIR/b-status.log"
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase bypass-agent \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" \
+            --output /tmp/s1-atomic-bypass-agent.json
+      - name: Serve actual HTTP runtime and independently read back after all writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$CAS_LOG_DIR/server.log" 2>&1 &
+          ready=0
+          for n in $(seq 1 90); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ready=1;break;fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ];then
+            tail -n 90 "$CAS_LOG_DIR/server.log"
+            exit 1
+          fi
+          python3 experiments/platform-saltcorn/atomic/verify.py --phase http \
+            --db "$SQLITE_FILEPATH" --log-dir "$CAS_LOG_DIR" --base-url http://127.0.0.1:3100 \
+            --output /tmp/s1-atomic-http.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-saltcorn-real-transactions-and-bypass
+          path: /tmp/s1-atomic-*.json
+          if-no-files-found: warn
