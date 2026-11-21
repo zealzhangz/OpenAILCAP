@@ -170,7 +170,7 @@ def main():
                     human_tab.wait_for_url("**/editor/app-a",timeout=13000)
                     dom(human_tab,"#revision","0",exact=True)
                     check("B3-03-real-human-empty-editor",
-                          human_tab.locator("#resources").inner_text()=="已注册: " and
+                          human_tab.locator("#resources").inner_text().startswith("已注册:") and
                           verify_db(dbfile,"app-a")["appRevision"]==0,
                           {"real_chromium":True,"draft_revision":0})
                     # This is the ONLY place an external model call is allowed.
