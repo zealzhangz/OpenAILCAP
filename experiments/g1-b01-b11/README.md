@@ -37,3 +37,14 @@ B10 的 `router.py` 仍由源码只读复用，**不会因为 B11 数据同步�
 ## 下一步（若 B11 实测通过）
 
 B12 应对**运行时派生数据防污染/发布源与业务事件不同步窗口**作明确权衡：为真正多租户加行级权限/脱敏和受信同步服务的身份边界，建立 Outbox 消费者**持久状态、后台自动运行、延迟指标与故障恢复**；验证断电重启/网络中断后两套 Native 视图从源 checkpoint 正确重放，并对路由和发布指针的持久化控制面设计正式 W17/W20/W24 验收。
+
+
+## 2026-11-21：已完成、已合并、真实 GitHub CI 全绿
+
+- [报告 44：B11 权威合同 Outbox → 双真实 Saltcorn 业务数据投影](../../docs/01-research/44-s1-b11-authoritative-business-outbox-native-projection-evidence.md)；[最终 CI #44908563537](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44908563537) **completed / success**，Job **136859260383**，[Artifact #14708123689](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44908563537/artifacts/14708123689) 含机器可读 JSON 和原始日志。B11 **28/28** 单测，B10 **34/34** 回归，B2 **18/18**，B5 **40/40**，B11 真正 Linux UID/B2/双 Saltcorn/Chromium/SQL **62/62**，**0 次 DeepSeek**。
+- 真正 B2 合同 A 两级审批到 Approved 时，在源记录同一 SQLite 事务中生成 `seq1..4`；两个真正 Saltcorn 1.7.0-beta.5 实例的 Native SQLite **没有独立 seed**，通过 Outbox 实际物化为相同的 B2 合同业务行，原生 v1/v2 View 列 3/4 不同。
+- 实际 Native v2 SQLite 在 COMMIT 前注入失败，行/Receipt/Cursor **全部回滚**；相同事件重试正确应用。v1 相同事件重放 `applied=0,replayed=4`；旧序号篡改 payload 并重算 Hash 后重放拒绝。Native UID 真实 `open(O_RDONLY)` 读取权威 SQLite/密钥配置均被 OS 拒绝。
+- 两个 Saltcorn 原生 Web **都已经在运行**后，B2 真正创建第二份合同并完成两级审批，源 Outbox `seq5..8`，两个 Native SQL 只增量消费四个事件后均拥有 **两份 Approved 合同**，不重启服务；真实原生 HTTP、Router HTTP 和 Chromium 都显示第二份合同。
+- 真正 Native v2 故障时 Router 返回 503；受信 B2 `app.rollback` v2→v1 再 Router CAS v2→v1，前端恢复，**两个业务合同的 Approved 状态、源 Outbox 8 条记录、Native v1 Cursor8 都未随 UI 回滚**。App B 不变。
+- 前两次真实 CI [#44908199814](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44908199814)、[#44908364712](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44908364712) 分别暴露路由器 staged 源码路径错误、第二份合同创建后错误依赖 SQLite 未定义的行顺序；均已按根因修复。**仅最终 #44908563537 作为完成证据**。
+- [PR #13](https://github.com/zealzhangz/OpenAILCAP/pull/13) 已合并 `main`，SHA **68da2ce8cf5cd1312866f68c22314636354ab26b**。仍然不是企业通用 CDC、行权限/脱敏、自动后台消费者、生产 HA/零停机/完整 Native Workflow；G1-B01 OPEN，冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。
