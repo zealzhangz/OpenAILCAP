@@ -2362,7 +2362,8 @@ def main():
                     check("B15-146-missing-published-snapshot-fails-closed",
                           missing_snapshot[0]==503 and
                           cannot_connect(SALT) and
-                          backup.exists(),
+                          run(["sudo","-n","test","-f",backup],
+                              cwd=stage,ok=False).returncode==0,
                           {"snapshotMissing":True,"guardHTTP":503,
                            "nativeDirect":"BLOCKED"})
                     republished=publish_real()
