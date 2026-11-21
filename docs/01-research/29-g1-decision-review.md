@@ -216,3 +216,18 @@ undefined
 **保留失败**：[初次 CI #44917208014](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917208014) Python 缩进错误；[第二次 CI #44917393338](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917393338) 164单元与104 E2E 已通过，但四 UID 临时目录清理权限错误使 Job 失败；[最终 #44917605505](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505) 完整清理与所有测试均 success。原失败记录不删。
 
 **正式冻结结论仍然**：S1 **IN_PROGRESS**、G1 **NOT_PASSED**、G1-B01 **PARTIALLY VALIDATED / OPEN**、冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B13 104/104 为专项范围内结果，不转正式门禁。下一 B14 P0：**B2 权威签名事件 + Native Apply 验签**，以及**独立于 Saltcorn UID 的物理 SQL 读前证明/只读快照**；保留恶意 Consumer 伪造、恶意 Native Snapshot 和原生 HTTP 旁路负对照。
+
+
+## 2026-11-22：B14 Kernel Ed25519 权威事件来源认证与第五独立 UID SQL 读前审计复审
+
+[完整报告 47](47-s1-b14-ed25519-independent-sql-auditor-evidence.md)、[最终 Actions #44926315233](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926315233) **completed/success**，Job **136913068933**，[Artifact #14716390392](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926315233/artifacts/14716390392)：B14/B13/B12/B11/B10/B2/B5 单元/契约 **24+22+22+28+34+18+40 = 188/188 PASS**；真实 Ubuntu24.04/Node24/Saltcorn CLI1.7.0-beta.5/Python3.13/cryptography/Chromium、五个不同非 root Linux UID、B2 真实 Form/Workflow/SQLite Trigger Outbox、Ed25519 签名/验签、无 sudo Consumer、真实 Native SQLite/HTTP、独立 SQL 审计 **128/128 E2E PASS**；**0 次 DeepSeek**。PR #16 已合并 main，SHA **1dabeba18450adbd09196e6f21acb32cb7e080a2**。
+
+**B13-104 P0 的受控路径修复**：B14 先在同一真实测试环境完整复现 B13-104“合法 Consumer UID 自行伪造 SHA256 事件，旧 Native Broker 接受、Cursor28→29”负对照；受信 CI Controller 停止旧无签名 Broker、重置一次性 Native 派生库，再由 Kernel UID999 以**0600 私钥**对 B2 权威 Outbox 的28条真实事件做**domain-separated Ed25519 签名**。Consumer UID994 无 sudo、不能读/写私钥；Saltcorn UID997 只持固定只读公钥。Native 新 Broker 在调用 B11 事务 Apply 前验签，**原 B13 SHA256 伪造事件被拒绝、修改字段并重算 SHA256 复用旧签名被拒绝**，Cursor保持0；28条真实签名事件原子回放、28条幂等重放均通过。B2 新建第八份合同的4条事件由无 sudo Consumer 自动取得签名、应用，Native Cursor28→32；合法 Consumer 再伪造 `seq33` 并盗用旧签名，Native **拒绝**、Cursor32不变，受控 Guard HTTP200。**因此 B13-104 的受控 Apply IPC 事件来源认证缺陷得到有边界的实测修复**，但 Saltcorn UID 仍可绕过自身 Broker 直接写派生 SQLite。
+
+**B13 同 UID Snapshot P0 的受限修复**：新增第五独立 Linux 非 root `ailcapb14audit` UID993，Saltcorn UID997 仍拥有 Native SQLite；通过文件组只读 **0640** 与目录 **0710**，审计 UID 真实 `O_RDONLY` 成功、`O_WRONLY` PermissionError。审计 UID 自己拥有 `guard.sock` **0660**、SO_PEERCRED 仅 Router UID995、只读 snapshot；Saltcorn UID 连接被 DAC 拒绝。Router 在真实 Saltcorn HTTP 前后核验 B2 当前 Release、**全部 Ed25519 签名 Outbox**与独立审计 UID 的物理 SQL；真正 Chromium/HTTP200 展示7份和自动新增的第8份合同。Saltcorn UID 直接 SQL UPDATE 污染第8份合同标题，**独立审计 clean=false、受控 Router HTTP503、Native 原生直连 HTTP200**；人工修复后 Guard200。该设计降低“Saltcorn 同 UID 伪造 Guard Snapshot”的风险，但**不能阻止 Saltcorn UID 直接修改真实派生 SQLite 或使审计不可用**。
+
+**保留失败与最终证据**：[初次 CI #44925890843](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44925890843) 188项单测全过但 Ubuntu useradd 与同名 group 冲突，未执行 E2E；[第二次 CI #44926049128](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926049128) 188项单测、B13 104项和 B14-105—120 共120项真实 E2E 已通过，但 B14 Guard 误用 B13 临时目录前缀 fail-closed，未完成余下8项；[最终 #44926315233](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44926315233) **188/188 + 128/128、Job success、Artifact 完整**。失败记录不删除，也不把前两次当作成功证据。
+
+**仍 OPEN 的 P0/工程限制**：Saltcorn UID 可直接改写派生 SQLite；Native 原生 HTTP 直连可绕过 Router；Ed25519 密钥没有生产 KMS/HSM/轮换/吊销/可信时间/长期签名审计；Router 单一固定四列合同 GET 全量扫描源 Outbox 最多1000事件、双次校验仍有 TOCTOU；未覆盖多租户行级 ACL/PII、删除/Schema Migration、生产吞吐/断电/跨节点故障/HA、持久 Route Journal、Native Form/Workflow/Code 完整一致性。B15 优先验证**网络层强制受控入口**及**派生 SQLite 受控只读快照/原子发布**，保留 Native 直连、SQL 直写、断链/重放负对照。
+
+**正式冻结判定保持：S1 IN_PROGRESS、G1 NOT_PASSED、G1-B01 PARTIALLY VALIDATED / OPEN；冻结 W01—W24 0/24 FULL PASS，TC01—TC18 0/18 FULL PASS。** B14 的128/128为专项研究通过，不等于 G1 正式 FULL PASS。
