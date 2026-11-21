@@ -1476,7 +1476,8 @@ def main():
                                 "--config",str(b13_cfg),
                                 "--status",str(b13_status)
                             ],cwd=str(stage),stdin=subprocess.DEVNULL,
-                              stdout=output,stderr=subprocess.STDOUT)
+                              stdout=output,stderr=subprocess.STDOUT,
+                              start_new_session=True)
                     def b13_state():
                         # 0700 Consumer directory is intentionally not
                         # traversable by the CI runner: read via sudo cat.
@@ -1515,7 +1516,7 @@ def main():
                           native_inspect(v1native["db"])["receipts"]==24,
                           {"sourceHead":24,"nativeCursor":24,
                            "guardHTTP":200})
-                    unprivileged_consumer.terminate()
+                    os.killpg(unprivileged_consumer.pid,signal.SIGTERM)
                     unprivileged_consumer.wait(timeout=7)
                     seventh=create_approved(7)
                     native_stale=native_inspect(v1native["db"])
@@ -1623,9 +1624,12 @@ def main():
                     browser.close()
         finally:
             if unprivileged_consumer and unprivileged_consumer.poll() is None:
-                unprivileged_consumer.terminate()
+                try:os.killpg(unprivileged_consumer.pid,signal.SIGTERM)
+                except ProcessLookupError:pass
                 try:unprivileged_consumer.wait(timeout=5)
-                except subprocess.TimeoutExpired:unprivileged_consumer.kill()
+                except subprocess.TimeoutExpired:
+                    try:os.killpg(unprivileged_consumer.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
             for new_proc in (guard_proc,ipc_proc):
                 if new_proc and new_proc.poll() is None:
                     new_proc.terminate()
