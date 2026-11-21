@@ -21,7 +21,7 @@ from registry import ExtensionRegistry
 TOOLS={
     "metadata.upsert","app.publish","app.rollback",
     "code.verify","code.stage","code.publish","code.rollback",
-    "release.read","draft.read","risk.score"
+    "release.read","draft.read","risk.score","form.submit","workflow.advance"
 }
 
 @dataclass(frozen=True)
@@ -66,6 +66,13 @@ class ToolBroker:
         if tool=="app.rollback":
             self._shape(args,("command",))
             return self.store.rollback(actor,app,args["command"])
+        if tool=="form.submit":
+            self._shape(args,("formId","values"))
+            return self.store.submit_form(actor,app,args["formId"],args["values"])
+        if tool=="workflow.advance":
+            self._shape(args,("workflowId","recordId","action","expectedVersion"))
+            return self.store.advance(actor,app,args["workflowId"],args["recordId"],
+                                      args["action"],args["expectedVersion"])
         if tool=="code.verify":
             self._shape(args,("source",))
             try:
