@@ -160,7 +160,6 @@ class Broker:
         self.max_calls = max_calls
         self.sessions = {}
         self.grants = {}
-        self.calls = set()
         self.plugins = {}
         self.call_count = 0
         with sqlite3.connect(self.path) as db:
@@ -168,6 +167,11 @@ class Broker:
                 "call_id TEXT NOT NULL, tool TEXT NOT NULL, principal TEXT NOT NULL,"
                 "app_id TEXT NOT NULL, args_sha256 TEXT NOT NULL, result TEXT NOT NULL,"
                 "created_at TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS agent_tool_call_claims ("
+                "call_id TEXT PRIMARY KEY, principal TEXT NOT NULL,"
+                "app_id TEXT NOT NULL, tool TEXT NOT NULL,"
+                "state TEXT NOT NULL, created_at TEXT NOT NULL,"
+                "finished_at TEXT)")
 
     def bind_session(self, session, ctx, csrf):
         if session.app_id != APP_ID or session.email not in IDENTITIES:
@@ -230,18 +234,54 @@ class Broker:
         if not isinstance(number, str) or not NUMBER.fullmatch(number):
             raise ToolError("INVALID_RESOURCE")
 
+    def _reserve(self, call_id, name, subject):
+        # Durably reserve BEFORE any native request. SQLite UNIQUE(call_id)
+        # works across independent brokers/processes sharing this database.
+        # A crash after reserve leaves CLAIMED (unknown), never auto-retry.
+        try:
+            with sqlite3.connect(self.path, timeout=12) as db:
+                db.execute(
+                    "INSERT INTO agent_tool_call_claims"
+                    "(call_id,principal,app_id,tool,state,created_at) "
+                    "VALUES(?,?,?,?,?,?)",
+                    (call_id, subject.email, subject.app_id, name, "CLAIMED",
+                     datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        except sqlite3.IntegrityError:
+            raise ToolError("DUPLICATE_CALL_ID")
+        except sqlite3.Error:
+            raise ToolError("DURABLE_LEDGER_UNAVAILABLE")
+
     def _record(self, call_id, name, session, args, result):
+        # UPDATE claim status and insert redacted event in the SAME
+        # transaction. If this fails, CLAIMED remains and replay is blocked.
         digest = hashlib.sha256(json.dumps(args, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-        with sqlite3.connect(self.path) as db:
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with sqlite3.connect(self.path, timeout=12) as db:
+            rowcount = db.execute(
+                "UPDATE agent_tool_call_claims SET state=?,finished_at=? "
+                "WHERE call_id=? AND state='CLAIMED'",
+                (result, now, call_id)).rowcount
+            if rowcount != 1:
+                raise ToolError("DURABLE_CLAIM_MISSING")
             db.execute("INSERT INTO agent_tool_audit"
                        "(call_id,tool,principal,app_id,args_sha256,result,created_at)"
                        " VALUES (?,?,?,?,?,?,?)",
-                       (call_id, name, session.email if session else "unauthenticated",
-                        session.app_id if session else "unknown", digest, result,
-                        datetime.now(timezone.utc).isoformat(timespec="seconds")))
+                       (call_id, name, session.email, session.app_id, digest,
+                        result, now))
+
+    def lookup_call(self, call_id):
+        # Used for human reconciliation after unknown network outcomes.
+        # Never exposes session secrets or raw tool arguments.
+        with sqlite3.connect(self.path) as db:
+            row = db.execute(
+                "SELECT state,tool,app_id,principal FROM agent_tool_call_claims "
+                "WHERE call_id=?", (call_id,)).fetchone()
+        return ({"state":row[0],"tool":row[1],"app_id":row[2],"principal":row[3]}
+                if row else None)
 
     def execute(self, session_key, tool_name, args, *, call_id, human_grant=None):
         subject = None
+        reserved = False
         result = "DENIED"
         if not isinstance(call_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{8,64}", call_id):
             raise ToolError("INVALID_CALL_ID")
@@ -250,9 +290,8 @@ class Broker:
         self.call_count += 1
         try:
             subject = self._session(session_key)
-            if call_id in self.calls:
-                raise ToolError("DUPLICATE_CALL_ID")
-            self.calls.add(call_id)
+            self._reserve(call_id, tool_name, subject)
+            reserved = True
             definitions = {**TOOLS, **self.plugins}
             if tool_name not in definitions:
                 raise ToolError("UNKNOWN_TOOL")
@@ -298,6 +337,12 @@ class Broker:
         except ToolError as e:
             result = e.code
             raise
+        except Exception:
+            # If native I/O succeeded but the response failed, it is UNKNOWN.
+            # The persistent claim blocks replays; reconcile against native DB.
+            result = "UNKNOWN_EXCEPTION_OUTCOME"
+            raise
         finally:
-            self._record(call_id, tool_name, subject, args if isinstance(args, dict) else {},
-                         result)
+            if reserved:
+                self._record(call_id, tool_name, subject,
+                             args if isinstance(args, dict) else {}, result)
