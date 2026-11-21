@@ -59,8 +59,10 @@ def http(base,app,tool,token,args):
     req=Request(
         base+"/v3/apps/"+app+"/tools/"+tool,
         data=json.dumps(args,ensure_ascii=False).encode(),
-        headers={"Authorization":"Bearer "+token,
-                 "Content-Type":"application/json"},method="POST")
+        headers=({"Authorization":"Bearer "+token}
+                 if token is not None else {}) | {
+                    "Content-Type":"application/json"},
+        method="POST")
     try:
         with urlopen(req,timeout=20) as resp:
             return resp.status,json.loads(resp.read())
