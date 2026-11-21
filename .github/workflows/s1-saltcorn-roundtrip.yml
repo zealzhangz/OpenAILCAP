@@ -1,0 +1,95 @@
+name: S1 Saltcorn human-programmatic roundtrip and stale Pack experiment
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-saltcorn-roundtrip.yml'
+      - 'experiments/platform-saltcorn/roundtrip/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-saltcorn-edit-roundtrip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install real Saltcorn CLI
+        run: |
+          set -euo pipefail
+          timeout 600s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          saltcorn --version
+      - name: Initialize real Saltcorn native Pack and contract row
+        run: |
+          set -euo pipefail
+          echo "SQLITE_FILEPATH=$RUNNER_TEMP/s1-roundtrip.sqlite" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-roundtrip.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          timeout 120s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f experiments/platform-saltcorn/contract-pack.json
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/seed-contract.js
+          python3 experiments/platform-saltcorn/roundtrip/make-stale-pack.py \
+            --source experiments/platform-saltcorn/contract-pack.json \
+            --output "$RUNNER_TEMP/stale-automation-pack.json"
+      - name: A - Scoped native edits preserve manual work
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/roundtrip/human-edit.js
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/roundtrip/scoped-automation.js
+          python3 experiments/platform-saltcorn/roundtrip/verify.py \
+            --phase A --db "$SQLITE_FILEPATH" --output /tmp/s1-roundtrip-A.json
+      - name: B - Stale full Pack overwrites unrelated changes
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn install-pack -f "$RUNNER_TEMP/stale-automation-pack.json"
+          python3 experiments/platform-saltcorn/roundtrip/verify.py \
+            --phase B --db "$SQLITE_FILEPATH" --output /tmp/s1-roundtrip-B.json
+      - name: C - Application-side stale preflight refuses conflict
+        run: |
+          set -euo pipefail
+          timeout 120s saltcorn run-js -f experiments/platform-saltcorn/roundtrip/human-edit.js
+          if timeout 120s saltcorn run-js -f experiments/platform-saltcorn/roundtrip/guarded-automation.js > "$RUNNER_TEMP/guard-rejection.log" 2>&1; then
+            echo "::error::Guard unexpectedly accepted stale-base write"
+            exit 1
+          fi
+          if ! grep -q 'STALE_BASE' "$RUNNER_TEMP/guard-rejection.log"; then
+            echo "::error::Unexpected failure, not stale-base rejection"
+            tail -n 35 "$RUNNER_TEMP/guard-rejection.log"
+            exit 1
+          fi
+          echo "Expected application-side STALE_BASE rejection."
+          python3 experiments/platform-saltcorn/roundtrip/verify.py \
+            --phase C --db "$SQLITE_FILEPATH" --output /tmp/s1-roundtrip-C.json
+      - name: Read back latest real REST and rendered HTML
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/s1-roundtrip-server.log" 2>&1 &
+          ready=0
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ready=1; break; fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then
+            tail -n 80 "$RUNNER_TEMP/s1-roundtrip-server.log"
+            exit 1
+          fi
+          python3 experiments/platform-saltcorn/roundtrip/verify.py \
+            --phase C --db "$SQLITE_FILEPATH" \
+            --base-url http://127.0.0.1:3100 --output /tmp/s1-roundtrip-C-http.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-real-saltcorn-human-automation-roundtrip
+          path: |
+            /tmp/s1-roundtrip-A.json
+            /tmp/s1-roundtrip-B.json
+            /tmp/s1-roundtrip-C.json
+            /tmp/s1-roundtrip-C-http.json
+          if-no-files-found: warn
