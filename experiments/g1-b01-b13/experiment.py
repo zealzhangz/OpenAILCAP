@@ -1652,7 +1652,9 @@ def main():
             run(["sudo","-n","chown","-R",
                  str(os.getuid())+":"+str(os.getgid()),
                  authority,runtime,route_private,ready,
-                 home/"router-ready"],
+                 home/"router-ready",home/"ipc",
+                 home/"guard-private",home/"guard-ready",
+                 home/"b13-consumer-private"],
                 ok=False,timeout=10)
             data["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in data["checks"]),
