@@ -1,0 +1,96 @@
+name: S1 B14 Ed25519 signed B2 source and independent fifth-UID SQL guard
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b14-ed25519-independent-sql-guard.yml'
+      - 'experiments/g1-b01-b14/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b14-ed25519-independent-sql-guard.yml'
+      - 'experiments/g1-b01-b14/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kernel-ed25519-consumer-native-auditor-router:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install real Saltcorn CLI Chromium and Ed25519 cryptography
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0' 'cryptography>=44,<48'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: B14 Ed25519 units and B13 B12 B11 B10 B2 B5 regressions
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b14/*.py
+          (cd experiments/g1-b01-b14 && python3 -u -m unittest -v test_signed_security) \
+            2>&1 | tee /tmp/s1-b14-units.log
+          (cd experiments/g1-b01-b13 && python3 -u -m unittest -v test_ipc_guard) \
+            2>&1 | tee /tmp/s1-b14-b13-regression.log
+          (cd experiments/g1-b01-b12 && python3 -u -m unittest -v test_consumer) \
+            2>&1 | tee /tmp/s1-b14-b12-regression.log
+          (cd experiments/g1-b01-b11 && python3 -u -m unittest -v test_projection) \
+            2>&1 | tee /tmp/s1-b14-b11-regression.log
+          (cd experiments/g1-b01-b10 && python3 -u -m unittest -v test_router) \
+            2>&1 | tee /tmp/s1-b14-b10-regression.log
+          (cd experiments/g1-b01-b2 && python3 -u -m unittest -v test_schema) \
+            2>&1 | tee /tmp/s1-b14-b2-regression.log
+          (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
+            2>&1 | tee /tmp/s1-b14-b5-regression.log
+      - name: Create 5 real nonroot UIDs and 4 distinct IPC ACL groups
+        run: |
+          set -euo pipefail
+          sudo -n groupadd --system ailcapb13pipe
+          sudo -n groupadd --system ailcapb13guard
+          sudo -n groupadd --system ailcapb14pipe
+          sudo -n groupadd --system ailcapb14guard
+          sudo -n groupadd --system ailcapb14audit
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb13kern
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb13pipe,ailcapb13guard,ailcapb14pipe ailcapb13salt
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb13guard,ailcapb14guard ailcapb13route
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb13pipe,ailcapb14pipe ailcapb13cons
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin \
+            -G ailcapb14audit,ailcapb14guard ailcapb14audit
+          for u in ailcapb13kern ailcapb13salt ailcapb13route ailcapb13cons ailcapb14audit; do id "$u"; done
+          [[ "$(id -u ailcapb13salt)" != "$(id -u ailcapb14audit)" ]]
+          [[ "$(id -u ailcapb13route)" != "$(id -u ailcapb14audit)" ]]
+      - name: Real B2 outbox + Kernel Ed25519 + Saltcorn Native + fifth-UID independent SQL auditor + Chromium
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b14/experiment.py \
+            --output /tmp/s1-b14-evidence.json \
+            2>&1 | tee /tmp/s1-b14-e2e.log
+      - name: Upload complete real signature forgery and independent physical SQL audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b14-ed25519-independent-sql-auditor-evidence
+          path: |
+            /tmp/s1-b14-units.log
+            /tmp/s1-b14-b13-regression.log
+            /tmp/s1-b14-b12-regression.log
+            /tmp/s1-b14-b11-regression.log
+            /tmp/s1-b14-b10-regression.log
+            /tmp/s1-b14-b2-regression.log
+            /tmp/s1-b14-b5-regression.log
+            /tmp/s1-b14-evidence.json
+            /tmp/s1-b14-e2e.log
+          if-no-files-found: warn
