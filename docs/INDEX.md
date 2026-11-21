@@ -157,3 +157,12 @@
 - [机器可读预注册用例基线](01-research/g1-b01-acceptance-cases.json)：W01—W24 全部标记 `NOT_RUN`，供后续 CI 在真实运行后生成独立 observations；不冒称已修复 Saltcorn 原生编辑器。
 
 **严格限制**：本轮是设计规范与验收协议交付，**没有新增真正运行的全写入者 PoC 或 CI**，未使用 DeepSeek API。此前原生 Web stale-form 覆盖及直写漂移风险仍存在；G1-B01 **未关闭**，G1 继续 **NOT_PASSED**，冻结合同验收仍 **0/18 FULL PASS**。
+
+ 
+## 2026-11-21：S1 G1-B01 C1 真正可执行的受控写入机制
+
+- [C1 Python/SQLite/HTTP 可复现引擎与测试工程](../experiments/g1-b01-c1/README.md)：同一命令写入路径，服务端 CAS/revision/hash/幂等/审计，三类研究身份共用 HTTP 接口，真实双进程 SQLite 并发。
+- [G1-B01 C1 真实 CI 研究报告 32](01-research/32-g1-b01-c1-real-ci-evidence.md)：[GitHub Actions #44886944054](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054) **completed/success，31/31 unittest 执行实例通过**，18 个不同测试方法定义，Artifact [14699494263](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44886944054/artifacts/14699494263)，独立审查 PR #1 已合并。
+- [离线工作流](../.github/workflows/s1-g1-b01-c1.yml)：无需 Saltcorn、Chromium 或 DeepSeek Key，避免额外 API 费用。
+
+**限制**：C1 仅为自研独立服务，Browser/Plugin 仍为研究测试身份而非 Saltcorn 原生 UI/实际插件；旧原生编辑路径未治理。G1-B01 从“仅规范”发展为“独立 C1 验证”，但 **W01—W24 仍 0/24 完整 PASS；TC01—TC18 仍 0/18 完整 PASS；G1 NOT_PASSED**。
