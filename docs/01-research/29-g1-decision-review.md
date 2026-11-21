@@ -201,3 +201,18 @@ undefined
 **继续阻断正式门禁**：Consumer 仍由 **sudo-capable CI Runner** 启动并通过 sudo runuser 启动 Native Worker，尚无正式独立 Consumer UID、受控 IPC/跨机 TLS、持久 HA/Leader Election/系统服务；503 是同机代理真实 HTTP 故障，非断电/跨机网络分区。Native SQL 可被同 UID 改写且 HTTP 读取未做 fail-closed，缓存与权限绕过仍存在；没有自动修复/派生重建、生产延迟 SLA、真实行级 ACL/PII 脱敏、Delete/Schema Migration、完整 Native Form/Workflow/Code 语义。B10 Router 仍单实例内存 CAS、故障返回503，不具备生产零停机/外部副作用补偿/跨服务原子发布。
 
 **正式判定保持**：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B12 79/79 为范围受限专项证据，不得自动转正式验收。下一 B13 P0：**可信 Consumer 独立 OS 身份 + 受控 Native Apply IPC**，**Router 读取前物理 SQL 完整性校验并 fail-closed**，进一步做权威重建/缓存旁路/签名验证。
+
+
+## 2026-11-21：B13 四真实 OS UID、受限 Unix IPC、读前 Guard 与源事件伪造 P0 负对照复审
+
+[完整报告 46](46-s1-b13-four-uid-native-ipc-read-guard-negative-evidence.md)、[最终 GitHub Actions #44917605505](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505) **completed/success**，Job **136886465940**，[Artifact #14711934942](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505/artifacts/14711934942)：B13/B12/B11/B10/B2/B5 单元/契约回归 **22+22+28+34+18+40 = 164/164 PASS**；真实 Ubuntu24.04、Saltcorn CLI1.7.0-beta.5、两套 Native HTTP、四不同 Linux UID、SO_PEERCRED Unix IPC、B2 SQLite/Outbox、Chromium E2E **104/104 PASS**（B11 62 + B12 17 + B13 25），**0 次 DeepSeek**。PR #15 已合并 main，SHA **712ab9cc3dcf1ef2f94745c9f4aa75fca238eee0**。
+
+**正向真实边界**：新增独立 `ailcapb13cons` Consumer UID994，真正 `sudo -n true` 失败，实际 O_RDONLY 权威 B2 SQLite、Saltcorn Native SQLite、Router Token 配置全部 PermissionError；Saltcorn UID997 读取 Consumer/Router B2 Token 配置均拒绝。Saltcorn UID Native Broker 创建**两个不同 Linux Group 的 0660 Unix Socket**，SO_PEERCRED 校验 Consumer/Router UID；Consumer Socket 仅 audit/checkpoint/apply，Guard Socket 仅返回固定四列 Native 业务行、Cursor、Receipt、Mapping 的物理 SQL 快照，Consumer/Router 相互无法连接对方 Socket。**Consumer 自身不再有 sudo 权限**，但 CI Runner 仍使用 sudo 创建用户和启动实验进程，不能视为生产服务授权方案。
+
+**受限读前守护实证**：独立 Router UID995 持 B2 Release Read 与 Projection Read Token（Saltcorn UID 无此 Token），对单个公开 `GET /view/s1_contract_list` 在 Native HTTP 前后两次核验当前 B2 Release/Manifest、权威 Outbox 事件序列/哈希与 Native SQL 物理行/Receipt/Cursor，任一不匹配 HTTP503。真实 Chromium 在 Guard 入口展示5份合同；Consumer 无 sudo 经 IPC 自动同步第六份合同、Guard HTTP200；终止 Consumer 后 B2 创建第七份合同，B2 Head28/Native Cursor24，**Guard503 / Native 直连200**；新 Consumer 自动追赶至28后 Guard200；Saltcorn UID 真实 SQL 污染第七份合同标题后**Guard503 / Native 直连200**，人工修复后 Guard200。Guard 是单个只读入口的受限验证，不等于原生 Saltcorn 全面强制隔离、无 TOCTOU 或生产线性一致性。
+
+**P0 负对照——不得误报安全通过**：B13-104 使用**合法 Consumer UID**经 Consumer Apply Socket 提交**自行伪造、B2 Outbox 不存在**的 `seq=29` 合同插入事件及其合法 SHA256 `eventHash`。真实 Native Apply **接受并提交**该伪造合同，Native Cursor28→29，B2 权威 Head仍28；Guard 独立对照后真实返回 HTTP503。**Native 数据完整性已被污染**，Consumer OS 身份验证与普通 eventHash **不是权威事件来源认证**。B13-104 专项 PASS 是成功暴露危险能力，**源签名/Native 防伪造目标 FAIL/OPEN**。Native Broker 与 Saltcorn 同 UID 可被同 UID 失陷伪造 Snapshot，Native 原生 HTTP 直连仍不受 Guard 保护。每次 Guard 全量重扫源 Outbox，最大1000事件，未测吞吐与延迟，未实现企业多租户 ACL/PII、Delete/Schema Migration、HA/跨机网络安全或全量 Native Form/Workflow/Code。
+
+**保留失败**：[初次 CI #44917208014](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917208014) Python 缩进错误；[第二次 CI #44917393338](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917393338) 164单元与104 E2E 已通过，但四 UID 临时目录清理权限错误使 Job 失败；[最终 #44917605505](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44917605505) 完整清理与所有测试均 success。原失败记录不删。
+
+**正式冻结结论仍然**：S1 **IN_PROGRESS**、G1 **NOT_PASSED**、G1-B01 **PARTIALLY VALIDATED / OPEN**、冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B13 104/104 为专项范围内结果，不转正式门禁。下一 B14 P0：**B2 权威签名事件 + Native Apply 验签**，以及**独立于 Saltcorn UID 的物理 SQL 读前证明/只读快照**；保留恶意 Consumer 伪造、恶意 Native Snapshot 和原生 HTTP 旁路负对照。
