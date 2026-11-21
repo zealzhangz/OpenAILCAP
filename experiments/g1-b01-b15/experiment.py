@@ -2053,13 +2053,344 @@ def main():
                                     {"op":"snapshot"})["result"]["clean"],
                           {"guardHTTP":200,"repair":"MANUAL",
                            "nativeUIDCanStillDirectWrite":True})
+                    # B15: sixth trusted Publisher UID can READ Native and
+                    # signed B2 events, but cannot WRITE Native/authority.
+                    # Only public 4-column rows go into an atomically swapped
+                    # immutable-in-use SQLite snapshot; never Saltcorn auth.
+                    pub_user="ailcapb15pub"
+                    pub_uid=pwd.getpwnam(pub_user).pw_uid
+                    check("B15-129-sixth-independent-Publisher-UID",
+                          pub_uid>0 and pub_uid not in (
+                              *uids.values(),consumer_uid,audit_uid),
+                          {"publisherUid":pub_uid,"auditUid":audit_uid,
+                           "saltcornUid":uids[SALT]})
+                    pub_read=uid_probe(pub_user,
+                        "import os,sys\n"
+                        "fd=os.open(sys.argv[1],os.O_RDONLY)\n"
+                        "os.close(fd)\n",(v1native["db"],))
+                    pub_no_write=uid_probe(pub_user,
+                        "import os,sys\n"
+                        "try:\n"
+                        " fd=os.open(sys.argv[1],os.O_WRONLY)\n"
+                        " os.close(fd)\n"
+                        " raise SystemExit(3)\n"
+                        "except PermissionError:\n"
+                        " raise SystemExit(0)\n",(v1native["db"],))
+                    check("B15-130-Publisher-real-SQLite-read-not-write",
+                          pub_read.returncode==0 and
+                          pub_no_write.returncode==0 and
+                          denied_read(pub_user,auth_db) and
+                          denied_read(pub_user,key_path),
+                          {"publisherCanReadNative":True,
+                           "publisherCanWriteNative":False,
+                           "publisherCanReadAuthority":False,
+                           "publisherHasSigningKey":False})
+                    pub_folder=home/"published-private"
+                    pub_folder.mkdir(mode=0o750)
+                    run(["sudo","-n","chown",pub_user+":ailcapb15snap",
+                         pub_folder])
+                    run(["sudo","-n","chmod","0750",pub_folder])
+                    pub_cfg_dir=home/"b15-publisher-private"
+                    pub_cfg_dir.mkdir(mode=0o700)
+                    pub_cfg=pub_cfg_dir/"publisher.json"
+                    published=pub_folder/"published.sqlite"
+                    pub_cfg.write_text(json.dumps({
+                        "output":str(published),"nativeDb":str(v1native["db"]),
+                        "sourceUrl":signed_url,"sourceToken":signed_token,
+                        "publicKeyHex":public_hex,
+                        "kernelPort":meta["port"],
+                        "kernelReadToken":router_read_token,
+                        "version":1,"manifestHash":v1["manifestHash"]
+                    }))
+                    pub_cfg.chmod(0o600)
+                    run(["sudo","-n","chown","-R",pub_user+":"+pub_user,
+                         pub_cfg_dir])
+                    def publish_real(allow_fail=False):
+                        r=run(["sudo","-n","runuser","-u",pub_user,"--",
+                            sys.executable,
+                            str(stage/"g1-b01-b15"/"publish_snapshot.py"),
+                            "--config",str(pub_cfg)],cwd=stage,
+                            ok=not allow_fail,timeout=30)
+                        if allow_fail:return r
+                        return one(r.stdout,"S1_B15_PUBLISH")
+                    published32=publish_real()
+                    check("B15-131-signed-B2-native-verified-public-snapshot32",
+                          published32["head"]==32 and
+                          published32["contracts"]==8 and
+                          published32["uid"]==pub_uid and
+                          published32["onlyPublicProjection"],
+                          {"signedB2Head":32,"publicRows":8,
+                           "publisherUid":pub_uid})
+                    pub_stat=run(["sudo","-n","stat","-c","%u:%g:%a",
+                                  published],cwd=stage).stdout.strip()
+                    public_tables=run(["sudo","-n","runuser","-u",pub_user,"--",
+                        sys.executable,"-c",
+                        "import sqlite3,sys,json\n"
+                        "c=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro&immutable=1',uri=True)\n"
+                        "print('B15_TABLES|'+json.dumps([r[0] for r in c.execute("
+                        "\"SELECT name FROM sqlite_master WHERE type='table' "
+                        "ORDER BY name\")]))\n",published],cwd=stage)
+                    tables=one(public_tables.stdout,"B15_TABLES")
+                    check("B15-132-published-SQLite-only-public-tables-no-auth",
+                          set(tables)=={"published_contracts","published_state"}
+                          and pub_stat.split(":")[0]==str(pub_uid) and
+                          pub_stat.endswith(":640") and
+                          pub_folder.stat().st_mode&0o777==0o750,
+                          {"tables":tables,"mode":"0640",
+                           "nativeAuthTablesCopied":False})
+                    pub_read_native=denied_read(SALT,published)
+                    router_no_write=uid_probe(ROUTER,
+                        "import os,sys\n"
+                        "try:\n"
+                        " f=os.open(sys.argv[1],os.O_WRONLY)\n"
+                        " os.close(f)\n"
+                        " raise SystemExit(3)\n"
+                        "except PermissionError:\n"
+                        " raise SystemExit(0)\n",(published,))
+                    router_read=uid_probe(ROUTER,
+                        "import os,sys\n"
+                        "f=os.open(sys.argv[1],os.O_RDONLY)\n"
+                        "os.close(f)\n",(published,))
+                    check("B15-133-Native-denied-published-snapshot-Router-readonly",
+                          pub_read_native and
+                          router_no_write.returncode==0 and
+                          router_read.returncode==0 and
+                          denied_read(SALT,pub_cfg),
+                          {"nativeCanReadPublishedDB":False,
+                           "nativeCanWritePublishedDB":False,
+                           "routerCanReadPublishedDB":True,
+                           "routerCanWritePublishedDB":False})
+                    b15_guard_cfg_dir=home/"b15-guard-private"
+                    b15_guard_cfg_dir.mkdir(mode=0o700)
+                    b15_guard_cfg=b15_guard_cfg_dir/"guard.json"
+                    b15_guard_cfg.write_text(json.dumps({
+                        "sourceUrl":signed_url,
+                        "sourceToken":signed_token,
+                        "kernelPort":meta["port"],
+                        "kernelReadToken":router_read_token,
+                        "guardSocket":str(audit_socket),
+                        "nativePort":3158,"marker":MARKER,
+                        "version":1,"manifestHash":v1["manifestHash"],
+                        "publicKeyHex":public_hex,
+                        "snapshotPath":str(published),
+                        "publisherUid":pub_uid
+                    }))
+                    b15_guard_cfg.chmod(0o600)
+                    run(["sudo","-n","chown","-R",ROUTER+":"+ROUTER,
+                         b15_guard_cfg_dir])
+                    b15_ready_dir=home/"b15-guard-ready"
+                    b15_ready_dir.mkdir(mode=0o755)
+                    run(["sudo","-n","chown",ROUTER+":"+ROUTER,
+                         b15_ready_dir])
+                    b15_ready=b15_ready_dir/"ready.json"
+                    b15_guard_log=home/"b15-guard.log"
+                    with b15_guard_log.open("w") as output:
+                        b15_guard_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u",ROUTER,"--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b15"/"guard_router.py"),
+                            "--config",str(b15_guard_cfg),
+                            "--ready",str(b15_ready)
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(100):
+                        if b15_ready.is_file():break
+                        if b15_guard_proc.poll() is not None:
+                            raise AssertionError("B15_GUARD_EXIT "+
+                                                 b15_guard_log.read_text()[-1100:])
+                        time.sleep(.08)
+                    if not b15_ready.is_file():
+                        raise AssertionError("B15_GUARD_NOT_READY")
+                    b15_meta=json.loads(b15_ready.read_text())
+                    b15_url=("http://127.0.0.1:"+str(b15_meta["port"]))
+                    b15_before=web_call(b15_url+ROUTE)
+                    check("B15-134-published-signed-physical-SQL-guard-HTTP200",
+                          b15_before[0]==200 and
+                          b15_before[1].get("X-OpenAILCAP-Guard")==
+                              "B15-ED25519-SQL-PUBLISHED" and
+                          eighth.encode() in b15_before[2],
+                          {"publishedHead":32,"nativeHead":32,
+                           "guardHTTP":200})
+                    b15_page=context.new_page()
+                    b15_page.goto(b15_url+ROUTE,
+                                  wait_until="domcontentloaded")
+                    check("B15-135-real-Chromium-published-snapshot-eight-rows",
+                          eighth in b15_page.content() and
+                          "HT-2026-000001" in b15_page.content(),
+                          {"realChromium":True,"publishedContracts":8})
+                    # Real host firewall, NOT merely a Router app-level 403.
+                    # IPv4+IPv6: loopback TCP port 3158 only Router UID;
+                    # non-loopback INPUT to 3158 rejected.
+                    firewall_args=[
+                        "--native-port","3158",
+                        "--router-uid",str(uids[ROUTER])]
+                    policy=stage/"g1-b01-b15"/"network_policy.py"
+                    enabled=run(["sudo","-n",sys.executable,policy,
+                                 "enable",*firewall_args],cwd=stage)
+                    firewall_enabled=True
+                    fw=one(enabled.stdout,"S1_B15_FIREWALL")
+                    check("B15-136-real-IPv4-IPv6-OUTPUT-INPUT-UID-firewall",
+                          fw["allInstalled"] and
+                          fw["installed"]==[True,True,True,True] and
+                          fw["routerUid"]==uids[ROUTER],
+                          {"installed":fw["installed"],
+                           "nativePort":3158,"routerUid":uids[ROUTER]})
+                    def cannot_connect(user):
+                        p=uid_probe(user,
+                            "import socket,sys\n"
+                            "try:\n"
+                            " s=socket.create_connection(('127.0.0.1',3158),1)\n"
+                            " s.close()\n"
+                            " raise SystemExit(3)\n"
+                            "except OSError:\n"
+                            " raise SystemExit(0)\n")
+                        return p.returncode==0
+                    runner_blocked=False
+                    try:web_call(native1+ROUTE,timeout=2)
+                    except (URLError,OSError,TimeoutError):runner_blocked=True
+                    check("B15-137-real-Runner-and-Native-UID-direct-HTTP-blocked",
+                          runner_blocked and cannot_connect(SALT) and
+                          cannot_connect("ailcapb13cons"),
+                          {"runnerDirectNative":"BLOCKED",
+                           "nativeUidDirectNative":"BLOCKED",
+                           "consumerUidDirectNative":"BLOCKED"})
+                    router_tcp=uid_probe(ROUTER,
+                        "import socket\n"
+                        "s=socket.create_connection(('127.0.0.1',3158),2)\n"
+                        "s.close()\n")
+                    fw_guard=web_call(b15_url+ROUTE)
+                    check("B15-138-trusted-Router-UID-allowed-through-firewall",
+                          router_tcp.returncode==0 and fw_guard[0]==200 and
+                          eighth.encode() in fw_guard[2],
+                          {"routerCanConnectNative":True,
+                           "guardHTTP":200})
+                    browser_direct_blocked=False
+                    try:
+                        b15_page.goto(native1+ROUTE,
+                                      wait_until="domcontentloaded",timeout=3000)
+                    except Exception:
+                        browser_direct_blocked=True
+                    b15_page.goto(b15_url+ROUTE,
+                                  wait_until="domcontentloaded")
+                    check("B15-139-real-Chromium-direct-native-denied-guard-works",
+                          browser_direct_blocked and
+                          eighth in b15_page.content(),
+                          {"ChromiumNativeDirect":"DENIED",
+                           "ChromiumGuard":"HTTP200"})
+                    ninth=create_approved(9)
+                    caught9=wait_signed(
+                        lambda x:x.get("state")=="CAUGHT_UP" and
+                                 x.get("cursor")==36)
+                    stale=web_call(b15_url+ROUTE)
+                    b14_after9=web_call(b14_guard_base+ROUTE)
+                    check("B15-140-real-B2-head36-Native36-published32-fails-closed",
+                          caught9["head"]==36 and stale[0]==503 and
+                          b14_after9[0]==200 and
+                          cannot_connect(SALT),
+                          {"B2Head":36,"nativeCursor":36,
+                           "publishedHead":32,"guardHTTP":503,
+                           "nativeDirect":"BLOCKED"})
+                    published36=publish_real()
+                    recovered=web_call(b15_url+ROUTE)
+                    check("B15-141-atomic-publish-head36-recovers-guard-and-Chromium",
+                          published36["head"]==36 and
+                          published36["contracts"]==9 and
+                          recovered[0]==200 and ninth.encode() in recovered[2],
+                          {"publishedHead":36,"guardHTTP":200,
+                           "publicRows":9})
+                    b15_page.goto(b15_url+ROUTE,
+                                  wait_until="domcontentloaded")
+                    check("B15-142-Chromium-new-signed-published-ninth-contract",
+                          ninth in b15_page.content() and
+                          eighth in b15_page.content(),
+                          {"realChromium":True,"visibleContracts":9})
+                    snapshot_hash_before=run(["sudo","-n","sha256sum",published],
+                                             cwd=stage).stdout.split()[0]
+                    native_command([sys.executable,"-c",
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B15_NATIVE_DIRECT_SQL_TAMPER' "
+                        "WHERE contract_no='HT-2026-000009'\")\n"
+                        "c.commit()\n"],v1native["db"])
+                    dirty_b15=web_call(b15_url+ROUTE)
+                    hash_after=run(["sudo","-n","sha256sum",published],
+                                   cwd=stage).stdout.split()[0]
+                    check("B15-143-Native-SQL-tamper-cannot-change-published-snapshot",
+                          dirty_b15[0]==503 and
+                          hash_after==snapshot_hash_before and
+                          cannot_connect(SALT) and
+                          denied_read(SALT,published),
+                          {"NativeDirectSQLTampered":True,
+                           "trustedPublishedSHA256Unchanged":True,
+                           "guardHTTP":503,"nativeHTTP":"BLOCKED"})
+                    reject_publish=publish_real(allow_fail=True)
+                    rejected=reject_publish.returncode!=0 and (
+                        "S1_B15_PUBLISH_REJECT|PUBLISH_SOURCE_NATIVE_MISMATCH"
+                        in reject_publish.stdout)
+                    check("B15-144-publisher-refuses-to-publish-tampered-Native",
+                          rejected and
+                          run(["sudo","-n","sha256sum",published],
+                              cwd=stage).stdout.split()[0]==snapshot_hash_before,
+                          {"tamperedNativePublish":"REJECTED",
+                           "lastGoodPublishedHead":36})
+                    native_command([sys.executable,"-c",
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B2 autonomous contract 9' "
+                        "WHERE contract_no='HT-2026-000009'\")\n"
+                        "c.commit()\n"],v1native["db"])
+                    repaired_b15=web_call(b15_url+ROUTE)
+                    check("B15-145-manual-Native-repair-restores-signed-snapshot-guard",
+                          repaired_b15[0]==200 and
+                          ninth.encode() in repaired_b15[2] and
+                          run(["sudo","-n","sha256sum",published],
+                              cwd=stage).stdout.split()[0]==snapshot_hash_before,
+                          {"guardHTTP":200,"publishedUnchanged":True,
+                           "repair":"MANUAL"})
+                    # Atomic publication failure: removing the only published
+                    # file must fail closed, not fall back to Native HTTP.
+                    backup=pub_folder/"published.backup.sqlite"
+                    rename_cmd=[
+                        "sudo","-n","runuser","-u",pub_user,"--",
+                        sys.executable,"-c",
+                        "import os,sys;os.rename(sys.argv[1],sys.argv[2])",
+                        published,backup]
+                    run(rename_cmd,cwd=stage)
+                    missing_snapshot=web_call(b15_url+ROUTE)
+                    check("B15-146-missing-published-snapshot-fails-closed",
+                          missing_snapshot[0]==503 and
+                          cannot_connect(SALT) and
+                          backup.exists(),
+                          {"snapshotMissing":True,"guardHTTP":503,
+                           "nativeDirect":"BLOCKED"})
+                    republished=publish_real()
+                    final_guard=web_call(b15_url+ROUTE)
+                    check("B15-147-atomic-republish-restores-guard",
+                          republished["head"]==36 and
+                          final_guard[0]==200 and ninth.encode() in final_guard[2],
+                          {"republishedHead":36,"guardHTTP":200})
+                    removed=run(["sudo","-n",sys.executable,policy,
+                                 "disable",*firewall_args],cwd=stage)
+                    firewall_enabled=False
+                    removed_status=one(removed.stdout,"S1_B15_FIREWALL")
+                    restored_direct=web_call(native1+ROUTE)
+                    check("B15-148-netfilter-rules-fully-removed-native-direct-restored",
+                          removed_status["allAbsent"] and
+                          restored_direct[0]==200 and
+                          web_call(b15_url+ROUTE)[0]==200,
+                          {"rulesRemoved":4,"nativeDirectHTTP":200,
+                           "guardHTTP":200})
                     data["final"]={
-                        "B14Ed25519SourceForgeryRejected":True,
-                        "B14IndependentPhysicalSQLAuditorUID":audit_uid,
-                        "B14SaltcornUIDCannotSpoofAuditorSocket":True,
-                        "B14NativeDirectHTTPBypassStillOpen":True,
-                        "B14MaliciousSaltcornCanModifySQLite":True,
-                        "B14ProductionPKIKeyRotationImplemented":False,
+                        "B15RealHostIPv4IPv6UIDFirewall":True,
+                        "B15SixthUIDPublishedMinimalSQLite":True,
+                        "B15SignedSourceNativePhysicalSQLCrossChecked":True,
+                        "B15NativeDirectHTTPDeniedWhileFirewallActive":True,
+                        "B15NativeCanStillDirectWriteItsOwnLiveDB":True,
+                        "B15PublisherIsControllerInvokedNotAutomatic":True,
+                        "B15ProductionMultiHostNetworkPolicyValidated":False,
+                        "B15FullSiteRoutesValidated":False,
                         "formalG1Passed":False
                     }
 
@@ -2126,12 +2457,12 @@ def main():
             data["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in data["checks"]),
                 "attempted":len(data["checks"]),
-                "expected":146,"modelCalls":0,"formalG1Passed":False
+                "expected":148,"modelCalls":0,"formalG1Passed":False
             }
             Path(opts.output).write_text(
                 json.dumps(data,ensure_ascii=False,indent=2)+"\n")
             print("S1_B15_RESULT "+json.dumps(data["summary"]),flush=True)
-    return 0 if len(data["checks"])==146 and all(
+    return 0 if len(data["checks"])==148 and all(
         x["status"]=="PASS" for x in data["checks"]) else 1
 
 
