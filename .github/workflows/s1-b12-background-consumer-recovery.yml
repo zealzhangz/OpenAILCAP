@@ -1,0 +1,84 @@
+name: S1 B12 real background Saltcorn consumer restart outage drift
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b12-background-consumer-recovery.yml'
+      - 'experiments/g1-b01-b12/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b12-background-consumer-recovery.yml'
+      - 'experiments/g1-b01-b12/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-native-b2-background-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual Saltcorn CLI and real Chromium
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: B12 background consumer and B11 outbox contract units
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b12/*.py
+          (cd experiments/g1-b01-b12 && python3 -u -m unittest -v test_consumer) \
+            2>&1 | tee /tmp/s1-b12-consumer-units.log
+          (cd experiments/g1-b01-b11 && python3 -u -m unittest -v test_projection) \
+            2>&1 | tee /tmp/s1-b12-b11-regression.log
+      - name: B10 router and B2 B5 regression
+        run: |
+          set -euo pipefail
+          (cd experiments/g1-b01-b10 && python3 -u -m unittest -v test_router) \
+            2>&1 | tee /tmp/s1-b12-router-regression.log
+          (cd experiments/g1-b01-b2 && python3 -u -m unittest -v test_schema) \
+            2>&1 | tee /tmp/s1-b12-b2-regression.log
+          (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
+            2>&1 | tee /tmp/s1-b12-b5-regression.log
+      - name: Three distinct real Linux UIDs for B12
+        run: |
+          set -euo pipefail
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb12kern
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb12salt
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb12route
+          id ailcapb12kern
+          id ailcapb12salt
+          id ailcapb12route
+          [[ "$(id -u ailcapb12kern)" != "$(id -u ailcapb12salt)" ]]
+          [[ "$(id -u ailcapb12kern)" != "$(id -u ailcapb12route)" ]]
+      - name: Actual B2 + live Saltcorn + independent daemon SIGKILL + HTTP503 + drift + Chromium
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b12/experiment.py \
+            --output /tmp/s1-b12-evidence.json \
+            2>&1 | tee /tmp/s1-b12-e2e.log
+      - name: Upload real JSON evidence and full CI logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b12-real-native-background-consumer-recovery-evidence
+          path: |
+            /tmp/s1-b12-consumer-units.log
+            /tmp/s1-b12-b11-regression.log
+            /tmp/s1-b12-router-regression.log
+            /tmp/s1-b12-b2-regression.log
+            /tmp/s1-b12-b5-regression.log
+            /tmp/s1-b12-evidence.json
+            /tmp/s1-b12-e2e.log
+          if-no-files-found: warn
