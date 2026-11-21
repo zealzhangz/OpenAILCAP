@@ -1239,7 +1239,375 @@ def main():
                           {"chromium":"fifth-authority-contract",
                            "activeUIRelease":1,
                            "noProductionHAClaim":True})
+                    # B13: the old privileged B12 consumer is no longer used.
+                    # Four actual UIDs: Kernel, Saltcorn, Router, Consumer.
+                    consumer_proc.terminate()
+                    consumer_proc.wait(timeout=5)
+                    consumer_uid=pwd.getpwnam("ailcapb13cons").pw_uid
+                    check("B13-80-four-distinct-nonroot-Linux-UIDs",
+                          consumer_uid>0 and consumer_uid not in uids.values()
+                          and len(set([consumer_uid,*uids.values()]))==4,
+                          {"consumerUid":consumer_uid,
+                           "kernelUid":uids[KERNEL],
+                           "nativeUid":uids[SALT],
+                           "routerUid":uids[ROUTER]})
+                    ipc_dir=home/"ipc"
+                    ipc_dir.mkdir(mode=0o755)
+                    run(["sudo","-n","chown",SALT+":"+SALT,ipc_dir])
+                    consumer_socket=ipc_dir/"consumer.sock"
+                    guard_socket=ipc_dir/"guard.sock"
+                    ipc_ready=ipc_dir/"ready.json"
+                    ipc_log=home/"native-ipc.log"
+                    with ipc_log.open("w") as output:
+                        ipc_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u",SALT,"--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b13"/"native_ipc.py"),
+                            "--db",str(v1native["db"]),
+                            "--consumer-socket",str(consumer_socket),
+                            "--guard-socket",str(guard_socket),
+                            "--ready",str(ipc_ready),
+                            "--consumer-uid",str(consumer_uid),
+                            "--router-uid",str(uids[ROUTER])
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(120):
+                        if ipc_ready.is_file():break
+                        if ipc_proc.poll() is not None:
+                            raise AssertionError("B13_IPC_EXIT "+
+                                ipc_log.read_text()[-1300:])
+                        time.sleep(.08)
+                    if not ipc_ready.is_file():
+                        raise AssertionError("B13_IPC_NOT_READY")
+                    ipc_info=json.loads(ipc_ready.read_text())
+                    check("B13-81-native-broker-real-Saltcorn-UID-two-0660-sockets",
+                          ipc_info["uid"]==uids[SALT] and
+                          consumer_socket.stat().st_mode&0o777==0o660 and
+                          guard_socket.stat().st_mode&0o777==0o660,
+                          {"nativeBrokerUid":ipc_info["uid"],
+                           "consumerSocketMode":"0660",
+                           "guardSocketMode":"0660"})
+                    def uid_probe(user,code,args=()):
+                        return run(["sudo","-n","runuser","-u",user,"--",
+                            sys.executable,"-c",code,*map(str,args)],
+                            cwd=stage,ok=False)
+                    def denied_read(user,path):
+                        return uid_probe(user,
+                            "import os,sys\n"
+                            "try:\n"
+                            " f=os.open(sys.argv[1],os.O_RDONLY)\n"
+                            " os.close(f)\n"
+                            " raise SystemExit(3)\n"
+                            "except PermissionError:\n"
+                            " raise SystemExit(0)\n", (path,)).returncode==0
+                    no_sudo=uid_probe("ailcapb13cons",
+                        "import subprocess\n"
+                        "p=subprocess.run(['sudo','-n','true'],"
+                        "capture_output=True)\n"
+                        "raise SystemExit(0 if p.returncode!=0 else 3)\n")
+                    check("B13-82-consumer-UID-no-sudo-privilege",
+                          no_sudo.returncode==0,
+                          {"consumerCanSudo":False})
+                    check("B13-83-consumer-UID-cannot-read-authority-DB",
+                          denied_read("ailcapb13cons",auth_db),
+                          {"authoritySQLite":"DENIED"})
+                    check("B13-84-consumer-UID-cannot-read-native-DB",
+                          denied_read("ailcapb13cons",v1native["db"]),
+                          {"nativeSQLite":"DENIED"})
+                    guard_private=home/"guard-private"
+                    guard_private.mkdir(mode=0o700)
+                    guard_cfg=guard_private/"guard.json"
+                    guard_cfg.write_text(json.dumps({
+                        "sourceUrl":core_base+
+                            "/v4/apps/app-a/projection/pull",
+                        "sourceToken":projection_token,
+                        "kernelPort":meta["port"],
+                        "kernelReadToken":router_read_token,
+                        "guardSocket":str(guard_socket),
+                        "nativePort":3158,"marker":MARKER,
+                        "version":1,"manifestHash":v1["manifestHash"]
+                    }))
+                    guard_cfg.chmod(0o600)
+                    run(["sudo","-n","chown","-R",
+                         ROUTER+":"+ROUTER,guard_private])
+                    check("B13-85-consumer-cannot-read-router-B2-token",
+                          denied_read("ailcapb13cons",guard_cfg),
+                          {"routerProjectionToken":"DENIED"})
+                    cons_private=home/"b13-consumer-private"
+                    cons_private.mkdir(mode=0o700)
+                    b13_cfg=cons_private/"consumer.json"
+                    b13_status=cons_private/"status.json"
+                    b13_log=home/"b13-consumer.log"
+                    b13_cfg.write_text(json.dumps({
+                        "sourceUrl":proxy_url,
+                        "token":projection_token,
+                        "nativeSocket":str(consumer_socket),
+                        "intervalMs":180
+                    }))
+                    b13_cfg.chmod(0o600)
+                    run(["sudo","-n","chown","-R",
+                         "ailcapb13cons:ailcapb13cons",cons_private])
+                    check("B13-86-native-UID-cannot-open-consumer-B2-token",
+                          denied_read(SALT,b13_cfg),
+                          {"nativeHasSourceToken":False})
+                    check("B13-87-native-UID-cannot-open-router-B2-token",
+                          denied_read(SALT,guard_cfg),
+                          {"nativeHasRouterToken":False})
+                    def ipc_call(sock,body):
+                        with socket.socket(socket.AF_UNIX,
+                                           socket.SOCK_STREAM) as conn:
+                            conn.settimeout(4)
+                            conn.connect(str(sock))
+                            conn.sendall(
+                                (json.dumps(body,separators=(",",":"))+
+                                 "\n").encode())
+                            with conn.makefile("rb") as stream:
+                                return json.loads(stream.readline(131073))
+                    def peer_call(user,sock,body):
+                        cmd=(
+                            "import json,socket,sys\n"
+                            "s=socket.socket(socket.AF_UNIX)\n"
+                            "s.settimeout(4)\n"
+                            "s.connect(sys.argv[1])\n"
+                            "s.sendall((sys.argv[2]+'\\n').encode())\n"
+                            "data=b''\n"
+                            "while not data.endswith(b'\\n'):\n"
+                            " p=s.recv(4096)\n"
+                            " if not p:break\n"
+                            " data+=p\n"
+                            "print('S1_B13_PEER|'+data.decode().strip())\n"
+                        )
+                        p=uid_probe(user,cmd,(sock,json.dumps(body)))
+                        if p.returncode:
+                            raise AssertionError("IPC_PEER_DENIED "+p.stderr)
+                        return one(p.stdout,"S1_B13_PEER")
+                    def denied_connect(user,sock):
+                        return uid_probe(user,
+                            "import socket,sys\n"
+                            "s=socket.socket(socket.AF_UNIX)\n"
+                            "try:\n"
+                            " s.connect(sys.argv[1])\n"
+                            " raise SystemExit(3)\n"
+                            "except PermissionError:\n"
+                            " raise SystemExit(0)\n",(sock,)).returncode==0
+                    a=peer_call("ailcapb13cons",consumer_socket,
+                                {"op":"audit"})
+                    check("B13-88-consumer-IPC-audit-allowed-by-UID",
+                          a["ok"] and a["result"]["clean"] and
+                          a["result"]["cursor"]==20,
+                          {"audit":"CLEAN","cursor":20})
+                    c=peer_call("ailcapb13cons",consumer_socket,
+                                {"op":"checkpoint"})
+                    check("B13-89-consumer-IPC-checkpoint-from-real-native-SQL",
+                          c["ok"] and c["result"]["lastSeq"]==20,
+                          {"nativeCommittedCursor":20})
+                    check("B13-90-consumer-UID-guard-socket-DAC-denied",
+                          denied_connect("ailcapb13cons",guard_socket),
+                          {"consumerCanCallGuardSnapshot":False})
+                    g=peer_call(ROUTER,guard_socket,{"op":"snapshot"})
+                    check("B13-91-router-UID-guard-snapshot-public-only",
+                          g["ok"] and g["result"]["clean"] and
+                          g["result"]["cursor"]==20 and
+                          len(g["result"]["rows"])==5,
+                          {"rows":5,"cursor":20,
+                           "noSaltcornAdminTables":True})
+                    check("B13-92-router-UID-consumer-write-socket-DAC-denied",
+                          denied_connect(ROUTER,consumer_socket),
+                          {"routerCanCallNativeApply":False})
+                    guard_ready_dir=home/"guard-ready"
+                    guard_ready_dir.mkdir(mode=0o755)
+                    run(["sudo","-n","chown",ROUTER+":"+ROUTER,
+                         guard_ready_dir])
+                    guard_ready=guard_ready_dir/"ready.json"
+                    guard_log=home/"guard-router.log"
+                    with guard_log.open("w") as output:
+                        guard_proc=subprocess.Popen([
+                            "sudo","-n","runuser","-u",ROUTER,"--",
+                            sys.executable,"-u",
+                            str(stage/"g1-b01-b13"/"guard_router.py"),
+                            "--config",str(guard_cfg),
+                            "--ready",str(guard_ready)
+                        ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                          stdout=output,stderr=subprocess.STDOUT)
+                    for _ in range(120):
+                        if guard_ready.is_file():break
+                        if guard_proc.poll() is not None:
+                            raise AssertionError("B13_GUARD_EXIT "+
+                                guard_log.read_text()[-1300:])
+                        time.sleep(.08)
+                    if not guard_ready.is_file():
+                        raise AssertionError("B13_GUARD_NOT_READY")
+                    guard_meta=json.loads(guard_ready.read_text())
+                    guard_base=("http://127.0.0.1:"+
+                                str(guard_meta["port"]))
+                    check("B13-93-guard-router-runs-under-real-router-UID",
+                          guard_meta["uid"]==uids[ROUTER],
+                          {"guardRouterUid":guard_meta["uid"],
+                           "saltcornUid":uids[SALT]})
+                    guarded=web_call(guard_base+ROUTE)
+                    check("B13-94-read-time-B2-outbox-native-SQL-HTTP-200",
+                          guarded[0]==200 and
+                          guarded[1].get("X-OpenAILCAP-Guard")==
+                          "B13-VERIFIED" and
+                          all(("HT-2026-"+str(i).zfill(6)).encode()
+                              in guarded[2] for i in range(1,6)),
+                          {"verifiedContractRows":5,
+                           "sourceEvents":20,"http":guarded[0]})
+                    guarded_page=context.new_page()
+                    guarded_page.goto(guard_base+ROUTE,
+                                      wait_until="domcontentloaded")
+                    check("B13-95-real-Chromium-guarded-business-view",
+                          fifth in guarded_page.content() and
+                          "HT-2026-000001" in guarded_page.content(),
+                          {"browser":"Chromium",
+                           "guardedRowsVisible":True})
+                    forbidden=web_call(guard_base+ROUTE,
+                                       method="POST",body={})
+                    check("B13-96-guard-public-HTTP-writes-405",
+                          forbidden[0]==405,
+                          {"http":405,"writeNotForwarded":True})
+                    def start_b13_consumer():
+                        nonlocal unprivileged_consumer
+                        with b13_log.open("a") as output:
+                            unprivileged_consumer=subprocess.Popen([
+                                "sudo","-n","runuser","-u","ailcapb13cons",
+                                "--",sys.executable,"-u",
+                                str(stage/"g1-b01-b13"/"consumer_daemon.py"),
+                                "--config",str(b13_cfg),
+                                "--status",str(b13_status)
+                            ],cwd=str(stage),stdin=subprocess.DEVNULL,
+                              stdout=output,stderr=subprocess.STDOUT)
+                    def b13_state():
+                        if not b13_status.exists():return {}
+                        result=run(["sudo","-n","cat",b13_status],
+                                   cwd=stage,ok=False)
+                        try:return json.loads(result.stdout)
+                        except ValueError:return {}
+                    def wait_b13(predicate,seconds=28):
+                        deadline=time.monotonic()+seconds
+                        latest={}
+                        while time.monotonic()<deadline:
+                            latest=b13_state()
+                            if latest and predicate(latest):return latest
+                            if unprivileged_consumer and (
+                                unprivileged_consumer.poll() is not None
+                            ):
+                                raise AssertionError("B13_CONSUMER_EXIT "+
+                                    b13_log.read_text()[-1100:])
+                            time.sleep(.13)
+                        raise AssertionError("B13_CONSUMER_TIMEOUT "+
+                                             json.dumps(latest))
+                    start_b13_consumer()
+                    b13_first=wait_b13(lambda x:x.get("state")=="CAUGHT_UP"
+                                       and x.get("cursor")==20)
+                    check("B13-97-unprivileged-consumer-starts-from-cursor20",
+                          b13_first["lag"]==0 and
+                          unprivileged_consumer.poll() is None,
+                          {"cursor":20,"noSudoInsideConsumer":True})
+                    sixth=create_approved(6)
+                    b13_sixth=wait_b13(lambda x:x.get("cursor")==24
+                                       and x.get("state")=="CAUGHT_UP")
+                    good6=web_call(guard_base+ROUTE)
+                    check("B13-98-real-unprivileged-IPC-auto-applies-sixth",
+                          b13_sixth["head"]==24 and
+                          good6[0]==200 and sixth.encode() in good6[2] and
+                          native_inspect(v1native["db"])["receipts"]==24,
+                          {"sourceHead":24,"nativeCursor":24,
+                           "guardHTTP":200})
+                    unprivileged_consumer.terminate()
+                    unprivileged_consumer.wait(timeout=7)
+                    seventh=create_approved(7)
+                    native_stale=native_inspect(v1native["db"])
+                    check("B13-99-B2-authority-advances-while-UID-consumer-down",
+                          pull_events(after=24)[1]["head"]==28 and
+                          native_stale["lastSeq"]==24 and
+                          len(native_stale["rows"])==6,
+                          {"sourceHead":28,"nativeCursor":24})
+                    lag_guard=web_call(guard_base+ROUTE)
+                    raw_native=web_call(native1+ROUTE)
+                    check("B13-100-guard-fails-closed-on-lag-raw-native-200",
+                          lag_guard[0]==503 and raw_native[0]==200 and
+                          b"GUARD_NATIVE_BEHIND" in lag_guard[2],
+                          {"guardHTTP":503,"nativeHTTP":200,
+                           "noStalePublicRead":True})
+                    start_b13_consumer()
+                    b13_seventh=wait_b13(
+                        lambda x:x.get("cursor")==28 and
+                                 x.get("state")=="CAUGHT_UP")
+                    healthy=web_call(guard_base+ROUTE)
+                    check("B13-101-IPC-restart-auto-catchup-restores-guard",
+                          b13_seventh["head"]==28 and
+                          healthy[0]==200 and seventh.encode() in healthy[2],
+                          {"cursor":28,"guardHTTP":200,
+                           "restartedUnprivilegedConsumer":True})
+                    native_command([sys.executable,"-c",
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B13_NATIVE_TAMPER' "
+                        "WHERE contract_no='HT-2026-000007'\")\n"
+                        "c.commit()\n"],v1native["db"])
+                    tamper_guard=web_call(guard_base+ROUTE)
+                    tamper_native=web_call(native1+ROUTE)
+                    physical_tamper=native_inspect(v1native["db"])
+                    check("B13-102-real-native-SQL-tamper-guard-503",
+                          tamper_guard[0]==503 and
+                          tamper_native[0]==200 and
+                          any(r["title"]=="B13_NATIVE_TAMPER"
+                              for r in physical_tamper["rows"]),
+                          {"guardHTTP":503,"directNativeHTTP":200,
+                           "physicalSQLiteTampered":True})
+                    native_command([sys.executable,"-c",
+                        "import sqlite3,os\n"
+                        "c=sqlite3.connect(os.environ['SQLITE_FILEPATH'])\n"
+                        "c.execute(\"UPDATE s1_contracts SET title="
+                        "'B2 autonomous contract 7' "
+                        "WHERE contract_no='HT-2026-000007'\")\n"
+                        "c.commit()\n"],v1native["db"])
+                    recovered=web_call(guard_base+ROUTE)
+                    check("B13-103-manual-native-repair-guard-200",
+                          recovered[0]==200 and
+                          seventh.encode() in recovered[2],
+                          {"guardHTTP":200,"repair":"MANUAL",
+                           "notAutomaticRepair":True})
+                    # P0 negative control: hashes are NOT source signatures.
+                    # A compromised Consumer UID can forge an event over its
+                    # authorized apply IPC. Guard independently compares
+                    # native cursor against B2 head and MUST reject.
+                    forged={
+                        "app":"app-a","seq":29,
+                        "model":"model.contracts",
+                        "recordId":"a1b2c3d4e5f6071829",
+                        "version":1,
+                        "cells":{"contract_no":"HT-2026-999999",
+                                 "title":"FORGED_CONSUMER_EVENT",
+                                 "amount_minor":1,"status":"Approved"}
+                    }
+                    forged["eventHash"]=digest(forged)
+                    forged_response=peer_call(
+                        "ailcapb13cons",consumer_socket,
+                        {"op":"apply","batch":{"app":"app-a",
+                                              "after":28,
+                                              "events":[forged]}})
+                    rejected=web_call(guard_base+ROUTE)
+                    check("B13-104-negative-forged-consumer-event-native-accepts-guard-denies",
+                          forged_response["ok"] and
+                          forged_response["result"]["lastSeq"]==29 and
+                          native_inspect(v1native["db"])["lastSeq"]==29 and
+                          pull_events(after=28)[1]["head"]==28 and
+                          rejected[0]==503,
+                          {"unsafeNativeApplyAcceptedForgedEvent":True,
+                           "B2AuthoritativeHead":28,
+                           "nativeCursor":29,"guardHTTP":503,
+                           "sourceEventHashesNotSignatures":True})
                     data["final"]={
+                        "B13GuardAfterForgedEvent":"FAIL_CLOSED",
+                        "B13ConsumerLeastPrivilege":True,
+                        "nativeIPCAuthenticatesEventSource":False,
+                        "readGuardResistsMaliciousNativeUID":False,
+                        "formalG1Passed":False
+                    }
+
                         "v1Manifest":v1["manifestHash"],
                         "v2Manifest":v2["manifestHash"],
                         "routerEpoch":3,
