@@ -97,8 +97,15 @@ def save_label(page, value, field="label"):
     page.locator("#save").click()
 
 
-def wait_message(page, needle):
-    page.wait_for_function("(text) => document.getElementById('message').textContent.includes(text)", needle, timeout=12000)
+def wait_dom(page, selector, expected, *, exact=False):
+    """Poll DOM text via Playwright locator without JS eval (strict CSP stays on)."""
+    locator = page.locator(selector)
+    for _ in range(75):
+        actual = locator.inner_text(timeout=1500)
+        if (actual == expected) if exact else (expected in actual):
+            return
+        page.wait_for_timeout(180)
+    raise AssertionError("DOM_EXPECTATION_TIMEOUT: " + selector + " / " + expected)
 
 
 def main():
@@ -176,7 +183,7 @@ def main():
                     login.locator("#login").click()
                     login.wait_for_url("**/editor/app-a/field.title",
                                        timeout=12000)
-                    login.wait_for_function("document.getElementById('revision').textContent === '0'", timeout=12000)
+                    wait_dom(login, "#revision", "0", exact=True)
                     record("B1-02-real-session-login",
                            login.locator("#label-current").inner_text() == "Title",
                            {"login": "real-form", "current_label": "Title"})
@@ -186,8 +193,8 @@ def main():
                                wait_until="domcontentloaded")
                     tab_b.goto(base + "/editor/app-a/field.title",
                                wait_until="domcontentloaded")
-                    tab_a.wait_for_function("document.getElementById('revision').textContent === '0'", timeout=12000)
-                    tab_b.wait_for_function("document.getElementById('revision').textContent === '0'", timeout=12000)
+                    wait_dom(tab_a, "#revision", "0", exact=True)
+                    wait_dom(tab_b, "#revision", "0", exact=True)
                     record("B1-03-two-independent-browser-snapshots",
                            tab_a.locator("#label-current").inner_text() == "Title" and
                            tab_b.locator("#label-current").inner_text() == "Title",
@@ -202,7 +209,7 @@ def main():
                     ) if r.request.method == "POST" and
                     r.url.endswith("/v1/apps/app-a/changes") else None)
                     save_label(tab_b, "Browser B Saved")
-                    tab_b.wait_for_function("document.getElementById('message').textContent.includes('保存成功')", timeout=12000)
+                    wait_dom(tab_b, "#message", "保存成功")
                     after_b = raw_db(dbfile)
                     record("B1-04-actual-B-browser-saves-via-command",
                            after_b["revision"] == 1 and
@@ -210,7 +217,7 @@ def main():
                            {"db_revision": after_b["revision"],
                             "db_label": after_b["content"]["label"]})
                     save_label(tab_a, "Browser A Stale")
-                    tab_a.wait_for_function("document.getElementById('message').textContent.includes('409 VERSION_CONFLICT')", timeout=12000)
+                    wait_dom(tab_a, "#message", "409 VERSION_CONFLICT")
                     after_a = raw_db(dbfile)
                     record("B1-05-stale-browser-409-no-loss",
                            after_a["content"]["label"] == "Browser B Saved" and
@@ -231,18 +238,18 @@ def main():
                            {"agent_http": agent_result["status"],
                             "db_revision": after_agent["revision"]})
                     save_label(tab_b, "Overwrites Agent", field="status")
-                    tab_b.wait_for_function("document.getElementById('message').textContent.includes('409 VERSION_CONFLICT')", timeout=12000)
+                    wait_dom(tab_b, "#message", "409 VERSION_CONFLICT")
                     record("B1-07-stale-human-after-agent-409",
                            raw_db(dbfile)["content"]["status"] == "AI Reviewed",
                            {"browser_http": 409, "agent_status_preserved": True})
                     tab_a.locator("#reload").click()
-                    tab_a.wait_for_function("document.getElementById('revision').textContent === '2'", timeout=12000)
+                    wait_dom(tab_a, "#revision", "2", exact=True)
                     record("B1-08-human-explicit-refresh-after-agent",
                            tab_a.locator("#status-current").inner_text() ==
                            "AI Reviewed",
                            {"browser_revision": 2, "visible_agent_status": True})
                     save_label(tab_a, "Human After AI")
-                    tab_a.wait_for_function("document.getElementById('message').textContent.includes('保存成功')", timeout=12000)
+                    wait_dom(tab_a, "#message", "保存成功")
                     after_human = raw_db(dbfile)
                     record("B1-09-human-resumes-with-agent-change-preserved",
                            after_human["revision"] == 3 and
@@ -375,7 +382,7 @@ def main():
                     final_db = raw_db(dbfile)
                     final_b = raw_db(dbfile, "app-b")
                     tab_a.locator("#reload").click()
-                    tab_a.wait_for_function("document.getElementById('revision').textContent === '5'", timeout=12000)
+                    wait_dom(tab_a, "#revision", "5", exact=True)
                     record("B1-18-independent-db-and-live-browser-consistent",
                            tab_a.locator("#label-current").inner_text() ==
                            final_db["content"]["label"] and
