@@ -16,6 +16,7 @@ def fixture(**changes):
          "request":{"app":"app-a","tool":"draft.read","args":{}},
          "probes":{"containerUid":65534,"dockerSocket":"DENIED",
                    "hostSqliteRwConnect":"DENIED","hostDbFileWrite":"DENIED",
+                   "hostDbFileRead":"DENIED",
                    "hostSentinelRead":"DENIED","containerPluginFileWrite":"DENIED",
                    "internetTcp":"DENIED","hostSecretInherited":False}}
     obj.update(changes)
@@ -97,6 +98,9 @@ class HostPolicyUnit(unittest.TestCase):
         self.assertFalse(complete_isolation(x))
     def test_network_success_fails_isolation(self):
         x=fixture()["probes"];x["internetTcp"]="CONNECTED"
+        self.assertFalse(complete_isolation(x))
+    def test_host_database_read_access_fails_isolation(self):
+        x=fixture()["probes"];x["hostDbFileRead"]="OPENED"
         self.assertFalse(complete_isolation(x))
     def test_host_secret_exposure_fails_isolation(self):
         x=fixture()["probes"];x["hostSecretInherited"]=True
