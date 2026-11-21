@@ -188,3 +188,16 @@ undefined
 **继续阻断正式门禁**：B11 Outbox 只针对 app-a/model.contracts 的 INSERT/UPDATE，尚无删除、Schema 迁移、通用 CDC、真实后台常驻消费者、持久跨进程队列/断电追赶、死信/延迟指标和网络分区恢复；测试由受信 CI Controller 主动同步而非生产服务自动持续运行。四列 allowlist 不是多租户行权限或敏感数据脱敏；Native 原生列表是公开测试 View，不能生产部署。Event SHA 不是签名，Saltcorn Runtime UID 仍可物理污染自己的派生 DB（下一事件更新该行时才拒绝），Router 仍为单实例内存 CAS，Native localhost 端口未做正式生产网络隔离，真实故障返回 503 而非零停机。B2 的 Form/Workflow 逻辑仅在可信 Kernel 执行，Saltcorn 只是只读业务数据/Model/View 的可删投影，B4 Code/插件/全量流程未实现。正式 W17（完整 Native REST/缓存一致性）、W20（外部未知结果补偿）、W24（完整应用/代码/流程/外部副作用回滚）仍未满足。
 
 **正式结论不变**：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B11 62/62 只是独立范围受限研究，不能直接升级冻结 W/TC。下一 B12 优先真实后台 Consumer checkpoint/断线/崩溃恢复、Native 读取前防污染与重建，再考虑用户行级权限/脱敏和发布/路由控制面持久化。
+
+
+## 2026-11-21：B12 真实后台 Consumer SIGKILL / HTTP 503 恢复 / Native SQL 漂移复审
+
+[完整报告 45](45-s1-b12-autonomous-consumer-crash-recovery-native-drift-evidence.md)、[最终 Actions #44910951780](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910951780) **completed/success**，Job **136866440843**，[Artifact #14709752514](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44910951780/artifacts/14709752514)：B12 单元 **22/22**、B11 **28/28**、B10 **34/34**、B2 **18/18**、B5 **40/40** 回归，真实 Ubuntu24.04/三独立 Linux UID/B2 Kernel/SQLite Trigger/两套 Saltcorn Native/HTTP/Chromium **79/79** E2E（B11 基线 62 + B12 新增 17），**0 次 DeepSeek**。PR #14 已合并 main，SHA **8ce7324d85aa1d06a8269bc6351d43a95678b06d**。
+
+**新增严格正向证据**：B11 真实 B2 Outbox 到 Saltcorn SQLite 的每批同步由受信 CI Controller 手动调用，B12 首次使用真正长期运行的独立 Consumer OS 进程，持续从 Saltcorn SQLite 已提交的 `b11_projection_cursor` 读取 checkpoint，经独立随机 projectionToken 只读拉取 B2 事件，向 Saltcorn UID 的 Native Apply Worker 仅通过 stdin 发送 JSON 事件，保持业务行、record_map、Receipt、cursor 原子提交。Native UID 真实 O_RDONLY 访问私有 Consumer Token 配置 **DENIED**。真实 B2 新建批准第三份合同后 Consumer 自动 cursor8→12、原生 HTTP 展示；真实 SIGKILL Consumer 时 B2 继续写入第四份合同，源 seq16、Native cursor12，重启新 Consumer 进程自动从已提交 Native cursor 追赶至16、4行16回执、无重复；源 HTTP 代理实际返回503期间 B2 继续新建批准第五份合同，源 seq20、Native cursor16，解除503后自动追赶至20、Native 5行20回执，真实 HTTP 与 Chromium 展示第五份合同。独立 SQL Oracle 验证源 B2 **5 份 Approved 合同、20 条 Outbox 事件、App B 未变**。
+
+**特别重要的负对照**：Saltcorn UID 真实 SQL 改写第五份派生合同标题后，后台 Consumer **即使无新源事件**仍在周期性全量 record_map/Receipt 检查中检测 `DERIVED_DRIFT` 并停止后续消费，但 Native HTTP **仍返回 200**；真实 HTTP 本次显示的是**缓存旧标题**，不是篡改标题（`httpShowsTamper=false`）。**既不能宣称已验证读取前 fail-closed，也不能把偶然缓存旧值当作安全保证**。Saltcorn UID 人工修复派生 SQL 后 Consumer 恢复 CAUGHT_UP，不是自动重建。初次 CI 失败为 B11 模块导入路径缺失；第二次 CI 失败是误假设 Saltcorn HTTP 立即反映 Native SQL 篡改，现均基于真实行为修正并保留失败记录。
+
+**继续阻断正式门禁**：Consumer 仍由 **sudo-capable CI Runner** 启动并通过 sudo runuser 启动 Native Worker，尚无正式独立 Consumer UID、受控 IPC/跨机 TLS、持久 HA/Leader Election/系统服务；503 是同机代理真实 HTTP 故障，非断电/跨机网络分区。Native SQL 可被同 UID 改写且 HTTP 读取未做 fail-closed，缓存与权限绕过仍存在；没有自动修复/派生重建、生产延迟 SLA、真实行级 ACL/PII 脱敏、Delete/Schema Migration、完整 Native Form/Workflow/Code 语义。B10 Router 仍单实例内存 CAS、故障返回503，不具备生产零停机/外部副作用补偿/跨服务原子发布。
+
+**正式判定保持**：S1 **IN_PROGRESS**；G1 **NOT_PASSED**；G1-B01 **PARTIALLY VALIDATED / OPEN**；冻结 W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。B12 79/79 为范围受限专项证据，不得自动转正式验收。下一 B13 P0：**可信 Consumer 独立 OS 身份 + 受控 Native Apply IPC**，**Router 读取前物理 SQL 完整性校验并 fail-closed**，进一步做权威重建/缓存旁路/签名验证。
