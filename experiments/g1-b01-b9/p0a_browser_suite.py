@@ -29,7 +29,8 @@ def run_suite(*, context, base, token_agent, plugin_tool, http, physical,
         if page.url.endswith("/editor/login"):
             raise AssertionError("P0A_HUMAN_SESSION_MISSING")
         # Wait for async fetch to complete, rather than assuming DOMContentLoaded.
-        page.locator("#message").get_by_text("已加载草稿", exact=False).wait_for(
+        page.wait_for_function(
+            "() => document.getElementById('message').textContent.includes('已加载草稿')",
             timeout=12000)
         page.locator("#resource-id").fill("view.contracts")
         page.locator("#select").click()
@@ -63,11 +64,13 @@ def run_suite(*, context, base, token_agent, plugin_tool, http, physical,
                 "P0A_HUMAN_HTTP_"+str(response.status)+
                 "_EXPECTED_"+str(status_expected))
         if status_expected == 200:
-            page.get_by_role("status").get_by_text(
-                "保存成功", exact=False).wait_for(timeout=12000)
+            page.wait_for_function(
+                "() => document.getElementById('message').textContent.includes('保存成功')",
+                timeout=12000)
         else:
-            page.get_by_role("status").get_by_text(
-                "409", exact=False).wait_for(timeout=12000)
+            page.wait_for_function(
+                "() => document.getElementById('message').textContent.includes('409')",
+                timeout=12000)
         return response.status, result
 
     def app():
