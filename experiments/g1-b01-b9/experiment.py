@@ -29,6 +29,7 @@ from playwright.sync_api import sync_playwright
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parent
 sys.path.insert(0,str(ROOT/"g1-b01-b2"))
+sys.path.insert(0,str(ROOT/"platform-saltcorn"/"browser"))
 from schema_core import sha
 from projector import compile_release,check_compiled,ProjectionRejected
 
@@ -139,8 +140,9 @@ def main():
             "g1-b01-b4":("registry.py","policy.py","sandbox.py","worker.py"),
             "g1-b01-b5":("tool_broker.py",),
             "g1-b01-b7":("physical_sql_oracle.py",),
-            "g1-b01-b8":("native_env_launcher.py",),
-            "g1-b01-b9":("kernel_service.py","native_oracle.py"),
+            "g1-b01-b8":(),
+            "g1-b01-b9":("kernel_service.py","native_oracle.py",
+                         "native_env_launcher.py"),
             "platform-saltcorn":("contract-pack.json","seed-contract.js")
         }.items():
             dst=stage/directory;dst.mkdir(mode=0o755)
@@ -202,7 +204,7 @@ def main():
             env["SQLITE_FILEPATH"]=str(dbfile)
             out=execute([
                 "sudo","-n","runuser","-u",RUNT,"--",
-                sys.executable,str(stage/"g1-b01-b8"/"native_env_launcher.py"),
+                sys.executable,str(stage/"g1-b01-b9"/"native_env_launcher.py"),
                 *argv
             ],cwd=stage,env=salt_env,stdin=json.dumps(env)+"\n",
               strict=False,timeout=timeout)
@@ -397,7 +399,7 @@ def main():
                           pub1["version"]==1 and
                           pub1["manifestHash"]==sha(pub1["definitions"]),
                           {"v1":1,"manifestSha":pub1["manifestHash"]})
-                    pack1,packfile1=compiled_file("v1",pub1)
+                    pack1,packfile1=compiled_file("v1-preview",pub1)
                     check("B9-11-v1-Pack-compiled-only-from-hash-checked-release",
                           pack1["manifestHash"]==pub1["manifestHash"] and
                           pack1["projectionPack"]["views"][0]["configuration"][
@@ -431,6 +433,7 @@ def main():
                           kernel_physical()["app-a"]["publishedVersion"]==1,
                           {"separateAuthorityDirUid":uids[0],
                            "separateSaltcornDirUid":uids[1]})
+                    before_native=kernel_physical()
                     salt_base=start_saltcorn(first["db"],3139)
                     native_page=context.new_page()
                     login_native(native_page,salt_base,admin_password)
@@ -473,7 +476,7 @@ def main():
                            "nativeWizardSteps":len(trace)})
                     afterweb=kernel_physical()
                     check("B9-18-actual-authority-Manifest-Receipt-Audit-unmodified",
-                          afterweb==kernel_physical() and
+                          afterweb==before_native and
                           afterweb["app-a"]["revision"]==4 and
                           afterweb["app-a"]["publishedVersion"]==1 and
                           afterweb["app-b"]==start["app-b"],
@@ -635,7 +638,7 @@ def main():
                           bcheck["app-a"]["publishedVersion"]==1 and
                           restored["db"]!=db and
                           restored["compiled"]["manifestHash"]==
-                          bcheck["app-a"]["manifestHash"] and
+                          pub1["manifestHash"] and
                           bcheck["app-a"]["revision"]==5,
                           {"authorityRevision":5,
                            "activeSourceReleaseVersion":1,
