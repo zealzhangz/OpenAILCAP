@@ -55,3 +55,7 @@ CI 只上传不含密钥或数据库文件的结构化结果。若安装失败�
 ## 真实 SQLite 事务语义、双进程并发与绕过版本账本负例
 
 新增 [atomic/](atomic/README.md) 研究，Run [#44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 成功执行。TX1 真实验证 Saltcorn SQLite withTransaction 的异常后写入不回滚；TX2/TX3 由两个独立 CLI 进程通过显式 SQLite BEGIN IMMEDIATE 和研究用 CAS 表实现本场景不同字段合并、同字段冲突拒绝；TX4 中途失败回滚；TX5 绕过版本表的人工原生字段修改又被 Agent CAS 错误覆盖；TX6 实际 HTTP 读回。**两项危险反例成功复现**，并非安全验收通过；尚无真实人工浏览器/LLM Agent，G1 未通过。
+
+## 2026-11-21 真实浏览器字段编辑实测
+
+新增 [browser/](browser/README.md) Playwright + Chromium 实验，GitHub [Actions Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208) 成功，9/9 实际人工 Web 字段向导与 5/5 后置模拟 Agent 检查符合预注册预期。**危险反例**：同一字段 B 页面先保存，A 旧页面后提交将 B 标签覆盖；随后基于独立旧版本账本的模拟 Agent 再次覆盖人工结果。真实登录/CSRF/匿名拒绝均有一手日志。Agent 是 CLI 确定性脚本，不是真正 LLM。CI 初次因 Ubuntu 26.04 与 Playwright 不兼容失败，改固定 Ubuntu 24.04 后通过。G1 未通过。

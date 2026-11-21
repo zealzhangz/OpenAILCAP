@@ -1,0 +1,144 @@
+{
+  "study": "S1 Saltcorn true Chromium human editor stale-tab overwrite and sidecar Agent bypass",
+  "run_date": "2026-11-21",
+  "upstream_code_inspected": "saltcorn/saltcorn@515254bee5a98df70530cc59846b1df02d5db350",
+  "tested_cli_package": "@saltcorn/cli@1.7.0-beta.5",
+  "browser": "Playwright Python 1.56.0 / bundled Chromium on ubuntu-24.04",
+  "executing_commit": "c06838773f1c391c881fdb81b8fa95660f972639",
+  "run": {
+    "id": 44873882208,
+    "url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208",
+    "status": "completed",
+    "conclusion": "success",
+    "job_id": 136754179909,
+    "artifact": {
+      "id": 14694788713,
+      "name": "s1-real-chromium-saltcorn-editor"
+    }
+  },
+  "first_environment_failure": {
+    "run_id": 44873783039,
+    "conclusion": "failure",
+    "cause": "Playwright 1.56 not supported on GitHub ubuntu-latest image Ubuntu 26.04",
+    "failed_before_browser_execution": true,
+    "mitigation": "Pin ubuntu-24.04; successful rerun 44873882208"
+  },
+  "evidence_type": "curated observed fields from real GitHub Actions stdout; full result JSON remains on downloadable run artifact",
+  "browser_cases": [
+    {
+      "id": "UI01",
+      "status": "PASS",
+      "baseline_field_label": "Title"
+    },
+    {
+      "id": "UI02",
+      "status": "PASS",
+      "real_authenticated_browser_path": "/field/7"
+    },
+    {
+      "id": "UI03",
+      "status": "PASS",
+      "form_input_names": [
+        "_csrf",
+        "calculated",
+        "contextEnc",
+        "description",
+        "is_unique",
+        "label",
+        "protected",
+        "required",
+        "stepName",
+        "stored",
+        "unique_error_msg"
+      ]
+    },
+    {
+      "id": "UI04",
+      "status": "PASS",
+      "same_user_tabs_held_stale_base": true,
+      "initial_a": "Title",
+      "initial_b": "Title"
+    },
+    {
+      "id": "UI05",
+      "status": "PASS",
+      "first_browser_B_saved": "Browser B Saved"
+    },
+    {
+      "id": "UI06",
+      "status": "PASS",
+      "second_stale_browser_A_saved": "Browser A Stale Save",
+      "overwrote_first": true,
+      "semantic": "UNSAFE_EDIT_LOSS_REPRODUCED"
+    },
+    {
+      "id": "UI07",
+      "status": "PASS",
+      "fresh_browser_ui_label": "Browser A Stale Save"
+    },
+    {
+      "id": "UI08",
+      "status": "PASS",
+      "unauthenticated_editor_redirect": "/auth/login?dest=%2Ffield%2F7"
+    },
+    {
+      "id": "UI09",
+      "status": "PASS",
+      "real_web_post_count": 6,
+      "post_path": "/field",
+      "each_post_has_contextEnc": true,
+      "each_post_has_csrf": true
+    }
+  ],
+  "post_browser_cases": [
+    {
+      "id": "U10",
+      "status": "PASS",
+      "db_field_label": "Agent Overwrites Browser",
+      "semantic": "UNSAFE_BROWSER_EDIT_OVERWRITTEN_BY_SIMULATED_AGENT"
+    },
+    {
+      "id": "U11",
+      "status": "PASS",
+      "external_sidecar_revision_after_agent": 1
+    },
+    {
+      "id": "U12",
+      "status": "PASS",
+      "contract_row": "HT-2026-000001",
+      "currency_minor_amount": 100000001,
+      "preserved": true
+    },
+    {
+      "id": "U13-REST",
+      "status": "PASS",
+      "http": 200
+    },
+    {
+      "id": "U13-HTML",
+      "status": "PASS",
+      "http": 200
+    }
+  ],
+  "totals": {
+    "browser_passed": 9,
+    "browser_total": 9,
+    "post_browser_passed": 5,
+    "post_browser_total": 5
+  },
+  "security_scope": {
+    "actual_browser_save": true,
+    "real_session": true,
+    "csrf_hidden_field_observed": true,
+    "real_db_readback": true,
+    "stale_edit_negative_control": true,
+    "agent_is_real_llm": false,
+    "agent_execution_method": "deterministic privileged Saltcorn CLI",
+    "second_user_authenticated_session": false,
+    "production_cas_for_web_ui": false,
+    "completed_contract_benchmark_passes": 0,
+    "contract_benchmark_total": 18,
+    "G1": "NOT_PASSED"
+  },
+  "caution": "GREEN WORKFLOW records intentionally reproduced unsafe overwritten human edits. It is NOT a software security acceptance verdict."
+}

@@ -71,3 +71,12 @@
 - [可复现的原生事务与双进程实验工程](../experiments/platform-saltcorn/atomic/README.md)
 
 **本轮 36 次阶段断言均符合预期，但同时复现两个危险问题**：Saltcorn SQLite withTransaction 异常后写入不回滚；人工绕过研究版本表后，Agent 侧 CAS 会错误接受旧版本并静默覆盖人工值。这是 H03 的强约束证据，**不是 H03/G1 通过**。冻结合同任务仍 0/18 完整 PASS。
+
+## 2026-11-21：S1 首次真实 Chromium 人工设计器保存与旧页面覆盖实证
+
+- [研究报告 19：真实浏览器登录、CSRF 字段向导、双标签页覆盖及模拟 Agent 版本失效](01-research/19-real-browser-edit-evidence.md)
+- [机器可读的 9 项浏览器与 5 项后置测试证据](01-research/browser-edit-observations.json)
+- [Playwright 浏览器真实 UI 复现工程](../experiments/platform-saltcorn/browser/README.md)
+- [原始成功 GitHub Actions Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)，Artifact 14694788713
+
+**本轮重大突破**：真实 Chromium 管理员页面已实测字段提交，B 保存后 A 旧表单成功覆盖 B，之后外部 Agent 版本表没有记录人工编辑，再一次错误允许模拟 Agent 覆盖真实浏览器变更。9/9 浏览器与 5/5 后置断言通过，其中两次覆盖是**故意复现的负面结果**。此前 Run #44873783039 因 Ubuntu 26.04 与 Playwright 1.56 不兼容而在浏览器安装前失败，固定 ubuntu-24.04 后成功。**G1 未通过；合同完整 TC 仍 0/18。**

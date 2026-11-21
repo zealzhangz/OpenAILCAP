@@ -109,3 +109,11 @@
 新增 [报告 18](18-saltcorn-sqlite-atomic-evidence.md)、[原始 Run #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657)，观察到真实第三方平台本机 SQLite 两进程并发写入、资源级原子 revision 冲突拒绝、故障注入回滚，且**真实复现了两个负面风险**：（1）Saltcorn 的 SQLite withTransaction 包装层无真实事务回滚，（2）未走治理账本的人工原生修改会被随后的 Agent 侧 CAS 误认为合法并覆盖。
 
 **G1 状态维持 NOT_PASSED**：这次测试验证的是低层协议和真实原生模型 API，不是浏览器登录后的设计器人工保存，不是实际模型 Agent。冻结合同 TC01—TC18 全部仍待完整端到端业务验收，不能借此计入通过。下一个严格门禁是先让真实浏览器/HTTP 人工写入进入同一不可绕过的版本历史，再观察 AI 工具调用的同步、冲突、授权及回滚。强制身份、租户、插件路径与部署仍为后续阻断。
+
+## 2026-11-21 G1 第四次实证复审：真实 Web 人工保存已经验证
+
+新增 **首次浏览器真实人工编辑证据**：[研究报告 19](19-real-browser-edit-evidence.md) 与 [GitHub Actions Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)。使用 Chromium 真实 UI 登录临时管理员、两个浏览器标签页 B 后 A 提交字段向导。**9/9 页面与 SQLite 验收通过，但 A 旧表单实际覆盖 B 已保存标签**；模拟 Agent 侧版本账本没有纳入浏览器修改，导致下一轮旧 revision 修改再次静默覆盖。后置 5/5 验收中含危险负面对照。真实 browser GET/POST/CSRF/未登录拒绝均有一手可复核输出。
+
+**风险评审**：G1 在“第三方参考平台真实 Web 用户编辑旅程”的证据缺口已显著缩小，但这不是 OpenAILCAP 人机安全协同能力可行性正向证明。任何只包装 Agent 写入、不改造人工编辑器版本治理的方案继续保持不可接受。仍缺：真正 LLM Agent 的类型化工具调用、正式统一版本化 API（认证、409、幂等、审计）、可运行两级审批/自定义业务规则/插件与多应用隔离，及统一 IR vs 分域 Schema 的真实对比。
+
+**G1：NOT_PASSED；18 项完整合同 TC01—TC18：仍 0/18。** 不得仅依据脚本数量或 CI 绿灯提前进入第二阶段。CI 工具首次失败的 Ubuntu/Playwright 兼容性问题已在成功重跑的固定 Runner 中解除。

@@ -63,3 +63,7 @@ WP2 已深入检查 ToolJet/ToolJet 主服务端，确认 Code Mode 的 CE 控�
 ## 2026-11-21 S1 SQLite 适配器事务与双进程写入的实证深化
 
 已运行 [真正 Saltcorn + SQLite 两个独立 CLI 进程的原生 Field.update 实验](18-saltcorn-sqlite-atomic-evidence.md)：[GitHub Actions #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657)，completed/success。TX1 真实复现 Saltcorn SQLite withTransaction 抛异常但已更新字段未回滚；TX2/TX3 显式 BEGIN IMMEDIATE + 受控资源版本表支持不同字段并行和同字段旧版本拒绝；TX4 SQL 事务内原生写入后故障注入回滚；TX5 人工不走版本账本时后续自动化 CAS 误判成功并覆盖人工字段；TX6 真实 HTTP 读回。**七阶段 36 次断言符合预期，但 TX1/TX5 是危险负对照**。继续评估真实浏览器路由授权/保存和统一强制治理入口，G1 未通过。
+
+## 2026-11-21：Web 人工设计器实证推进
+
+新增 [真实 Chromium 两标签页字段编辑](19-real-browser-edit-evidence.md)，Run [#44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208) completed/success。Playwright 在真实 Web 登录会话下打开两个持旧上下文的字段向导，分别提交，SQLite 显示 B 先保存后 A 旧页面覆盖 B；一次性 Web 管理员、CSRF、6 次真实 POST 及未认证跳转均有日志。模拟 Agent 再依据未更新的研究账本改写同一字段，真实数据库再次发生覆盖。**人工部分已是真实浏览器操作**，Agent 仍是确定性 CLI，不能误称 AI 协作验证通过。原 Run [#44873783039](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873783039) 因 Playwright 不支持 GitHub ubuntu-latest 26.04 在安装阶段失败，修订 ubuntu-24.04 后完成，已归档失败根因。

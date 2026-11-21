@@ -45,3 +45,7 @@ R（路由）、B（代码闭环）、D（插件/应用隔离）均未执行；C
 ## 2026-11-21 SQLite 真实原生事务与并发回填
 
 [Run #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 实测七组 36 次断言，包含两个不同 CLI 进程并发写入相同/不同 Saltcorn Field、真正 SQLite BEGIN IMMEDIATE 和 Field.update 同事务、事务内注入失败后 ROLLBACK、浏览器编辑器类似的直接原生更新绕过研究版本账本。实际同字段竞争一胜一旧版本拒绝；但 sidecar 账本被绕过时后续 CAS 仍错误接受覆盖。Saltcorn SQLite withTransaction 内真实事务语句被注释，异常后修改保留。**实验代码/审计报告**见 [atomic/README](../../experiments/platform-saltcorn/atomic/README.md)、[报告](18-saltcorn-sqlite-atomic-evidence.md)。没有真实认证浏览器会话或 LLM Agent。**G1 未通过**。
+
+## 2026-11-21：S1 真正人工 Chromium 浏览器实验完成
+
+成功 GitHub [Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)（Commit c0683877）运行了一次性 Saltcorn+SQLite、Chromium 真实管理员登录、正常 CSRF 字段向导、两个持旧上下文的浏览器标签页。UI01—UI09 **9/9 PASS**；B 保存字段标签后 A 旧页面保存将 B 变更覆盖，为真实 UI 失效反例。随后 CLI 确定性自动化以错误滞后的外部版本表覆盖浏览器变更，U10—U13 共 **5/5 PASS（含危险负例）**。交付 [浏览器脚本](../../experiments/platform-saltcorn/browser/README.md)、[完整研究报告](19-real-browser-edit-evidence.md)、[独立证据摘要](browser-edit-observations.json)。首次环境失败 Run #44873783039 归因为 Playwright 1.56 不支持 GitHub ubuntu-latest Ubuntu 26.04，固定 Ubuntu 24.04 后通过。未运行真实 LLM/跨应用/审批，G1 不通过。

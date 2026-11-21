@@ -71,3 +71,9 @@ OpenAILCAP 必须同时允许人工编辑、AI 通过配置工具修改、AI 创
 [GitHub Actions 实证 #44872093657](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44872093657) 将证据从单进程模拟提升到真正两个独立 Saltcorn CLI 进程：显式 SQLite 事务内比较资源版本与原生 Field.update 可使同资源一胜一拒，故障注入回滚有效。**但是**：Saltcorn SQLite withTransaction 包装本身没有 SQL 事务（先前代码无法作原子性依据）；人工通过 native Field.update 绕过实验版本表后，Agent CAS 即使“原子正确”也会覆盖人工内容。
 
 **决策候选约束进一步收紧**：不接受“人工设计器继续原生写库，只有 Agent 工具通过 CAS sidecar”的过渡方案。应统一所有写入口，或者在 Agent 发布前完成经授权的外部版本采纳+内容指纹一致性检查并失败关闭；否则中止 AI 自动提交。这只是候选 ADR 修订，不等于最终决定元数据 IR 或技术栈。完整原始记录见 [报告 18](18-saltcorn-sqlite-atomic-evidence.md)。
+
+## 2026-11-21 ADR-S1-001 依据真实 Web 两标签页继续收紧
+
+[Saltcorn Chromium 实际编辑证据](19-real-browser-edit-evidence.md)（[Run #44873882208](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44873882208)）：本次首次采用真正的管理员浏览器页面而不是 CLI 模拟人工。两标签页打开同一旧 title 编辑向导，B 正常保存后 A 持旧表单提交，数据库静默变成 A 的值；模拟 Agent 仅维护自己的版本账本，仍按旧 revision=0 接受写入并再次覆盖人工值。
+
+**候选 ADR 的技术结论提升为必须满足的强约束**：统一受治理写入并非仅 AI Agent 侧的功能。真实 Web 设计器必须以相同 revision/指纹令牌提交变更，并在服务端通过原子事务校验；对于旧版本即使是管理员，也需返回明确冲突，而非仅检查角色与 CSRF。已验证 Saltcorn 字段编辑路由有真实权限与 CSRF，但不能把它们误认为并发一致性机制。该 ADR 仍是 S1 候选，**不是已经建成的 OpenAILCAP 统一写入 API**。还需通过带真实登录会话的安全版 API、插件路径与开发 Agent 的独立验收后才能决策。
