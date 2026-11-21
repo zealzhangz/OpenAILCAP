@@ -231,3 +231,18 @@ undefined
 **仍 OPEN 的 P0/工程限制**：Saltcorn UID 可直接改写派生 SQLite；Native 原生 HTTP 直连可绕过 Router；Ed25519 密钥没有生产 KMS/HSM/轮换/吊销/可信时间/长期签名审计；Router 单一固定四列合同 GET 全量扫描源 Outbox 最多1000事件、双次校验仍有 TOCTOU；未覆盖多租户行级 ACL/PII、删除/Schema Migration、生产吞吐/断电/跨节点故障/HA、持久 Route Journal、Native Form/Workflow/Code 完整一致性。B15 优先验证**网络层强制受控入口**及**派生 SQLite 受控只读快照/原子发布**，保留 Native 直连、SQL 直写、断链/重放负对照。
 
 **正式冻结判定保持：S1 IN_PROGRESS、G1 NOT_PASSED、G1-B01 PARTIALLY VALIDATED / OPEN；冻结 W01—W24 0/24 FULL PASS，TC01—TC18 0/18 FULL PASS。** B14 的128/128为专项研究通过，不等于 G1 正式 FULL PASS。
+
+
+## 2026-11-22：B15 Linux IPv4/IPv6 Native HTTP 强制入口与第六 UID 原子公开快照复审
+
+[完整报告48](48-s1-b15-host-firewall-atomic-public-snapshot-evidence.md)、[最终 Actions #44928087963](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44928087963) **completed/success**，Job **136918499653**，[Artifact #14716058088](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44928087963/artifacts/14716058088)：B15 22+B14 24+B13 22+B12 22+B11 28+B10 34+B2 18+B5 40 = **210/210 单元/契约 PASS**；真实 B11 62+B12 17+B13 25+B14 24+B15 20 = **148/148 E2E PASS**；0次 DeepSeek。PR #17 已合并 main，SHA **601e1bd201e673b82156d8aa59f6eca26619c783**。
+
+**B14 Native HTTP 直连 P0 的单机受限修复证据**：B15 由受信 root 在真实 Ubuntu24.04 安装 `iptables/ip6tables` IPv4/IPv6 **4条** Native端口3158强制规则：loopback OUTPUT仅 Router UID995 可连接，非loopback INPUT拒绝；Runner、Saltcorn UID997、Consumer UID994以及真正 Chromium **真实直连 Native 被拒绝**，Router UID995实际 TCP连接成功，B15 Guard HTTP200、Chromium经受控入口显示真实合同；规则完整移除后 Native直连恢复200。**只能判定本单机固定端口/UID路径有效**，不代表跨主机/Kubernetes CNI、其他端口/协议/Unix Socket、root/CAP_NET_ADMIN 或生产网络隔离完成。
+
+**第六 UID 独立快照的实际权限与一致性证据**：新增 Publisher UID992，与 Kernel999、Saltcorn997、Router995、Consumer994、独立审计UID993均不同。Publisher UID `O_RDONLY`真实读取 Native SQLite成功、`O_WRONLY` PermissionError，不能读 Kernel权威DB/Ed25519私钥；在**发布前后**验证 B2当前 Release、逐条 Ed25519签名的真实 Outbox与物理 Native SQLite Cursor/Receipt/RecordMap/四列合同数据一致，生成**仅两张公开表**的独立 SQLite，不复制 Saltcorn 账户/Session/插件表。快照 Publisher-owned **0750目录/0640文件**，Router只读、Saltcorn UID不能读/写，fsync+`os.replace`原子替换。B15 Guard 在真实 Native HTTP前后核验 B2签名源、第五UID物理Native SQL、第六UID发布快照。B2真实第九份合同4事件使 Native Cursor32→36、发布快照仍32，Guard503；显式发布Head36后 Guard200、Chromium显示第九份合同；Saltcorn UID直接 SQL篡改时**发布快照SHA256不变、Guard503、Publisher拒绝污染发布**，人工修复后200；快照缺失Guard503，重发恢复200。
+
+**不能越界的结论**：Saltcorn UID仍然能够直接写**自己的实时派生 SQLite**；本轮只隔离了**独立发布快照**，并未让 Saltcorn Native Web 使用只读业务数据库。Publisher由受信 CI Controller**显式触发**，没有自动生产发布、跨节点 HA、发布 Journal/回收、生产负载或重启后网络规则持久化。固定单模型/四列列表，未验证全站路由、SSO/ACL/PII、删除/Schema Migration、恶意 HTML、TOCTOU、生产 KMS/密钥轮换/撤销、跨主机 mTLS、K8s网络隔离。下一步 B16应先验证 Native Web/Apply 真实 OS UID 分离及 Saltcorn 对 SQLite 写权限的实际需求，再决定是否可能实现 Web 业务数据只读。
+
+**失败保留**：[首次 CI #44927546949](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44927546949) 210单元/契约与130项真实 E2E通过，Publisher主组 `chown` 配置错误；[第二次 CI #44927817940](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44927817940) 210单元/契约与138项真实 E2E通过，Chromium拒绝Native后的 `chrome-error://` 异步导航竞争；[最终 #44928087963](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44928087963) **210/210+148/148、Job success、Artifact 完整**。两次失败不计入正式通过。
+
+**正式冻结门禁判定继续保持：S1 IN_PROGRESS、G1 NOT_PASSED、G1-B01 PARTIALLY VALIDATED / OPEN；W01—W24 0/24 FULL PASS，TC01—TC18 0/18 FULL PASS。** B15 的148/148为专项研究通过，不是 G1 正式 FULL PASS。
