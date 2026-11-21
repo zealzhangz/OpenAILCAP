@@ -1,0 +1,87 @@
+{
+  "id": "S1-DEEPSEEK-ROUTE-CHOICE-6-v1",
+  "frozen_at": "2026-11-21",
+  "purpose": "A one-call, six-task pilot of CONFIG/CODE/HYBRID selection over actually runnable Saltcorn native mechanisms",
+  "platform_capabilities": {
+    "data_model": "Saltcorn Table/Field can store String and Integer fields and render a native List View without custom JavaScript",
+    "code_action": "Existing workflow capabilities lack a declarative modulo-7 checksum rule, but allow a custom run_js_code Validate Trigger",
+    "hybrid": "A native schema can hold approval_note and Key relation while an Insert Trigger performs a cross-table threshold audit snapshot",
+    "deployment": "Only preinstalled reviewed native Pack/Trigger adapters are allowed; model CANNOT supply or execute arbitrary JS, shell, or SQL",
+    "limits": "No claim these platform capabilities exhaust all Saltcorn plugins or are universal impossibility proofs"
+  },
+  "cases": [
+    {
+      "id": "RC01",
+      "requirement": "合同登记需要新增一个普通文本‘业务联系人备注’，保存后在合同列表展示即可；已有字段与列表组件可以覆盖，不要求计算规则。",
+      "expected_mode": "CONFIG",
+      "fixture": {
+        "number": "CFG-01",
+        "note": "联系人备注甲",
+        "status": "Draft"
+      }
+    },
+    {
+      "id": "RC02",
+      "requirement": "新增‘归档说明’文本信息，要求录入、保存并显示在现有列表中，除了基本字段保存无额外行为。",
+      "expected_mode": "CONFIG",
+      "fixture": {
+        "number": "CFG-02",
+        "note": "归档备注乙",
+        "status": "Submitted"
+      }
+    },
+    {
+      "id": "RC03",
+      "requirement": "业务编号采用 K-数字-末位码 格式，末位必须等于前面的整数对 7 取模。现有字段配置仅有基础长度/必填校验，字段结构不需要变化。",
+      "expected_mode": "CODE",
+      "fixture": {
+        "number": "K-14-0",
+        "invalid_number": "K-14-5"
+      }
+    },
+    {
+      "id": "RC04",
+      "requirement": "另一个合同编号同样要执行自定义模 7 校验（如 K-22-1），现有规则配置不支持该算法，不能用纯文本保存代替校验。",
+      "expected_mode": "CODE",
+      "fixture": {
+        "number": "K-22-1",
+        "invalid_number": "K-22-5"
+      }
+    },
+    {
+      "id": "RC05",
+      "requirement": "合同增加可录入的‘审批备注’，保存时若金额严格超过 100 万元，要把备注与审核档位同步快照到关联审计记录。需要持久字段和当前未提供的跨表条件行为。",
+      "expected_mode": "HYBRID",
+      "fixture": {
+        "number": "HYB-05",
+        "note": "高额审批备注",
+        "amount_minor": 100000001,
+        "outcome": "HIGH"
+      }
+    },
+    {
+      "id": "RC06",
+      "requirement": "合同增加‘复核备注’作为业务模型字段；在登记时需要自定义动作将该备注与金额档位写入另一张关联表，金额恰好 100 万元不应升级审批。",
+      "expected_mode": "HYBRID",
+      "fixture": {
+        "number": "HYB-06",
+        "note": "普通复核备注",
+        "amount_minor": 100000000,
+        "outcome": "NORMAL"
+      }
+    }
+  ],
+  "excluded_from_model_input": [
+    "expected_mode",
+    "fixture",
+    "id of this test spec"
+  ],
+  "model_calls_budget": 1,
+  "model_max_output_tokens": 650,
+  "scorer": "Six exact mode matches and independent native Saltcorn SQLite/HTML proof, not grading by model self-explanation",
+  "coverage_limits": [
+    "Small hand-curated fixture set; no measured generalization or reproducibility variance",
+    "Only preimplemented Saltcorn field, code trigger and combined trigger capabilities",
+    "No generated code, no autonomous tool implementation or real human-agent editing"
+  ]
+}

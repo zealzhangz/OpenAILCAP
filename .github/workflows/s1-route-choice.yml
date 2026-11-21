@@ -1,0 +1,139 @@
+name: S1 DeepSeek configuration vs code route selection
+on:
+  push:
+    paths:
+      - '.github/workflows/s1-route-choice.yml'
+      - 'experiments/route-choice/**'
+  workflow_dispatch:
+    inputs:
+      live_model:
+        description: 'One DeepSeek model response, otherwise offline baseline'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  select:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check frozen contract and no-network security rules
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/route-choice/*.py
+          python3 -m unittest discover -s experiments/route-choice -p 'test_*.py' -v
+      - name: One optional DeepSeek model call
+        env:
+          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
+          MANUAL: ${{ inputs.live_model }}
+          ONESHOT: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[deepseek-route-once]') }}
+        run: |
+          set -euo pipefail
+          if [[ ( "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$MANUAL" == "true" ) || ( "$GITHUB_EVENT_NAME" == "push" && "$ONESHOT" == "true" ) ]]; then
+            echo "S1_ROUTE_ONE_REAL_DEEPSEEK_CALL"
+            python3 -u experiments/route-choice/predict.py --live \
+              --spec experiments/route-choice/spec.json \
+              --output /tmp/s1-route-prediction.json
+          else
+            echo "S1_ROUTE_OFFLINE_BASELINE_NO_MODEL"
+            python3 -u experiments/route-choice/predict.py \
+              --spec experiments/route-choice/spec.json \
+              --output /tmp/s1-route-prediction.json
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-route-choice-prediction
+          path: /tmp/s1-route-prediction.json
+          if-no-files-found: warn
+  native-execute:
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: s1-route-choice-prediction
+          path: /tmp/s1-route-model
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual Saltcorn 1.7.0 beta.5
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          saltcorn --version
+      - name: Build reviewed native capabilities and select adapters from model enums
+        run: |
+          set -euo pipefail
+          python3 experiments/route-choice/generate_pack.py \
+            --original-pack experiments/platform-saltcorn/contract-pack.json \
+            --source-dir experiments/route-choice \
+            --output "$RUNNER_TEMP/route-pack.json"
+          python3 experiments/route-choice/make_executor.py \
+            --spec experiments/route-choice/spec.json \
+            --prediction /tmp/s1-route-model/s1-route-prediction.json \
+            --template experiments/route-choice/native-executor-template.js \
+            --output "$RUNNER_TEMP/route-executor.js"
+      - name: Initialize actual native Saltcorn Tables Fields Views and Triggers
+        run: |
+          set -euo pipefail
+          export SQLITE_FILEPATH="$RUNNER_TEMP/s1-route-native.sqlite"
+          export SALTCORN_SESSION_SECRET="$(openssl rand -hex 32)"
+          echo "::add-mask::$SALTCORN_SESSION_SECRET"
+          echo "SQLITE_FILEPATH=$SQLITE_FILEPATH" >> "$GITHUB_ENV"
+          echo "SALTCORN_SESSION_SECRET=$SALTCORN_SESSION_SECRET" >> "$GITHUB_ENV"
+          echo "SALTCORN_NWORKERS=1" >> "$GITHUB_ENV"
+          timeout 180s saltcorn reset-schema -f
+          timeout 120s saltcorn install-pack -f "$RUNNER_TEMP/route-pack.json"
+          test -s "$SQLITE_FILEPATH"
+      - name: Execute the selected native configuration and code action paths
+        run: |
+          set -euo pipefail
+          timeout 180s saltcorn run-js -f "$RUNNER_TEMP/route-executor.js" \
+            > "$RUNNER_TEMP/route-execution.log" 2>&1 || {
+              tail -n 90 "$RUNNER_TEMP/route-execution.log"
+              exit 1
+            }
+          grep '^S1_ROUTE_EXEC_COMPLETE|' "$RUNNER_TEMP/route-execution.log"
+          grep '^S1_ROUTE_EXEC|' "$RUNNER_TEMP/route-execution.log"
+      - name: Start real Saltcorn HTML runtime
+        run: |
+          set -euo pipefail
+          saltcorn serve --port 3100 --noscheduler > "$RUNNER_TEMP/route-server.log" 2>&1 &
+          ready=0
+          for n in $(seq 1 85); do
+            if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:3100/; then ready=1;break;fi
+            sleep 2
+          done
+          if [[ "$ready" != "1" ]]; then tail -n 70 "$RUNNER_TEMP/route-server.log";exit 1;fi
+      - name: Independently score model routing and real Saltcorn SQL plus HTML
+        run: |
+          set -euo pipefail
+          if grep -q '"model_inference_executed": true' /tmp/s1-route-model/s1-route-prediction.json; then
+            python3 -u experiments/route-choice/verify.py --live-model \
+              --spec experiments/route-choice/spec.json \
+              --prediction /tmp/s1-route-model/s1-route-prediction.json \
+              --database "$SQLITE_FILEPATH" --log "$RUNNER_TEMP/route-execution.log" \
+              --output /tmp/s1-route-native-result.json
+          else
+            python3 -u experiments/route-choice/verify.py \
+              --spec experiments/route-choice/spec.json \
+              --prediction /tmp/s1-route-model/s1-route-prediction.json \
+              --database "$SQLITE_FILEPATH" --log "$RUNNER_TEMP/route-execution.log" \
+              --output /tmp/s1-route-native-result.json
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s1-route-choice-native-evidence
+          path: /tmp/s1-route-native-result.json
+          if-no-files-found: warn
