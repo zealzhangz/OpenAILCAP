@@ -200,3 +200,12 @@
 - [真实 GitHub Actions #44891826332](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332) **completed/success**（Job **136809104025**），[Artifact #14702700418](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891826332/artifacts/14702700418)，模型实际执行 **一次 DeepSeek `deepseek-flash` Function Calling**，生成合同 Model/Form/View/Workflow 四类定义并经可信类型化工具提交；**Live 24/24** 真 Chromium/Agent/SQL 独立验证 PASS。
 - 只有在之前 [零模型完整预检 #44891709859](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44891709859) 的 **B3 18/18 恶意提议测试 + B2 18/18 单测 + Chromium 离线 24/24** 通过后，才通过精确 HEAD Commit 标记执行**唯一一次**外部模型调用。真实模型 CI 同样复跑全部离线闸门再进入 live。模型无 SQL/CLI/发布权限；实际工具进程 HTTP 创建四资源，浏览器可编辑、Agent 409 重基、人工发布、金额 100万元审批与视图运行成功。
 - [PR #5](https://github.com/zealzhangz/OpenAILCAP/pull/5) 已合并 main（`8e7951eadfd634bc2334995d4d49256b6938bd3e`）。**研究限制**：高度受限的固定合同能力目录，不是任意自然语言自动开发、自定义代码构建、真正插件沙箱或生产发布。**S1 G1 NOT_PASSED；冻结 W01—W24 仍 0/24 FULL PASS、合同 TC01—TC18 仍 0/18 FULL PASS**。
+
+
+## 2026-11-21：S1 B4 真正 DeepSeek 生成自定义代码 + 隔离构建/独立运行
+
+- [报告 37：真实 AI 自定义 Python 业务规则、独立 432 边界 Oracle、与 B2 Manifest 绑定发布和回滚](01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md)；[可运行代码与严格限制](../experiments/g1-b01-b4/README.md)，[B4 CI 工作流](../.github/workflows/s1-b4-custom-code.yml)。
+- [完全离线成功 Run #44893945547](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44893945547)：B4 AST/工具安全单元 **27/27**，既有 B2 回归 **18/18**，真正 Docker + Chromium B4 E2E **27/27**；模型调用 0。
+- [一次真正 DeepSeek 代码生成 Run #44894074280](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280)：**completed/success**，实际 1 次 DeepSeek `deepseek-flash` `submit_python_rule` 源代码 Function Calling；本次 B4 在线 E2E **27/27 PASS**；Job **136815855851**，[原始 Artifact #14702827817](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44894074280/artifacts/14702827817)。AI 代码 hash `a6743bd...` 与离线人工样例 `2c866d...` 不同，绝非拿固定源码冒充在线生成。
+- 真实低代码 B2 缺少合同供应商信用/合作年限评分时，可信能力匹配选择 CUSTOM_CODE；模型只提出单纯函数源码，严格 AST 拒绝任意执行，Docker `--network=none`、`--read-only`、非 root、资源限额真实编译+运行 **432** 个风险边界组合。失败代码不入 Artifact 不发布；模拟授权人工发布绑定 B2 Manifest v1；真浏览器高风险 95 / 低风险 0；代码 v2 人工注释修改后重新构建并回滚 v1；B2 v2 不兼容返回 409，回滚 B2 v1 后恢复。
+- [PR #6](https://github.com/zealzhangz/OpenAILCAP/pull/6) 已合并 `main`，SHA `5dd3224893a87e1e7a77f91000c38fa023a98d07`。**限制**：固定纯函数 AST 及固定合同测试；无通用工程代码构建、真实多轮 AI 自动修复、人类实际审批或生产发布。**G1 NOT_PASSED；正式 W01—W24 仍 0/24 FULL PASS，TC01—TC18 仍 0/18 FULL PASS**。
