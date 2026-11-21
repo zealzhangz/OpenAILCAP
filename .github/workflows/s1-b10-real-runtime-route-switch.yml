@@ -1,0 +1,80 @@
+name: S1 B10 actual two live Saltcorn release instances and HTTP route cutover
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b10-real-runtime-route-switch.yml'
+      - 'experiments/g1-b01-b10/**'
+  push:
+    paths:
+      - '.github/workflows/s1-b10-real-runtime-route-switch.yml'
+      - 'experiments/g1-b01-b10/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-two-saltcorn-traffic-switch-and-rollback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install actual native Saltcorn and browser
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0'
+          timeout 540s python3 -m playwright install --with-deps chromium
+          saltcorn --version
+      - name: Compile B10 and run pure router CAS/readiness unit tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile experiments/g1-b01-b10/*.py
+          cd experiments/g1-b01-b10
+          python3 -u -m unittest -v test_router \
+            2>&1 | tee /tmp/s1-b10-router-units.log
+      - name: Regress real B2 Domain Schema and B5 Tool Broker
+        run: |
+          set -euo pipefail
+          (cd experiments/g1-b01-b2 && python3 -u -m unittest -v test_schema) \
+            2>&1 | tee /tmp/s1-b10-b2-regression.log
+          (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
+            2>&1 | tee /tmp/s1-b10-b5-regression.log
+      - name: Three non-root system users for authority, derived native runtime and router
+        run: |
+          set -euo pipefail
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb10kern
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb10salt
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb10route
+          id ailcapb10kern
+          id ailcapb10salt
+          id ailcapb10route
+          [[ "$(id -u ailcapb10kern)" != "$(id -u ailcapb10salt)" ]]
+          [[ "$(id -u ailcapb10kern)" != "$(id -u ailcapb10route)" ]]
+          [[ "$(id -u ailcapb10salt)" != "$(id -u ailcapb10route)" ]]
+      - name: Two concurrent real Saltcorn v1-v2 and authoritative workflow traffic tests
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b10/experiment.py \
+            --output /tmp/s1-b10-evidence.json \
+            2>&1 | tee /tmp/s1-b10-e2e.log
+      - name: Retain actual logs and JSON evidence including failure snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b10-real-two-saltcorn-traffic-cas-failclosed-evidence
+          path: |
+            /tmp/s1-b10-router-units.log
+            /tmp/s1-b10-b2-regression.log
+            /tmp/s1-b10-b5-regression.log
+            /tmp/s1-b10-evidence.json
+            /tmp/s1-b10-e2e.log
+          if-no-files-found: warn
