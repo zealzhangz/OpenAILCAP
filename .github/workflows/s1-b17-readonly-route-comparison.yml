@@ -1,0 +1,73 @@
+name: S1 B17 bounded Native adaptation versus public snapshot renderer
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s1-b17-readonly-route-comparison.yml'
+      - 'experiments/g1-b01-b17/**'
+      - 'experiments/g1-b01-b16/**'
+      - 'experiments/g1-b01-b15/**'
+      - 'experiments/platform-saltcorn/contract-pack.json'
+      - 'experiments/platform-saltcorn/seed-contract.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  route-comparison:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned native runtime and browser
+        run: |
+          set -euo pipefail
+          timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
+          python3 -m pip install 'playwright==1.56.0' 'cryptography>=44,<48'
+          timeout 540s python3 -m playwright install --with-deps chromium
+      - name: Contract tests and upstream evidence
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/s1-b17-evidence
+          python3 -m py_compile experiments/g1-b01-b17/*.py
+          (cd experiments/g1-b01-b17 && python3 -m unittest -v test_snapshot_web) 2>&1 | tee /tmp/s1-b17-evidence/b17-units.log
+          (cd experiments/g1-b01-b15 && python3 -m unittest -v test_published_network) 2>&1 | tee /tmp/s1-b17-evidence/b15-units.log
+          python3 experiments/g1-b01-b16/inspect_upstream.py /tmp/s1-b17-evidence/upstream
+      - name: Create Apply Native Web and snapshot Web identities
+        run: |
+          set -euo pipefail
+          sudo -n groupadd --system ailcapb16read
+          sudo -n groupadd --system ailcapb17pub
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -g ailcapb16read -G ailcapb17pub ailcapb16apply
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -g ailcapb16read ailcapb16web
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -g ailcapb17pub ailcapb17view
+          id ailcapb16apply
+          id ailcapb16web
+          id ailcapb17view
+      - name: B16 unmodified native negative regression
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b16/experiment.py --output /tmp/s1-b17-evidence/b16/results.json \
+            2>&1 | tee /tmp/s1-b17-evidence/b16-regression.log
+      - name: Real native adaptation and snapshot browser comparison
+        env:
+          DEEPSEEK_KEY: ''
+        run: |
+          set -euo pipefail
+          python3 -u experiments/g1-b01-b17/compare.py --output /tmp/s1-b17-evidence/b17/results.json \
+            2>&1 | tee /tmp/s1-b17-evidence/b17-comparison.log
+      - name: Preserve original source logs and observed outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s1-b17-readonly-route-comparison-evidence
+          path: /tmp/s1-b17-evidence/
+          if-no-files-found: warn

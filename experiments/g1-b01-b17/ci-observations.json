@@ -1,0 +1,282 @@
+{
+  "source": "Parsed GitHub job logs; original results in artifact",
+  "run": 44958544226,
+  "job": 137011971972,
+  "artifact": 14727973319,
+  "codeCommit": "41b662d1fd952aebf80bff2604d69d8346bd9d99",
+  "nativeLiteralTextFidelityPassed": false,
+  "formalG1Passed": false,
+  "checks": [
+    {
+      "id": "B17-01-three-independent-uids",
+      "status": "PASS",
+      "observed": {
+        "ailcapb16apply": 999,
+        "ailcapb16web": 997,
+        "ailcapb17view": 995
+      }
+    },
+    {
+      "id": "B17-02-same-real-native-fixture",
+      "status": "PASS",
+      "observed": {
+        "origin": "real Saltcorn pack, synthetic row, both routes share four fields"
+      }
+    },
+    {
+      "id": "B17-03-writable-native-browser-control",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 200,
+        "exitCode": null,
+        "readonlyError": false,
+        "patchReached": false,
+        "logTail": "Saltcorn listening on http://127.0.0.1:3167/\n",
+        "browser": {
+          "status": 200,
+          "contractVisible": true,
+          "titleVisible": true,
+          "integerVisible": true,
+          "injectedImageCount": 0,
+          "scriptExecuted": false,
+          "bodyText": "SALTCORN\nMENU\nSign up\nLogin\nContract Number\tTitle\tAmount in CNY cents (integer)\tStatus\nHT-2026-000001\tS1 Platform Contract\t100000001\tDraft"
+        }
+      }
+    },
+    {
+      "id": "B17-04-session-file-writable",
+      "status": "PASS",
+      "observed": {
+        "ok": true,
+        "value": true,
+        "uid": 997
+      }
+    },
+    {
+      "id": "B17-05-one-hash-pinned-call-adapted",
+      "status": "PASS",
+      "observed": {
+        "action": "apply",
+        "changedFiles": 1,
+        "changedCalls": 1,
+        "sha256": "23651e377ba588fc75732e9c5c5260bb9f94db54595529879c4e97a83005607e"
+      }
+    },
+    {
+      "id": "B17-06-native-adaptation-outcome-classified",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 200,
+        "exitCode": null,
+        "readonlyError": false,
+        "patchReached": true,
+        "logTail": "B17_RESEARCH_SKIP_OFFLINE_STORE_CONFIG\nSaltcorn listening on http://127.0.0.1:3167/\n"
+      }
+    },
+    {
+      "id": "B17-07-native-adapted-browser",
+      "status": "PASS",
+      "observed": {
+        "status": 200,
+        "contractVisible": true,
+        "titleVisible": true,
+        "integerVisible": true,
+        "injectedImageCount": 0,
+        "scriptExecuted": false,
+        "bodyText": "SALTCORN\nMENU\nSign up\nLogin\nContract Number\tTitle\tAmount in CNY cents (integer)\tStatus\nHT-2026-000001\tS1 Platform Contract\t100000001\tDraft"
+      }
+    },
+    {
+      "id": "B17-08-native-db-unchanged",
+      "status": "PASS",
+      "observed": {
+        "sha256": "9831058169bd50571cabe348ea97c76f58ed293b250e85f51dfc0e0598c575ec"
+      }
+    },
+    {
+      "id": "B17-09-adapted-web-still-cannot-write",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "OperationalError",
+        "errno": null,
+        "sqliteCode": "SQLITE_READONLY",
+        "message": "attempt to write a readonly database",
+        "uid": 997
+      }
+    },
+    {
+      "id": "B17-10-same-hostile-business-text",
+      "status": "PASS",
+      "observed": {
+        "title": "<img src=x onerror=\"window.__b17_xss=1\">"
+      }
+    },
+    {
+      "id": "B17-11-native-second-start-classified",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 200,
+        "exitCode": null,
+        "readonlyError": false,
+        "patchReached": true,
+        "logTail": "B17_RESEARCH_SKIP_OFFLINE_STORE_CONFIG\nSaltcorn listening on http://127.0.0.1:3167/\n"
+      }
+    },
+    {
+      "id": "B17-12-native-hostile-no-execution",
+      "status": "PASS",
+      "observed": {
+        "status": 200,
+        "contractVisible": true,
+        "titleVisible": false,
+        "integerVisible": true,
+        "injectedImageCount": 0,
+        "scriptExecuted": false,
+        "bodyText": "SALTCORN\nMENU\nSign up\nLogin\nContract Number\tTitle\tAmount in CNY cents (integer)\tStatus\nHT-2026-000001\t\t100000001\tDraft"
+      }
+    },
+    {
+      "id": "B17-13-upstream-restored",
+      "status": "PASS",
+      "observed": {
+        "action": "restore",
+        "changedFiles": 1,
+        "changedCalls": 1,
+        "sha256": "8cac7fb41f671d831e3086ee2b481c92368350bd736bca9faae00fa0a626b0e0"
+      }
+    },
+    {
+      "id": "B17-14-snapshot-web-cannot-read-native-db",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "OperationalError",
+        "errno": null,
+        "sqliteCode": "SQLITE_CANTOPEN",
+        "message": "unable to open database file",
+        "uid": 995,
+        "rawOpenPermissionDenied": true
+      }
+    },
+    {
+      "id": "B17-15-snapshot-web-write-open-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 13,
+        "sqliteCode": null,
+        "message": "[Errno 13] Permission denied: '/tmp/s1-b16-probe-5iv9isfu/published/published.sqlite'",
+        "uid": 995
+      }
+    },
+    {
+      "id": "B17-16-snapshot-web-unlink-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 13,
+        "sqliteCode": null,
+        "message": "[Errno 13] Permission denied: '/tmp/s1-b16-probe-5iv9isfu/published/published.sqlite'",
+        "uid": 995
+      }
+    },
+    {
+      "id": "B17-17-snapshot-web-replace-denied",
+      "status": "PASS",
+      "observed": {
+        "ok": false,
+        "error": "PermissionError",
+        "errno": 13,
+        "sqliteCode": null,
+        "message": "[Errno 13] Permission denied: '/tmp/s1-b16-probe-5iv9isfu/view-home/replacement.tmp' -> '/tmp/s1-b16-probe-5iv9isfu/published/published.sqlite'",
+        "uid": 995
+      }
+    },
+    {
+      "id": "B17-18-snapshot-real-http",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 200,
+        "exitCode": null,
+        "readonlyError": false,
+        "patchReached": false,
+        "logTail": "{\"uid\": 995, \"port\": 3168}\n"
+      }
+    },
+    {
+      "id": "B17-19-snapshot-real-browser-escaped-text",
+      "status": "PASS",
+      "observed": {
+        "status": 200,
+        "contractVisible": true,
+        "titleVisible": true,
+        "integerVisible": true,
+        "injectedImageCount": 0,
+        "scriptExecuted": false,
+        "bodyText": "Contracts\nContract Number\tTitle\tAmount in CNY cents\tStatus\nHT-2026-000001\t<img src=x onerror=\"window.__b17_xss=1\">\t100000001\tDraft"
+      }
+    },
+    {
+      "id": "B17-20-snapshot-route-and-method-boundary",
+      "status": "PASS",
+      "observed": {
+        "otherRoute": 404,
+        "post": 405,
+        "csp": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+      }
+    },
+    {
+      "id": "B17-21-last-published-not-source-freshness",
+      "status": "PASS",
+      "observed": {
+        "nativeChanged": true,
+        "snapshotNotRepublished": true,
+        "meaning": "last-published semantics; NOT B15 current-source guard"
+      }
+    },
+    {
+      "id": "B17-22-atomic-republish-visible-without-web-restart",
+      "status": "PASS",
+      "observed": {
+        "status": 200,
+        "contractVisible": true,
+        "titleVisible": true,
+        "integerVisible": true,
+        "injectedImageCount": 0,
+        "scriptExecuted": false,
+        "bodyText": "Contracts\nContract Number\tTitle\tAmount in CNY cents\tStatus\nHT-2026-000001\tPublished generation two\t100000001\tDraft"
+      }
+    },
+    {
+      "id": "B17-23-missing-snapshot-fails-closed",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 503
+      }
+    },
+    {
+      "id": "B17-24-digest-tamper-fails-closed",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 503
+      }
+    },
+    {
+      "id": "B17-25-wrong-release-fails-closed",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 503
+      }
+    },
+    {
+      "id": "B17-26-valid-republish-recovers",
+      "status": "PASS",
+      "observed": {
+        "httpStatus": 200
+      }
+    }
+  ]
+}

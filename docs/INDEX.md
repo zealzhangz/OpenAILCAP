@@ -321,3 +321,9 @@ undefined
 - Apply UID999 / Web UID997，Apply-owned 0750 目录 + 0640 SQLite：Web 可读，直接 SQL、原生 CLI、改权限、删除与替换均拒绝；Apply 仍可写。可写 Native 基线 HTTP200/真实 Chromium 显示合同。
 - **技术可行性否定**：默认只读、关闭迁移并分离 Session、Apply 更新后重启三次均 exit1，`pre_installed_module_infos` 启动配置写入触发 `SQLITE_READONLY`；没有可用的只读 Native Web。CI 绿色含预期失败，不能等同于架构目标通过。另实证可写父目录可替换只读文件的危险反例。
 - **正式门禁不变**：S1 IN_PROGRESS / G1 NOT_PASSED / G1-B01 OPEN；W01—W24 **0/24 FULL PASS**、TC01—TC18 **0/18 FULL PASS**。建议 B17 比较明确的只读 Native 适配成本与 B15 最小公开快照直接渲染路线，不继续假定 chmod/UID 分离即可直接复用原生运行时。
+
+## 2026-11-22：S1 B17 只读路线对照完成
+
+- [报告50](01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md)、[PR #19](https://github.com/zealzhangz/OpenAILCAP/pull/19)。
+- Actions #44958544226：36项单元/契约、18项B16回归、26项修订后B17研究检查完成。原生一处适配后能只读显示，但恶意文本标题为空，保真失败保留；公开快照能安全显示并在发布后不重启刷新。
+- 下一步优先可信发布与源新鲜度集成；G1 NOT_PASSED，W/TC FULL PASS不变，模型调用0次。
