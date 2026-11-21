@@ -7,7 +7,7 @@ on:
   push:
     paths:
       - '.github/workflows/s1-b15-host-firewall-published-snapshot.yml'
-      - 'experiments/g1-b01-b14/**'
+      - 'experiments/g1-b01-b15/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -46,7 +46,7 @@ jobs:
             2>&1 | tee /tmp/s1-b15-units.log
           python3 -m py_compile experiments/g1-b01-b14/*.py
           (cd experiments/g1-b01-b14 && python3 -u -m unittest -v test_signed_security) \
-            2>&1 | tee /tmp/s1-b15-units.log
+            2>&1 | tee /tmp/s1-b15-b14-regression.log
           (cd experiments/g1-b01-b13 && python3 -u -m unittest -v test_ipc_guard) \
             2>&1 | tee /tmp/s1-b15-b13-regression.log
           (cd experiments/g1-b01-b12 && python3 -u -m unittest -v test_consumer) \
@@ -99,6 +99,7 @@ jobs:
           name: s1-b15-host-firewall-published-snapshot-evidence
           path: |
             /tmp/s1-b15-units.log
+            /tmp/s1-b15-b14-regression.log
             /tmp/s1-b15-b13-regression.log
             /tmp/s1-b15-b12-regression.log
             /tmp/s1-b15-b11-regression.log
