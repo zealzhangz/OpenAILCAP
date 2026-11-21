@@ -34,7 +34,7 @@ def serve(config_path,ready_path):
         raise RuntimeError("KERNEL_CONFIG_NOT_PRIVATE")
     cfg=json.loads(p.read_text(encoding="utf-8"))
     required={"dbPath","humanPassword","agentToken","publisherToken",
-              "runtimeToken","appBPublisherToken"}
+              "runtimeToken","appBPublisherToken","routerReadToken"}
     if not isinstance(cfg,dict) or set(cfg)!=required or any(
             not isinstance(cfg[k],str) or len(cfg[k])<24
             for k in required-{"dbPath"}):
@@ -61,6 +61,8 @@ def serve(config_path,ready_path):
                  {"draft.read","app.publish","app.rollback","release.read"})
     broker.grant(cfg["runtimeToken"],runtime,{
         "release.read","form.submit","workflow.advance"})
+    router_reader=Actor("b10-router-release-reader","app-a")
+    broker.grant(cfg["routerReadToken"],router_reader,{"release.read"})
     broker.grant(cfg["appBPublisherToken"],bp,{"release.read"})
     server=make_server(store,registry,broker,{},human,cfg["humanPassword"])
     if server.server_address[0]!="127.0.0.1":
