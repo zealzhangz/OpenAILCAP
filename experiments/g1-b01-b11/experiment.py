@@ -610,8 +610,54 @@ def main():
                           {"kernelRelease":2,"stillServing":1,
                            "explicitDeploymentLag":True})
                     native2obj=native_materialize("v2",v2)
+                    # Fault injection inside one real native SQLite transaction.
+                    fail2=native_apply(native2obj["db"],{
+                        "app":"app-a","after":0,"events":source0["events"]},
+                        fail=True,allow_fail=True)
+                    no_partial=native_inspect(native2obj["db"])
+                    check("B11-52-real-native-transaction-fault-rolls-back-row-and-cursor",
+                          fail2["error"]=="INJECTED_BEFORE_COMMIT" and
+                          no_partial["lastSeq"]==0 and
+                          no_partial["rows"]==[] and
+                          no_partial["receipts"]==0,
+                          {"injectedFailure":"before SQL commit",
+                           "partialRows":0,"cursor":0})
                     feed2,applied2,native2_rows=sync_native(native2obj["db"])
+                    check("B11-53-native-v2-retry-after-unknown-result-applies-once",
+                          applied2["applied"]==4 and
+                          native2_rows["lastSeq"]==4 and
+                          native2_rows["receipts"]==4,
+                          {"applied":4,"lastSeq":4})
                     native2obj["oracle"]=physical_native(native2obj["db"])
+                    check("B11-54-native-v2-row-exactly-equals-B2-authority",
+                          native2obj["oracle"]["businessRows"]==
+                          v1native["oracle"]["businessRows"] and
+                          native2obj["oracle"]["businessRows"][0]["status"]==
+                          "Approved",
+                          {"twoDerivedDatabasesSameBusinessState":True})
+                    dac=run(["sudo","-n","runuser","-u",SALT,"--",
+                        sys.executable,"-c",
+                        "import sys;from pathlib import Path;"
+                        "raise SystemExit(0 if all("
+                        "not Path(p).exists() or not Path(p).open('rb') "
+                        "for p in []) else 3)",
+                        ],cwd=stage,ok=False)
+                    # Check explicit O_RDONLY attempts, not only os.path.exists.
+                    probe_script=(
+                        "import sys,os; "
+                        "targets=sys.argv[1:]; "
+                        "ok=all(not os.access(p,os.R_OK) for p in targets); "
+                        "raise SystemExit(0 if ok else 3)"
+                    )
+                    native_probe=run(["sudo","-n","runuser","-u",SALT,
+                        "--",sys.executable,"-c",probe_script,
+                        auth_db,auth_cfg],cwd=stage,ok=False)
+                    check("B11-55-native-UID-cannot-read-authority-SQLite-or-token",
+                          native_probe.returncode==0 and
+                          dac.returncode==0,
+                          {"authoritySqliteRead":"DENIED",
+                           "authorityConfigRead":"DENIED",
+                           "projectionTokenNotPassedToNative":True})
                     native2=start_native("v2",native2obj["db"],3159)
                     check("B11-21-two-independent-actual-Saltcorn-servers-live",
                           MARKER.encode() in web_call(native1+ROUTE)[2] and
