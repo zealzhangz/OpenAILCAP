@@ -43,6 +43,7 @@ class ConsumerRound:
         self.source_cfg=suite.authority_dir/"p0b-outbox-source.json"
         self.pubkey=self.stage/"p0b-public-ed25519.hex"
         self.source_token=secrets.token_urlsafe(42)
+        self.publisher_source_token=secrets.token_urlsafe(42)
         self.port=None
         self.source_meta=None
         self.source_proc=None
@@ -200,7 +201,9 @@ class ConsumerRound:
         seed=self.home/"p0b-signed-source-seed.json"
         seed.write_text(json.dumps({
             "db":str(self.s.authority_db),"key":str(self.s.key),
-            "token":self.source_token,"port":self.port}))
+            "token":self.source_token,"port":self.port,
+            "publisherToken":self.publisher_source_token,
+            "template":str(self.s.stage/"platform-saltcorn"/"contract-pack.json")}))
         seed.chmod(0o600)
         self.s.execute(["sudo","-n","install","-o",KERN,"-g",KERN,
                         "-m","0600",seed,self.source_cfg])
