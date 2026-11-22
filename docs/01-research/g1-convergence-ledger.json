@@ -111,7 +111,8 @@
         "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
         "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "真实原生 CLI 与 Web 越界只能修改派生库且权威隔离"
     },
@@ -143,7 +144,8 @@
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
         "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "三写入者只读和跨应用拒绝且敏感内容不泄露"
     },
@@ -164,7 +166,8 @@
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
         "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "真实插件安装运行和数据库旁路无未管理写入"
     },
@@ -175,7 +178,8 @@
         "docs/01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md",
         "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "同进程权威 DB、原生 REST、真实浏览器和缓存一致"
     },
@@ -185,7 +189,8 @@
       "partial_evidence": [
         "docs/01-research/48-s1-b15-host-firewall-atomic-public-snapshot-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "权威签名新鲜度与依赖断裂在发布前阻断"
     },
@@ -194,7 +199,8 @@
       "package": "P0-B",
       "partial_evidence": [
         "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "真实代码构建失败时发布指针和人工资产均保留"
     },
@@ -230,7 +236,8 @@
       "partial_evidence": [
         "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "数据字段与页面流程代码依赖闭包完整校验"
     },
@@ -239,7 +246,8 @@
       "package": "P0-B",
       "partial_evidence": [
         "docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "配置流程代码 Runtime 和外部副作用统一回滚"
     },
@@ -247,7 +255,8 @@
       "status": "NOT_RUN",
       "package": "P1-C",
       "partial_evidence": [
-        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "同一部署中真实合同主从表及关联约束全旅程"
     },
@@ -367,7 +376,8 @@
       "package": "P1-C",
       "partial_evidence": [
         "docs/01-research/38-s1-b5-ir-parity-tool-broker-evidence.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "两个合同应用同名资源及主体完整隔离"
     },
@@ -377,7 +387,8 @@
       "partial_evidence": [
         "docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md",
         "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "故障发布回滚后用户可见版本与全部资产一致"
     },
@@ -397,7 +408,8 @@
       "package": "P0-B",
       "partial_evidence": [
         "docs/01-research/44-s1-b11-authoritative-business-outbox-native-projection-evidence.md",
-        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md"
+        "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
+        "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md"
       ],
       "missing_full_acceptance": "独立验收器对同一完整合同应用逐项判定"
     }
