@@ -36,3 +36,16 @@
 - 任一 untrusted Pack 在没有强审批的情况下进入 Native CLI、源头版本漂移仍被批准、未批准的 Plugin 工具能更新权威或 Native，立即 FAIL，保留 GitHub Actions 原始日志。
 
 下一收敛阶段：真正的**同实例 B2 权威签名新鲜度 → B15 原子发布私有/公共只读快照 → B17 只读运行态 + 正式 HTTP / Chrome 新版本即时可见**，包含故障仍保留旧版本与业务/流程/代码的依赖闭包；不能以本轮 staging 流程取代。
+
+
+## GitHub Actions 实际结果（2026-11-22）
+
+- 在源代码 SHA **`ecbae9b9ed3f46a05d5c9929cd237e6be8557fa0`** 上，[完整 GitHub Actions #44975954231](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44975954231) **completed/success**，Job **137065809087**，[原始日志与可复核 SQL JSON Artifact #14735083303](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44975954231/artifacts/14735083303)。
+- **B9 36 + 之前 P0A 24 + 本轮 P0A-25—32 8 = 68/68 真实同实例局部检查全部 PASS**。回归：原 Pack 编译 25 + 新 Pack 审批 14 = **39/39**；B2 **18/18**，B5 **40/40**，B6 真实 Docker host Relay 策略 **25/25**。**模型调用 0，G1 Passed=False。**
+- **P0A-25**：真实已登录 Chromium 发布请求 HTTP 200，B2 v3 release.read 为 v3，草稿 revision=16，权威 SQLite 确认第三份 immutable release；Live Saltcorn v1 尚未切换。
+- **P0A-26**：计算旧 Pack hash `ddb9823d07cf0051d3d01bcaf291c9f2bac04cec89dcd41633230d309d7bb259` 至批准的 v3 Pack hash `85466086185b481ba7759e5cd33af23429c579e2b12ac00db3c2adf123af7424` 的完整 JSON Pointer 差异，真实发现 `/views/0/configuration/columns/1/field_name`、`/views/0/configuration/columns/2/field_name`、`/views/0/configuration/columns/3` 三处；不存在无证据自动转成安全的字段。
+- **P0A-27—29**：外部恶意包插入 `/customUnsafeDomain`、`/plugins/0`、`/roles/0`、`/tables/1`、`/triggers/0`，全部完整差异可见，拒绝导入；**真正 Docker Plugin** 请求 `pack.install` 返回 **HTTP 403**，Agent 同为 403。缺少批准、虚构高权限、伪造 HMAC、Pack 内容变更均在 Native CLI 执行前拒绝。
+- **P0A-30**：**真正 Saltcorn 官方 install-pack** 在经过一次性模拟高权限人工批准后对**独立派生 staging SQLite** 返回 exit 0；独立 Native SQL 查到 v3 的四列 `contract_no,title,amount_minor,status` 及真实一条合同数据；同时线上 Native v1 文件及权威业务状态不变。
+- **P0A-31—32**：批准重放和故障注入不能再次触发导入；在权威发布指针由 v3 回滚 v1 后，旧批准失效、stage SQLite 实际删除，权威草稿 revision 仍 16、release 保留 3 份不可变历史、Live Native Chrome 仍读 v1 合同、app-b 物理数据库未变。
+- **保留失败过程证据**：开发期 [Actions #44975368809](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44975368809) 触发 OS 插件 client 对未注册 `pack.install` 的本地前置拒绝，修正为使用真正 Docker Host Relay 发送未授权请求；[Actions #44975747867](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44975747867) 证明 Native 私有目录 0700 和安全 Launcher 的 `projection-*` 白名单确实阻断错误装配路径，随后采用 Native UID 检查/白名单派生 staging 名称成功。本报告不省略这些失败，也不将失败当作目标功能安全通过证据。
+- **严格判定：正式 G1 仍 NOT_PASSED，冻结 W 0/24、TC 0/18 FULL PASS**。本轮可支撑“受控 Pack 预审与隔离 staging”路径，但不能伪称高权限 SSO/企业审批、Native 本地 CLI 绕过已全面封闭、B15/B17 原子签名热发布和完整 Code/Workflow/外部副作用一致性完成。下一优先 **P0-B 同实例来源签名新鲜度—原子发布—浏览器/REST 消费—故障保持旧版**。
