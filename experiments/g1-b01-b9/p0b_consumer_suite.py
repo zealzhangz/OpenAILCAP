@@ -36,6 +36,8 @@ class ConsumerRound:
         self.home=suite.home
         self.priv=self.home/"consumer-private"
         self.ipc=self.home/"consumer-ipc"
+        self.publisher_ipc=self.home/"publisher-ipc"
+        self.publisher_sock=self.publisher_ipc/"oracle.sock"
         self.readydir=self.home/"consumer-ready"
         self.sock=self.ipc/"signed.sock"
         self.cfg=self.priv/"consumer-config.json"
@@ -180,11 +182,14 @@ class ConsumerRound:
         if empty["rows"]!=[] or empty["cursor"]!=0:
             raise AssertionError("P0B_CONSUMER_NATIVE_WAS_SEEDED")
 
-        for dir in (self.priv,self.ipc,self.readydir):
+        for dir in (self.priv,self.ipc,self.publisher_ipc,self.readydir):
             dir.mkdir(mode=0o700)
         self.s.execute(["sudo","-n","chown","-R",
                         RUNT+":"+IPC_GROUP,self.ipc])
         self.s.execute(["sudo","-n","chmod","2750",self.ipc])
+        self.s.execute(["sudo","-n","chown","-R",
+                        RUNT+":ailcapb9pubipc",self.publisher_ipc])
+        self.s.execute(["sudo","-n","chmod","2750",self.publisher_ipc])
         self.s.execute(["sudo","-n","chown","-R",
                         RUNT+":"+RUNT,self.readydir])
         self.s.execute(["sudo","-n","chmod","0755",self.readydir])
@@ -231,7 +236,9 @@ class ConsumerRound:
             str(self.stage/"g1-b01-b9"/"p0b_consumer_native_ipc.py"),
             "--db",str(self.native_db),"--socket",str(self.sock),
             "--ready",str(ready),"--public-key-file",str(self.pubkey),
-            "--consumer-uid",str(pwd.getpwnam(CONS).pw_uid)
+            "--consumer-uid",str(pwd.getpwnam(CONS).pw_uid),
+            "--publisher-socket",str(self.publisher_sock),
+            "--publisher-uid",str(pwd.getpwnam(PUBL).pw_uid)
         ],cwd=str(self.stage),stdin=subprocess.DEVNULL,
           stdout=log.open("w"),stderr=subprocess.STDOUT)
         for _ in range(100):
