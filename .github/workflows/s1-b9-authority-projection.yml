@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
           python3 -m py_compile experiments/g1-b01-b9/*.py
           cd experiments/g1-b01-b9
-          python3 -u -m unittest -v test_projector test_pack_approval_gate \
+          python3 -u -m unittest -v test_projector test_pack_approval_gate test_p0b_business \
             2>&1 | tee /tmp/s1-b9-projector-unit.log
       - name: B2 trusted schema/store and B5 ToolBroker regressions
         run: |
