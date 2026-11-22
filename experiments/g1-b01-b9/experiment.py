@@ -160,7 +160,7 @@ def main():
             "g1-b01-b9":("kernel_service.py","native_oracle.py",
                          "native_env_launcher.py","plugin_client.py",
                          "projector.py","p0b_authority_business.py",
-                         "p0b_signed_release.py",
+                         "p0b_activation.py","p0b_signed_release.py",
                          "p0b_publisher.py","p0b_readonly_web.py",
                          "p0b_signed_outbox_server.py",
                          "p0b_consumer_native_ipc.py",
