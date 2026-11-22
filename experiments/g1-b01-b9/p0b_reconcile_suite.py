@@ -430,7 +430,10 @@ class AutoReconcileRound:
                  "realKernelReceiptBeforeAction":"NOT_FOUND",
                  "kernelEpoch":6,"B17BrowserRows":8,
                  "publisherNoUnboundedReplay":True})
-        return {"checks":10,"automaticPubAndNative":True,
+        from p0b_external_suite import RealExternalUnknownRound
+        external=RealExternalUnknownRound(s,self.cons,self).run()
+        return {"checks":10,"realExternalW20":external,
+                "automaticPubAndNative":True,
                 "separatePublisherUid":pwd.getpwnam(PUBL).pw_uid,
                 "trueNativeReadOnlyOracleIPC":True,
                 "signedSourceSeparateCapabilities":True,
