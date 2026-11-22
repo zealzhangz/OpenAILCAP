@@ -88,6 +88,8 @@ jobs:
           id ailcapb9plug
           id ailcapb9pub
           id ailcapb9ro
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9external
+          id ailcapb9external
           id ailcapb9cons
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
@@ -99,6 +101,9 @@ jobs:
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9plug)" != "$(id -u ailcapb9ro)" ]]
+          for name in ailcapb9kern ailcapb9run ailcapb9plug ailcapb9pub ailcapb9ro ailcapb9cons; do
+            [[ "$(id -u "$name")" != "$(id -u ailcapb9external)" ]]
+          done
           for name in ailcapb9kern ailcapb9run ailcapb9plug ailcapb9pub ailcapb9ro; do
             [[ "$(id -u "$name")" != "$(id -u ailcapb9cons)" ]]
           done
