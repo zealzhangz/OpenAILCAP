@@ -121,7 +121,8 @@ def init(c):
         db.execute("CREATE TABLE IF NOT EXISTS deploy("
                    "cid TEXT PRIMARY KEY, command TEXT NOT NULL,"
                    "source_hash TEXT NOT NULL, state TEXT NOT NULL,"
-                   "result TEXT,attempts INTEGER NOT NULL DEFAULT 0)")
+                   "result TEXT,attempts INTEGER NOT NULL DEFAULT 0,"
+                   "unknown_count INTEGER NOT NULL DEFAULT 0)")
 
 
 def jobs(c,states):
@@ -137,20 +138,21 @@ def put(c,cid,cmd,source_hash):
         db.execute("INSERT OR IGNORE INTO deploy "
                    "(cid,command,source_hash,state) VALUES (?,?,?,'PREPARED')",
                    (cid,canon(cmd),source_hash))
-        row=db.execute("SELECT command,source_hash,state,result,attempts "
+        row=db.execute("SELECT command,source_hash,state,result,attempts,unknown_count "
                        "FROM deploy WHERE cid=?",(cid,)).fetchone()
         if row[0]!=canon(cmd) or row[1]!=source_hash:
             raise Pending("JOURNAL_CHANGE_ID_CONFLICT",True)
         return {"state":row[2],"result":json.loads(row[3]) if row[3] else None,
-                "attempts":row[4]}
+                "attempts":row[4],"unknownCount":row[5]}
 
 
 def mark(c,cid,state,result=None,send=False):
     with sqlite3.connect(c["journal"],timeout=8) as db:
         db.execute("UPDATE deploy SET state=?,result=?,"
-                   "attempts=attempts+? WHERE cid=?",
+                   "attempts=attempts+?,unknown_count=unknown_count+? "
+                   "WHERE cid=?",
                    (state,canon(result) if result is not None else None,
-                    1 if send else 0,cid))
+                    1 if send else 0,1 if state=="UNKNOWN" else 0,cid))
 
 
 def receipt(c,cid,cmd):
