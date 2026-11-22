@@ -149,7 +149,8 @@
         "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "三写入者只读和跨应用拒绝且敏感内容不泄露"
     },
@@ -187,7 +188,8 @@
         "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "同进程权威 DB、原生 REST、真实浏览器和缓存一致"
     },
@@ -200,7 +202,8 @@
         "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "权威签名新鲜度与依赖断裂在发布前阻断"
     },
@@ -221,7 +224,8 @@
       "package": "P0-B",
       "partial_evidence": [
         "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "远端未知副作用按原 changeId 查询并明确补偿"
     },
@@ -264,7 +268,8 @@
         "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "配置流程代码 Runtime 和外部副作用统一回滚"
     },
@@ -399,7 +404,8 @@
         "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "两个合同应用同名资源及主体完整隔离"
     },
@@ -412,7 +418,8 @@
         "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "故障发布回滚后用户可见版本与全部资产一致"
     },
@@ -435,7 +442,8 @@
         "docs/01-research/56-g1-p0b-signed-atomic-readonly-live-evidence.md",
         "docs/01-research/57-g1-p0b-authoritative-business-outbox-signed-live-evidence.md",
         "docs/01-research/58-g1-p0b-signed-durable-consumer-recovery-evidence.md",
-        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md"
+        "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
       ],
       "missing_full_acceptance": "独立验收器对同一完整合同应用逐项判定"
     }
