@@ -19,7 +19,8 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
               token_publisher, token_plugin, authority_db,
               authority_config, http, broker, physical,
               native_physical, native_cmd, native_runtime, native_live_db,
-              native_live_page, pack_v1, template, stage, make_mutation,check):
+              native_live_page, pack_v1, template, stage, make_mutation,check,
+              signed_runtime):
 
     def tool(token,command,args):
         return http(base,"app-a",command,token,args)
@@ -63,6 +64,8 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
     check_compiled(compiled_v1)
     if compiled_v1["projectionPack"]!=pack_v1:
         raise AssertionError("P0A_PACK_ACTUAL_V1_BASELINE_MISMATCH")
+    # P0-B starts before v3 publication on the SAME B2 and native v1.
+    signed_runtime.init_v1(native_db=native_live_db,native_page=native_live_page)
 
     # Same authority DB: Agent changes existing View columns, and the
     # already-authenticated Chromium human publishes the entire draft.
@@ -291,6 +294,9 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
            "sourceVersion":3,"diffCount":review["diffCount"],
            "approvedOneShot":True})
 
+    # P0-B v3: same B2 pointer, actual Native staging DB, signed B14 source,
+    # atomic B15 publisher, same-port B17 Chromium route without restart.
+    signed_runtime.published_v3(staging_db)
     repeated=denied(
         lambda:gate.apply(plan,approval,approved_pack,executor=should_not_run),
         "PACK_PLAN_UNRECOGNIZED")
@@ -334,6 +340,10 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
     # runs as Native UID. No application or other process reads this stage.
     native_cmd(["/usr/bin/rm","-f",staging_db],native_live_db)
     gone=native_cmd(["/usr/bin/test","!","-e",staging_db],native_live_db)
+    # P0-B browser fail-closes on the new B2 rollback pointer until the
+    # independent publisher atomically restores an independently signed v1.
+    signed_runtime_result=signed_runtime.rolled_back(
+        native_live_db=native_live_db)
     end=physical()
     native_live_page.reload(wait_until="domcontentloaded")
     check("P0A-32-rollback-invalidates-Pack-approval-no-stage-promotion",
@@ -358,7 +368,8 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
            "staleApproval":"DENIED","stagingDBDeleted":True,
            "realSaltcornRunningV1":True,"crossAppUnchanged":True})
     return {
-        "checks":8, "actualNativePackInstallCLI":True,
+        "checks":8, "p0b":signed_runtime_result,
+        "actualNativePackInstallCLI":True,
         "oneShotHostPrivilegedApproval":True,
         "allJsonPointerPackDiffReviewed":True,
         "sourceIsLiveB2ReleaseRead":True,

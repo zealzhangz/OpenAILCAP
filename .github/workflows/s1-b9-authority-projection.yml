@@ -29,7 +29,7 @@ jobs:
         run: |
           set -euo pipefail
           timeout 540s npm install -g @saltcorn/cli@1.7.0-beta.5 --no-audit --no-fund
-          python3 -m pip install 'playwright==1.56.0'
+          python3 -m pip install 'playwright==1.56.0' 'cryptography>=44,<48'
           timeout 540s python3 -m playwright install --with-deps chromium
           saltcorn --version
       - name: Compile B9 and test strict release-to-pack compiler
@@ -57,19 +57,31 @@ jobs:
           python3 -m py_compile experiments/g1-b01-b6/plugin_isolation.py experiments/g1-b01-b6/plugin_untrusted.py
           (cd experiments/g1-b01-b6 && python3 -u -m unittest -v test_isolation) \
             2>&1 | tee /tmp/s1-b9-b6-host-relay-policy.log
-      - name: Create separate non-root authority, Saltcorn and plugin OS users
+      - name: Create separate Kernel, Saltcorn, plugin, Publisher and public read-only Linux identities
         run: |
           set -euo pipefail
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9kern
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9run
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9plug
+          sudo -n groupadd --system ailcapb9public
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9pub
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9public ailcapb9ro
           id ailcapb9kern
           id ailcapb9run
           id ailcapb9plug
+          id ailcapb9pub
+          id ailcapb9ro
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9plug)" ]]
-      - name: Same-instance real Docker, Chromium Agent CAS, full Pack approval/staged actual CLI and SQL oracles
+          [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9pub)" ]]
+          [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9pub)" ]]
+          [[ "$(id -u ailcapb9plug)" != "$(id -u ailcapb9pub)" ]]
+          [[ "$(id -u ailcapb9pub)" != "$(id -u ailcapb9ro)" ]]
+          [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9ro)" ]]
+          [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9ro)" ]]
+          [[ "$(id -u ailcapb9plug)" != "$(id -u ailcapb9ro)" ]]
+      - name: SAME B2 Kernel B14 Ed25519 B15 atomic Publisher B17 read-only Chromium v1-v3-rollback
         env:
           DEEPSEEK_KEY: ''
         run: |
