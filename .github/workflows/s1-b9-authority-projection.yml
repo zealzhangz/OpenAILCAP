@@ -64,13 +64,16 @@ jobs:
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9run
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9plug
           sudo -n groupadd --system ailcapb9public
+          sudo -n groupadd --system ailcapb9ipc
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9pub
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9public ailcapb9ro
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9ipc ailcapb9cons
           id ailcapb9kern
           id ailcapb9run
           id ailcapb9plug
           id ailcapb9pub
           id ailcapb9ro
+          id ailcapb9cons
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9plug)" ]]
@@ -81,7 +84,10 @@ jobs:
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9plug)" != "$(id -u ailcapb9ro)" ]]
-      - name: SAME B2 Kernel B14 Ed25519 B15 atomic Publisher B17 read-only Chromium v1-v3-rollback
+          for name in ailcapb9kern ailcapb9run ailcapb9plug ailcapb9pub ailcapb9ro; do
+            [[ "$(id -u "$name")" != "$(id -u ailcapb9cons)" ]]
+          done
+      - name: SAME B2 B11 signed durable Consumer AF_UNIX B14 B15/B17 Chromium replay outage recovery
         env:
           DEEPSEEK_KEY: ''
         run: |
