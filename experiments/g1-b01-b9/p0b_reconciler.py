@@ -250,7 +250,11 @@ def step(c):
     if {k:payload[k] for k in SOURCE}!=source:
         raise Pending("SIGNED_SOURCE_MOVED")
     config_pub={k:c[k] for k in (
-        "output","kernelBase","kernelReadToken","publicKeyHex","packTemplate")}
+        "output","kernelBase","kernelReadToken","publicKeyHex")}
+    # B9 projector compiles against a parsed PACK TEMPLATE dictionary,
+    # while the Kernel-only signer reads the same pinned JSON file path.
+    config_pub["packTemplate"]=json.loads(
+        Path(c["packTemplate"]).read_text())
     try:
         prepared=publish(config_pub,{**signed,
             "nativeOracle":physical["nativeOracle"]},prepare_only=True)
