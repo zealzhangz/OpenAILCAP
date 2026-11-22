@@ -8,12 +8,12 @@ G1 **NOT_PASSED**。以 [W01—W24 冻结矩阵](31-g1-b01-acceptance-matrix.md)
 
 ## 收敛决策
 
-停止按 B 序号继续堆积彼此独立的实验。当前优先候选是**独立 Domain Kernel 持有权威数据，人工编辑器、Agent 和插件仅调用受权命令；Native 仅为可重建的派生运行态或受控只读视图**。这只是待验候选；B17 的公开快照尚未接入 B15 签名发布与 B2 权威新鲜度核验，不能宣称已经封闭。Saltcorn 原生写入若仍能改权威库则立即 No-Go；若只写可丢弃副本，必须验证重新投影和运行时数据语义。
+停止按 B 序号继续堆积彼此独立的实验。当前优先候选是**独立 Domain Kernel 持有权威数据，人工编辑器、Agent 和插件仅调用受权命令；Native 仅为可重建的派生运行态或受控只读视图**。这只是待验候选；B17 的公开只读快照现已有 P0-B 限定 Model/View/单条 Native seed 的 B14 Ed25519 + B15 原子发布 + B2 实时新鲜度同实例证据，但尚未达到完整 G1 业务/代码/流程/外部补偿验收。Saltcorn 原生写入若仍能改权威库则立即 No-Go；若只写可丢弃副本，必须验证重新投影和运行时数据语义。
 
 | 顺序 | 闭环任务与冻结用例 | 进入下一任务的实物证据 | 当前缺口 |
 |---|---|---|---|
 | P0-A | 一个权威进程/DB 边界，Web、Agent、真正沙箱插件均用可信身份/命令写；原生 Web/CLI/Pack 的所有越界写只能被拒绝或隔离在可丢弃派生库。W01—W16、W22；TC10、TC11、TC13、TC15 | 固定 SHA 的可重建环境、三种真实写入者、两进程竞争、原始 HTTP/Chromium、物理 DB/审计和权限负例；同 UID/root 能力、Pack 整包差异和缓存路径逐项记录 | **已得局部证据：**B2/B5/B6 Docker Plugin/B7 SQL/B9 Saltcorn 同一 authority.sqlite、Chromium/Agent、Pack 完整 JSON diff 默认拒绝/模拟高权限一次性审批与真实官方 Saltcorn 独立 staging 导入 **68/68**；**仍阻断：**生产级人工认证/Pack 审批与插件安装/撤销、Native owner UID 可操作自身可丢弃数据库、同 UID/root 旁路、签名新鲜度/原子运行态切换；B13/B14/B15 仍为单机限定路径 |
-| P0-B | B2 权威源 → 签名发布 → B15/B17 只读消费贯通；先校验最新权威源和依赖闭包，再原子切换，错误保持旧 verified 版本；覆盖代码、配置、流程和外部副作用。W17—W20、W23、W24；TC12、TC16、TC18 | 一次版本发布/故障/回滚的 DB、REST、浏览器、签名、Manifest、构建哈希与回执全链对照；真实 timeout UNKNOWN 后按原 changeId 查证 | B17 未校验 B2 最新源；B15 签名快照和 B4 代码发布没有完整共同事务/回滚；UNKNOWN 补偿缺完整场景 |
+| P0-B | B2 权威源 → 签名发布 → B15/B17 只读消费贯通；先校验最新权威源和依赖闭包，再原子切换，错误保持旧 verified 版本；覆盖代码、配置、流程和外部副作用。W17—W20、W23、W24；TC12、TC16、TC18 | 一次版本发布/故障/回滚的 DB、REST、浏览器、签名、Manifest、构建哈希与回执全链对照；真实 timeout UNKNOWN 后按原 changeId 查证 | **已得限定局部证据：**[B2→B14 Ed25519→B15 原子快照→B17 只读浏览器](56-g1-p0b-signed-atomic-readonly-live-evidence.md) 同实例 **77/77**，真实 v1→v3→v1、签名伪造/构建失败拒绝、每请求校验 B2 最新指针；**仍阻断：**B2 指针/Publisher 非共同事务（中间 HTTP 503）、Native seed 业务数据非 B2 逐行权威签名、Form/Workflow/B4 Code 的完整依赖/回滚/外部 UNKNOWN 补偿未闭环，生产权限与 Native owner UID 旁路未关闭 |
 | P1-C | 冻结合同业务端到端：1:N、金额边界、搜索、授权审批、状态机、合同号幂等、双应用隔离。TC01—TC05、TC08、TC15 | 从同一部署的人工创建到浏览器用户操作，独立 SQL/HTTP/DOM 验证 `spec.json` 全部 oracle | B2/B4 是若干业务切片，未逐项执行冻结的完整 TC 旅程 |
 | P1-D | 最小一次真实 LLM 自主建模/表单/流程和超出配置能力的代码扩展；真正 Build Worker、隔离执行、失败保持旧发布；模型断开仍可人工维护。TC06、TC07、TC09、TC10、TC12、TC13 | 先零模型预检和成本边界，再仅在执行器全绿时一次受限 DeepSeek 请求；保存输入/工具轨迹/构建/独立 oracle | B3/B4 已验证片段，尚非冻结的完整自主开发和人工交接验收 |
 | P1-E | 插件安装/发现/撤销和恶意工具输入、工作区/凭据攻击。W16、W21；TC14、TC17 | 真正插件 OS 边界、授权清单和独立拒绝/无副作用证据 | B6/B7 是研究插件，真实生产安装器与 Native 插件路径没有全部封闭 |
@@ -30,6 +30,10 @@ G1 **NOT_PASSED**。以 [W01—W24 冻结矩阵](31-g1-b01-acceptance-matrix.md)
 
 GitHub Actions [#44975954231](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44975954231) 和 [报告 55](55-g1-p0a-pack-review-approved-stage-evidence.md)：**68/68 同实例研究测试成功**，39/39 Pack 编译及审批单元、18/18 B2、40/40 B5、25/25 B6；零模型调用。真实 B2 v3 Web 发布 → 全 Pack diff → 默认拒绝未授权 Plugin/Agent → 一次性受信宿主人工批准 → 官方 Saltcorn install-pack 仅到新 Native staging → Native SQL 四列读回 → v3→v1 回滚旧批准失效及 staging 删除。**没有 Native 原生 owner UID 全覆盖保证，也没有生产 SSO 或 P0-B 原子切换。**冻结用例仍全体 NOT_RUN。
 
+## 最新同实例 P0-B 局部证据（不代表 FULL PASS）
+
+GitHub Actions [#44978453572](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44978453572)、[报告 56](56-g1-p0b-signed-atomic-readonly-live-evidence.md)：同一 B2 权威数据库、Chrome、Agent、真实 Docker Plugin、Saltcorn Native 实例下 **77/77 局部集成验证 PASS**，39/39 Pack、18/18 B2、40/40 B5、25/25 B6；0 模型调用。Kernel UID Ed25519 签当前 B2 v1/v3，独立 Publisher/Reader UID、B15 单 SQLite 原子替换、B17 同 URL Chrome 无重启 3→4→3 列；签名错误、Native 列漂移、Build 故障均拒绝，不覆盖旧 verified 快照；B2 源先改变时 HTTP 503 fail-closed。**这些不是生产全局原子发布或完整业务/代码/流程证据**，42 个冻结用例仍 NOT_RUN。
+
 ## 下一次可改变决定的提交
 
-**立即优先 P0-B 同实例贯通**：权威 B2 新版 Manifest/Release 与签名源事件，B14 Ed25519 独立审计，B15 不可变快照及可审计 Publisher，B17 read-only public/runtime，必须在**同一 authority.sqlite、同一已发布 v1→v3→rollback 和同一个浏览器会话**核验签名新鲜度、Manifest/Pack/代码/流程依赖闭包、原子指针、HTTP/DOM 与物理数据库；故障/过时/篡改拒绝并留旧 verified 版。现有 [Pack Gate 同实例局部证据](55-g1-p0a-pack-review-approved-stage-evidence.md) 只验证受权 staging，不等于生产审批、Native 原生任意 owner UID 路径已封闭，也不等于 P0-B 热切换；外部 UNKNOWN/补偿和全部冻结 W/TC 仍待正式核验。完成无模型预检前不新增模型调用。
+**只收敛 P0-B 剩余正式阻断**：基于 [同实例签名原子只读证据](56-g1-p0b-signed-atomic-readonly-live-evidence.md)，推进真实 B2 业务数据与 Form/Workflow/B4 Code 的**可验证完整依赖闭包**和来源一致的 Publisher/运行态；清楚处理 B2 最新发布指针与 Publisher 原子快照不是同一事务、当前 503 窗口的生产级语义，并验证真正外部 UNKNOWN/回执/补偿。不得另增平行 B 实验或替代冻结 W17—W24/TC16/TC18；只有真实 SQL/REST/Chromium/签名全链证据完整后才能独立裁定 FULL PASS。必要性验证之前不调用 DeepSeek。
