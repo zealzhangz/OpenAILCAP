@@ -26,6 +26,8 @@ from urllib.request import Request,urlopen
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/"g1-b01-b2"))
 from p0b_signed_release import verify,ReleaseSignatureRejected,canon
+sys.path.insert(0,str(HERE.parent/"g1-b01-b14"))
+from signed_projection import verify_event,SignatureRefused
 from projector import compile_release,check_compiled
 from schema_core import sha
 
@@ -63,9 +65,70 @@ def current_release(cfg):
     return body
 
 
+def current_business(cfg):
+    """B9-only capability requires release.read, no record write grant."""
+    req=Request(cfg["kernelBase"]+"/v3/apps/app-a/tools/business.head",
+                data=b"{}",method="POST",headers={
+                    "Authorization":"Bearer "+cfg["kernelReadToken"],
+                    "Content-Type":"application/json"})
+    try:
+        with urlopen(req,timeout=5) as r:
+            if r.status!=200:
+                raise PublishRejected("PUBLISH_B2_BUSINESS_UNAVAILABLE")
+            value=json.loads(r.read(2049))
+    except (OSError,HTTPError,URLError,TimeoutError,ValueError):
+        raise PublishRejected("PUBLISH_B2_BUSINESS_UNAVAILABLE") from None
+    if (not isinstance(value,dict) or set(value)!={
+        "app","head","rowsDigest"} or value["app"]!="app-a" or
+        type(value["head"]) is not int or value["head"]<0 or
+        not isinstance(value["rowsDigest"],str)):
+        raise PublishRejected("PUBLISH_B2_BUSINESS_HEAD_INVALID")
+    return {"head":value["head"],"rowsDigest":value["rowsDigest"]}
+
+
+def verified_business_events(cfg,candidate,payload):
+    # B14 signs individual B11 event-time payloads; source is not a
+    # caller-controlled dictionary or Saltcorn seed.
+    signed=candidate.get("signedEvents")
+    if (not isinstance(signed,list) or len(signed)>1000 or
+        len(signed)!=payload["outboxHead"]):
+        raise PublishRejected("PUBLISH_SIGNED_BUSINESS_HEAD_INVALID")
+    actual={}
+    for index,event in enumerate(signed,1):
+        try:
+            unsigned=verify_event(event,cfg["publicKeyHex"])
+        except SignatureRefused:
+            raise PublishRejected("PUBLISH_B11_EVENT_SIGNATURE_INVALID") from None
+        if (unsigned["app"]!="app-a" or
+            unsigned["model"]!="model.contracts" or
+            unsigned["seq"]!=index or
+            type(unsigned["version"]) is not int or
+            unsigned["version"]<1 or
+            not isinstance(unsigned["cells"],dict) or
+            set(unsigned["cells"])!=ROWS_FIELDS):
+            raise PublishRejected("PUBLISH_B11_OUTBOX_SEQUENCE_INVALID")
+        body={k:unsigned[k] for k in (
+            "app","seq","model","recordId","version","cells")}
+        if hashlib.sha256(canon(body).encode()).hexdigest()!=unsigned["eventHash"]:
+            raise PublishRejected("PUBLISH_B11_EVENT_HASH_INVALID")
+        previous=actual.get(unsigned["recordId"])
+        if ((previous is not None and
+             unsigned["version"]!=previous["version"]+1) or
+            (previous is None and unsigned["version"]!=1)):
+            raise PublishRejected("PUBLISH_B11_RECORD_VERSION_GAP")
+        actual[unsigned["recordId"]]={
+            "version":unsigned["version"],"cells":unsigned["cells"]}
+    rows=[data["cells"] for data in actual.values()]
+    if len({row["contract_no"] for row in rows})!=len(rows):
+        raise PublishRejected("PUBLISH_B11_DUPLICATE_BUSINESS_ID")
+    if rows_digest(rows)!=payload["rowsDigest"]:
+        raise PublishRejected("PUBLISH_B11_SIGNED_ROWS_DIGEST_MISMATCH")
+    return sorted(rows,key=lambda x:x["contract_no"])
+
+
 def bound_source(cfg,candidate):
     if not isinstance(candidate,dict) or set(candidate)!={
-        "signedRelease","nativeOracle"
+        "signedRelease","signedEvents","nativeOracle"
     }:
         raise PublishRejected("PUBLISH_CANDIDATE_SHAPE")
     try:
@@ -73,6 +136,11 @@ def bound_source(cfg,candidate):
         payload=verify(signed,cfg["publicKeyHex"])
     except ReleaseSignatureRejected:
         raise PublishRejected("PUBLISH_SOURCE_SIGNATURE_REJECTED") from None
+    signed_rows=verified_business_events(cfg,candidate,payload)
+    business=current_business(cfg)
+    if business!={"head":payload["outboxHead"],
+                 "rowsDigest":payload["rowsDigest"]}:
+        raise PublishRejected("PUBLISH_B2_RECORD_DATA_STALE")
     current=current_release(cfg)
     if (current["version"]!=payload["version"] or
         current["manifestHash"]!=payload["manifestHash"] or
@@ -107,7 +175,10 @@ def bound_source(cfg,candidate):
             row["contract_no"] in seen):
             raise PublishRejected("PUBLISH_NATIVE_VALUE_INVALID")
         seen.add(row["contract_no"])
-    return payload,sorted(rows,key=lambda x:x["contract_no"])
+    normalized=sorted(rows,key=lambda x:x["contract_no"])
+    if normalized!=signed_rows:
+        raise PublishRejected("PUBLISH_NATIVE_ROWS_NOT_B2_SIGNED")
+    return payload,normalized
 
 
 def _path_checks(cfg):

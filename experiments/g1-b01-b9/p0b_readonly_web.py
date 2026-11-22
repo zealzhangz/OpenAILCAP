@@ -114,8 +114,9 @@ def load_snapshot(path,publisher_uid,public_key):
                 if type(row["amount_minor"]) is not int or (
                     not 0<=row["amount_minor"]<=2**53-1):
                     raise SnapshotDenied("SNAPSHOT_AMOUNT_INVALID")
-            if _rows_digest(rows)!=state["rows_digest"]:
-                raise SnapshotDenied("SNAPSHOT_ROWS_DIGEST_INVALID")
+            if (_rows_digest(rows)!=state["rows_digest"] or
+                state["rows_digest"]!=payload["rowsDigest"]):
+                raise SnapshotDenied("SNAPSHOT_ROWS_NOT_B2_SIGNED")
             return {"payload":payload,"rows":rows,
                     "digest":state["rows_digest"]}
     except SnapshotDenied:
@@ -141,7 +142,25 @@ def current_head(config):
         type(body["version"]) is not int or
         not isinstance(body["manifestHash"],str)):
         raise SnapshotDenied("B2_CURRENT_SOURCE_MALFORMED")
-    return body["version"],body["manifestHash"],body["draftRevision"]
+    signed_business=Request(
+        config["kernelBase"]+"/v3/apps/app-a/tools/business.head",
+        data=b"{}",headers={
+            "Authorization":"Bearer "+config["kernelReadToken"],
+            "Content-Type":"application/json"},method="POST")
+    try:
+        with urlopen(signed_business,timeout=4) as resp:
+            if resp.status!=200:
+                raise SnapshotDenied("B2_BUSINESS_HEAD_UNAVAILABLE")
+            head=json.loads(resp.read(2049))
+    except (OSError,HTTPError,URLError,TimeoutError,ValueError):
+        raise SnapshotDenied("B2_BUSINESS_HEAD_UNAVAILABLE") from None
+    if (not isinstance(head,dict) or set(head)!={
+        "app","head","rowsDigest"} or head["app"]!="app-a" or
+        type(head["head"]) is not int or head["head"]<0 or
+        not isinstance(head["rowsDigest"],str)):
+        raise SnapshotDenied("B2_BUSINESS_HEAD_INVALID")
+    return (body["version"],body["manifestHash"],body["draftRevision"],
+            head["head"],head["rowsDigest"])
 
 
 def render(data):
@@ -185,7 +204,8 @@ def server(config):
                 data=load_snapshot(config["snapshot"],
                                    config["publisherUid"],config["publicKeyHex"])
                 p=data["payload"]
-                if old!=(p["version"],p["manifestHash"],p["draftRevision"]):
+                if old!=(p["version"],p["manifestHash"],p["draftRevision"],
+                         p["outboxHead"],p["rowsDigest"]):
                     raise SnapshotDenied("SNAPSHOT_NOT_LATEST_SOURCE")
                 html=render(data)
                 if current_head(config)!=old:

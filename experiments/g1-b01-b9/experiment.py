@@ -153,12 +153,15 @@ def main():
             "g1-b01-b5":("tool_broker.py",),
             "g1-b01-b7":("physical_sql_oracle.py",),
             "g1-b01-b14":("signed_projection.py",),
+            "g1-b01-b11":("projection_source.py",),
             "g1-b01-b8":(),
             "g1-b01-b9":("kernel_service.py","native_oracle.py",
                          "native_env_launcher.py","plugin_client.py",
-                         "projector.py","p0b_signed_release.py",
+                         "projector.py","p0b_authority_business.py",
+                         "p0b_signed_release.py",
                          "p0b_publisher.py","p0b_readonly_web.py"),
-            "platform-saltcorn":("contract-pack.json","seed-contract.js")
+            "platform-saltcorn":("contract-pack.json","seed-contract.js",
+                                 "p0b-seed-second-contract.js")
         }.items():
             dst=stage/directory;dst.mkdir(mode=0o755)
             for name in names:
@@ -835,9 +838,11 @@ def main():
                     evidence["p0b"]=pack_round["p0b"]
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":41,
+                        "originalB9Checks":36,"additionalChecks":47,
                         "pluginDockerSandboxValidated":True,
                         "signedReadOnlyRuntimeHotSwapValidated":True,
+                        "b11B14AuthorityDataSignedInSameKernel":True,
+                        "sameVersionBusinessHeadFreshnessValidated":True,
                         "nativeServerZeroRestartHotSwapValidated":False,
                         "pluginInstallerOrRevocationValidated":False,
                         "nativePackFullDiffApprovalValidated":"STAGING_ONLY",
@@ -879,7 +884,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":77,
+                "expected":83,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -887,7 +892,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==77 and all(
+    return 0 if len(evidence["checks"])==83 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 

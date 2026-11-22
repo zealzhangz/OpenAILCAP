@@ -24,11 +24,12 @@ sys.path.insert(0,str(ROOT/"g1-b01-b2"))
 sys.path.insert(0,str(ROOT/"g1-b01-b14"))
 from schema_core import SchemaStore,Actor
 from projector import compile_release,check_compiled
-from signed_projection import make_keypair,key_id
+from signed_projection import make_keypair,key_id,sign_event,verify_event
+from p0b_authority_business import read_business
 
 DOMAIN=b"OpenAILCAP/G1/B14/B2-current-published-release/v1\x00"
 PAYLOAD_FIELDS={"app","version","draftRevision","manifestHash",
-                "projectionPackHash","viewColumns"}
+                "projectionPackHash","viewColumns","outboxHead","rowsDigest"}
 SIGNED_FIELDS={"payload","keyId","signature"}
 
 
@@ -49,13 +50,14 @@ def verify(signed,public_hex):
     if not isinstance(p,dict) or set(p)!=PAYLOAD_FIELDS or (
         p["app"]!="app-a" or type(p["version"]) is not int or
         p["version"]<1 or type(p["draftRevision"]) is not int or
+        type(p["outboxHead"]) is not int or p["outboxHead"]<0 or
         not isinstance(p["viewColumns"],list) or
         not p["viewColumns"] or
         any(col not in ("contract_no","title","amount_minor","status")
             for col in p["viewColumns"]) or
         len(set(p["viewColumns"]))!=len(p["viewColumns"]) or
         any(not isinstance(p[k],str) or not re.fullmatch(r"[0-9a-f]{64}",p[k])
-            for k in ("manifestHash","projectionPackHash"))):
+            for k in ("manifestHash","projectionPackHash","rowsDigest"))):
         raise ReleaseSignatureRejected("SIGNED_RELEASE_PAYLOAD_INVALID")
     try:
         public=bytes.fromhex(public_hex)
@@ -93,12 +95,14 @@ def sign_from_current_db(db,key,template):
         Actor("p0b-kernel-release-signer","app-a",can_runtime=True),"app-a")
     projection=compile_release(source,json.loads(Path(template).read_text()))
     check_compiled(projection)
+    business=read_business(db)
     payload={
         "app":"app-a","version":source["version"],
         "draftRevision":source["draftRevision"],
         "manifestHash":source["manifestHash"],
         "projectionPackHash":projection["projectionPackHash"],
-        "viewColumns":source["definitions"]["view.contracts"]["columns"]
+        "viewColumns":source["definitions"]["view.contracts"]["columns"],
+        "outboxHead":business["head"],"rowsDigest":business["rowsDigest"]
     }
     private=Ed25519PrivateKey.from_private_bytes(key.read_bytes())
     public=private.public_key().public_bytes(
@@ -109,7 +113,11 @@ def sign_from_current_db(db,key,template):
             ).decode("ascii")}
     if verify(signed,public.hex())!=payload:
         raise ReleaseSignatureRejected("KERNEL_SELF_VERIFICATION_FAILED")
-    return signed
+    signed_events=[sign_event(event,key) for event in business["events"]]
+    if any(verify_event(event,public.hex())["seq"]!=i
+           for i,event in enumerate(signed_events,1)):
+        raise ReleaseSignatureRejected("KERNEL_BUSINESS_SELF_VERIFY_FAILED")
+    return {"signedRelease":signed,"signedEvents":signed_events}
 
 
 def main():

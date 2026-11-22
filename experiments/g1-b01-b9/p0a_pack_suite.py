@@ -65,7 +65,12 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
     if compiled_v1["projectionPack"]!=pack_v1:
         raise AssertionError("P0A_PACK_ACTUAL_V1_BASELINE_MISMATCH")
     # P0-B starts before v3 publication on the SAME B2 and native v1.
-    signed_runtime.init_v1(native_db=native_live_db,native_page=native_live_page)
+    signed_runtime.init_v1(native_db=native_live_db,
+                           native_page=native_live_page,
+                           human_page=human_page)
+    # The first real B2 form.submit creates exactly one RECORD_CREATED event.
+    # Rebase P0-A isolated metadata/publish receipt/event deltas AFTER it.
+    start=physical()
 
     # Same authority DB: Agent changes existing View columns, and the
     # already-authenticated Chromium human publishes the entire draft.
@@ -367,6 +372,11 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
            "immutableReleases":end["app-a"]["releases"],
            "staleApproval":"DENIED","stagingDBDeleted":True,
            "realSaltcornRunningV1":True,"crossAppUnchanged":True})
+    business_round=signed_runtime.business_row_advance(
+        human_page=human_page,native_live_db=native_live_db,
+        native_cmd=native_cmd)
+    signed_runtime_result["checks"]=15
+    signed_runtime_result["businessSource"]=business_round
     return {
         "checks":8, "p0b":signed_runtime_result,
         "actualNativePackInstallCLI":True,
