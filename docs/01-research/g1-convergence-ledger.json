@@ -220,14 +220,23 @@
       "missing_full_acceptance": "真实代码构建失败时发布指针和人工资产均保留"
     },
     "W20": {
-      "status": "NOT_RUN",
+      "status": "PASS",
       "package": "P0-B",
       "partial_evidence": [
         "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
         "docs/01-research/59-g1-p0b-kernel-atomic-activation-and-cas-evidence.md",
-        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md"
+        "docs/01-research/60-g1-p0b-autonomous-release-and-unknown-reconciliation-evidence.md",
+        "docs/01-research/61-g1-w20-real-external-unknown-formal-acceptance.md"
       ],
-      "missing_full_acceptance": "远端未知副作用按原 changeId 查询并明确补偿"
+      "missing_full_acceptance": "",
+      "full_acceptance": {
+        "verdict": "docs/01-research/g1-w20-formal-verdict.json",
+        "validator": "scripts/verify_g1_w20.py",
+        "report": "docs/01-research/61-g1-w20-real-external-unknown-formal-acceptance.md",
+        "ci_run_url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44988774947",
+        "artifact_id": 14740927216,
+        "source_commit": "5a39591f6a3ce535d1f7f91ff548f7f2ab50146a"
+      }
     },
     "W21": {
       "status": "NOT_RUN",
