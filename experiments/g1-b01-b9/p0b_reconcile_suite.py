@@ -34,7 +34,7 @@ class AutoReconcileRound:
         self.journal=suite.pubdir/"deploy-journal.sqlite"
         self.flag=self.home/"reconcile-fault.flag"
         self.events=self.home/"reconcile-proxy-events.json"
-        self.proxyready=self.home/"ready"/"reconcile-proxy-ready.json"
+        self.proxyready=self.home/"reconcile-proxy-ready.json"
         self.proxyproc=None
         self.daemonproc=None
         self.proxy_base=None
