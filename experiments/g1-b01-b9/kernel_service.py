@@ -23,6 +23,7 @@ from registry import ExtensionRegistry
 from tool_broker import ToolBroker,make_server
 from projection_source import install as install_b11_outbox
 from p0b_authority_business import read_business,AuthorityDataRejected
+from p0b_activation import Activation,ActivationRejected,initialize as initialize_activation
 
 
 class BusinessHeadKernelBroker(ToolBroker):
@@ -31,7 +32,28 @@ class BusinessHeadKernelBroker(ToolBroker):
     The public tool name business.head is intercepted here and never added
     to B5's global capability list. Agent and Plugin lack release.read.
     """
+    def __init__(self,store,registry):
+        super().__init__(store,registry)
+        self.activation=Activation(store.path)
+
     def call(self,token,app,tool,args):
+        if tool in ("publication.read","publication.activate"):
+            if tool=="publication.read":
+                self.authorize(token,app,"release.read")
+                self._shape(args,())
+                if app!="app-a":
+                    raise Rejected(403,"ACTIVATION_APP_FORBIDDEN")
+                try:return self.activation.read()
+                except ActivationRejected as err:
+                    raise Rejected(err.status,err.code) from None
+            actor=self.authorize(token,app,"app.publish")
+            SchemaStore.authorize(actor,app,publish=True)
+            if app!="app-a":
+                raise Rejected(403,"ACTIVATION_APP_FORBIDDEN")
+            try:
+                return self.activation.activate(actor.name,args)
+            except ActivationRejected as err:
+                raise Rejected(err.status,err.code) from None
         if tool!="business.head":
             return super().call(token,app,tool,args)
         self.authorize(token,app,"release.read")
@@ -73,6 +95,7 @@ def serve(config_path,ready_path):
     # B11 real AFTER-record-write triggers in the SAME authority.sqlite, not
     # an independently populated demonstration database.
     install_b11_outbox(dbfile)
+    initialize_activation(dbfile)
     dbfile.chmod(0o600)
     registry=ExtensionRegistry(store,NoBuildInKernel())
     registry.init()

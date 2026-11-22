@@ -195,7 +195,7 @@ def _path_checks(cfg):
     return out
 
 
-def publish(cfg,candidate):
+def publish(cfg,candidate,*,prepare_only=False):
     out=_path_checks(cfg)
     payload,rows=bound_source(cfg,candidate)
     digest=rows_digest(rows)
@@ -235,6 +235,36 @@ def publish(cfg,candidate):
             rows_digest(snap["rows"])!=digest):
             raise PublishRejected("PUBLISH_STAGED_SNAPSHOT_NOT_VERIFIED")
         with open(tmp,"rb") as f:os.fsync(f.fileno())
+        if prepare_only:
+            # Immutable content-addressed candidate is never the public
+            # pointer. Only Kernel can commit activation; a failure here
+            # leaves active/public snapshot completely unchanged.
+            directory=out.parent/"candidates"
+            mode=directory.stat()
+            if (not stat.S_ISDIR(mode.st_mode) or
+                mode.st_uid!=os.getuid() or mode.st_mode&0o027):
+                raise PublishRejected("PUBLISH_CANDIDATE_FOLDER_UNTRUSTED")
+            artifact_hash=snap["artifactSha256"]
+            target=directory/(artifact_hash+".sqlite")
+            try:
+                os.link(tmp,target)
+            except FileExistsError:
+                # A colliding SHA-named file is safe only if all its bytes
+                # and signed source have independently verified equality.
+                old=load_snapshot(target,os.getuid(),cfg["publicKeyHex"])
+                if old["artifactSha256"]!=artifact_hash or old["payload"]!=payload:
+                    raise PublishRejected("PUBLISH_CANDIDATE_NAME_COLLISION")
+            else:
+                tmp.unlink()  # published hard-link now has st_nlink==1
+            if target.stat().st_nlink!=1:
+                raise PublishRejected("PUBLISH_CANDIDATE_NOT_IMMUTABLE_IN_USE")
+            folder_fd=os.open(directory,os.O_DIRECTORY|os.O_RDONLY)
+            try:os.fsync(folder_fd)
+            finally:os.close(folder_fd)
+            return {"version":payload["version"],"manifestHash":payload["manifestHash"],
+                    "rows":len(rows),"rowsDigest":digest,"ownerUid":os.getuid(),
+                    "prepared":True,"snapshotSha256":artifact_hash,
+                    "activationRequired":True}
         os.replace(tmp,out)
         folder_fd=os.open(out.parent,os.O_DIRECTORY|os.O_RDONLY)
         try:os.fsync(folder_fd)
@@ -250,6 +280,7 @@ def main():
     pa=argparse.ArgumentParser()
     pa.add_argument("--config",required=True)
     pa.add_argument("--candidate",required=True)
+    pa.add_argument("--prepare",action="store_true")
     a=pa.parse_args()
     cfgfile=Path(a.config)
     if cfgfile.stat().st_mode&0o077 or cfgfile.stat().st_uid!=os.getuid():
@@ -259,8 +290,10 @@ def main():
                  "publicKeyHex","packTemplate"}:
         raise SystemExit("P0B_PUBLISHER_CONFIG_INVALID")
     try:
-        result=publish(cfg,json.loads(Path(a.candidate).read_text()))
-        print("P0B_PUBLISHED|"+canon(result),flush=True)
+        result=publish(cfg,json.loads(Path(a.candidate).read_text()),
+                       prepare_only=a.prepare)
+        print(("P0B_PREPARED|" if a.prepare else "P0B_PUBLISHED|")+
+              canon(result),flush=True)
     except PublishRejected as ex:
         print("P0B_PUBLISH_REJECT|"+ex.code,flush=True)
         raise SystemExit(2)

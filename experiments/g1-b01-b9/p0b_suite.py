@@ -105,16 +105,19 @@ class SignedRuntimeSuite:
         file.chmod(0o644)
         return file
 
-    def _publish(self,tag,candidate,*,failure=False):
+    def _publish(self,tag,candidate,*,failure=False,prepare=False):
         path=self._write_candidate(tag,candidate)
         command=[
             self.stage/"g1-b01-b9"/"p0b_publisher.py",
             "--config",self.pubcfg,"--candidate",path]
+        if prepare:
+            command.append("--prepare")
         process=self._user_call(
             PUBL,command,strict=False,timeout=60,
             env={"P0B_INJECT_BUILD_FAILURE":"1"} if failure else None)
         if process.returncode==0:
-            return (0,self.single(process.stdout,"P0B_PUBLISHED"))
+            return (0,self.single(process.stdout,
+                         "P0B_PREPARED" if prepare else "P0B_PUBLISHED"))
         errors=[line.split("|",1)[1] for line in process.stdout.splitlines()
                 if line.startswith("P0B_PUBLISH_REJECT|")]
         if not errors:
@@ -142,7 +145,8 @@ class SignedRuntimeSuite:
         return None if digest=="MISSING" else digest
 
     def _make_dirs(self):
-        for folder in (self.pubdir,self.rodir,self.roready):
+        for folder in (self.pubdir,self.rodir,self.roready,
+                       self.pubdir/"candidates"):
             folder.mkdir(mode=0o700)
         self.pubcfg.write_text(json.dumps({
             "output":str(self.snapshot),"kernelBase":self.base,
@@ -158,7 +162,8 @@ class SignedRuntimeSuite:
         self.rocfg.chmod(0o600)
         self.execute(["sudo","-n","chown","-R",PUBL+":"+PUBGRP,
                       self.pubdir])
-        self.execute(["sudo","-n","chmod","2750",self.pubdir])
+        self.execute(["sudo","-n","chmod","2750",self.pubdir,
+                      self.pubdir/"candidates"])
         self.execute(["sudo","-n","chown","-R",READ+":"+READ,self.rodir,
                       self.roready])
         self.execute(["sudo","-n","chmod","0700",self.rodir])

@@ -43,25 +43,36 @@ def rows_digest(rows):
 
 
 def read_business(dbpath):
-    # A single B2 SQLite snapshot protects event head/records consistency.
+    """Read source/events as one B2 SQLite snapshot."""
     with sqlite3.connect("file:"+str(dbpath)+"?mode=ro",
                          uri=True,timeout=10) as db:
         db.row_factory=sqlite3.Row
         db.execute("BEGIN")
         try:
-            event_rows=db.execute(
-                "SELECT app,seq,model,record_id,version,content "
-                "FROM b11_outbox WHERE app=? ORDER BY seq",("app-a",)
-            ).fetchall()
-            record_rows=db.execute(
-                "SELECT record_id,version,content FROM records "
-                "WHERE app=? AND model=? ORDER BY record_id",
-                ("app-a","model.contracts")
-            ).fetchall()
+            result=read_business_on_connection(db)
             db.commit()
+            return result
         except sqlite3.Error:
             db.rollback()
             raise AuthorityDataRejected("AUTHORITY_OUTBOX_UNAVAILABLE") from None
+
+
+def read_business_on_connection(db):
+    """Exact same B11 SQL oracle inside caller's B2 BEGIN IMMEDIATE TX.
+
+    Publication activation MUST observe the source release and its business
+    outbox/records in ONE transaction to avoid TOCTOU against B2 form.submit.
+    Caller owns BEGIN, COMMIT and row_factory=sqlite3.Row.
+    """
+    event_rows=db.execute(
+        "SELECT app,seq,model,record_id,version,content "
+        "FROM b11_outbox WHERE app=? ORDER BY seq",("app-a",)
+    ).fetchall()
+    record_rows=db.execute(
+        "SELECT record_id,version,content FROM records "
+        "WHERE app=? AND model=? ORDER BY record_id",
+        ("app-a","model.contracts")
+    ).fetchall()
     if len(event_rows)>MAX_EVENTS or len(record_rows)>MAX_ROWS:
         raise AuthorityDataRejected("AUTHORITY_DATA_LIMIT")
     events=[]
