@@ -246,6 +246,8 @@ class AutoReconcileRound:
         plug=self._publisher_oracle(PLUG)
         cons=self._publisher_oracle(CONS)
         negative=self._signed_publisher_status(self.cons.source_token)
+        actual_source=self._signed_publisher_status(
+            self.cons.publisher_source_token)
         s.check("P0B-34-publisher-only-B14-signature-and-Native-SQL-IPC-scopes",
                 initial["epoch"]==2 and
                 initial["source"]["outboxHead"]==4 and
@@ -255,8 +257,11 @@ class AutoReconcileRound:
                 len(pub_oracle["result"]["nativeOracle"]["businessRows"])==4 and
                 plug.get("denied") in (13,1) and
                 cons.get("denied") in (13,1) and
-                negative[0]==401,
+                negative[0]==401 and actual_source[0]==200 and
+                actual_source[1]["signedRelease"]["payload"]["outboxHead"]==4 and
+                len(actual_source[1]["signedEvents"])==4,
                 {"sourceReleaseDeniedToConsumer":negative[0],
+                 "PublisherSignedReleaseHTTP":actual_source[0],
                  "NativeOraclePublisherCursor":pub_oracle["result"]["cursor"],
                  "NativeOraclePublisherReceipts":4,
                  "pluginSocketConnectDenied":plug,
