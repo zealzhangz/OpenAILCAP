@@ -492,14 +492,43 @@ def main():
                     salt_base=start_saltcorn(first["db"],3139)
                     native_page=context.new_page()
                     login_native(native_page,salt_base,admin_password)
-                    view_page=context.new_page()
-                    view_page.goto(salt_base+"/view/s1_contract_list",
-                                   wait_until="domcontentloaded")
-                    rendered=view_page.content()
+                    # Native Saltcorn occasionally accepts /auth/login
+                    # before its first View render is ready. Retry ONLY the
+                    # read navigation, bounded, with a fresh Chromium tab;
+                    # never bypass the real HTTP 200/contract-row assertion.
+                    view_errors=[]
+                    view_page=None
+                    rendered=""
+                    for attempt in range(1,4):
+                        candidate=context.new_page()
+                        try:
+                            response=candidate.goto(
+                                salt_base+"/view/s1_contract_list",
+                                wait_until="domcontentloaded",timeout=18000)
+                            rendered=candidate.content()
+                            if (response and response.status==200 and
+                                "HT-2026-000001" in rendered):
+                                view_page=candidate
+                                break
+                            view_errors.append(
+                                "attempt="+str(attempt)+" status="+
+                                str(response.status if response else None))
+                        except Exception as exc:
+                            from playwright.sync_api import TimeoutError as PwTimeout
+                            if not isinstance(exc,PwTimeout):
+                                raise
+                            view_errors.append("attempt="+str(attempt)+" timeout")
+                        candidate.close()
+                        time.sleep(.4)
+                    if view_page is None:
+                        raise AssertionError(
+                            "B9_NATIVE_REAL_VIEW_UNAVAILABLE "+str(view_errors))
                     check("B9-15-genuine-Saltcorn-native-HTML-renders-v1-rows",
                           "HT-2026-000001" in rendered and
                           "s1_contract_list" in view_page.url,
-                          {"httpHtml":200,"realNativeContract":True})
+                          {"httpHtml":200,"realNativeContract":True,
+                           "nativeViewAttempt":len(view_errors)+1,
+                           "transientNavigationRetries":view_errors})
                     edit=context.new_page()
                     fid=first["physical"]["fieldLabels"]
                     fieldid=execute([
