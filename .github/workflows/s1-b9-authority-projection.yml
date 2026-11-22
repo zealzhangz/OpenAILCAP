@@ -68,11 +68,7 @@ jobs:
           python3 -m py_compile experiments/g1-b01-b6/plugin_isolation.py experiments/g1-b01-b6/plugin_untrusted.py
           (cd experiments/g1-b01-b6 && python3 -u -m unittest -v test_isolation) \
             2>&1 | tee /tmp/s1-b9-b6-host-relay-policy.log
-          /tmp/s1-b9-b11-regression.log
-          /tmp/s1-b9-b12-regression.log
-          /tmp/s1-b9-b13-regression.log
-          /tmp/s1-b9-b14-regression.log
-                - name: Create separate Kernel, Saltcorn, plugin, Publisher and public read-only Linux identities
+      - name: Create separate Kernel, Saltcorn, plugin, Publisher and public read-only Linux identities
         run: |
           set -euo pipefail
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9kern
@@ -121,6 +117,10 @@ jobs:
             /tmp/s1-b9-b2-regression.log
             /tmp/s1-b9-b5-regression.log
             /tmp/s1-b9-b6-host-relay-policy.log
+            /tmp/s1-b9-b11-regression.log
+            /tmp/s1-b9-b12-regression.log
+            /tmp/s1-b9-b13-regression.log
+            /tmp/s1-b9-b14-regression.log
             /tmp/s1-b9-evidence.json
             /tmp/s1-b9-real-e2e.log
           if-no-files-found: warn
