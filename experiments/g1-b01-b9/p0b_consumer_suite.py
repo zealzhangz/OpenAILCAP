@@ -424,7 +424,10 @@ class ConsumerRound:
                  "anonymousB14SourceStatus":401,
                  "durableHead":3,"nativeSignedBrokerUid":
                      self.broker_meta["uid"]})
-        return {"checks":8,"autoNativeApplies":3,"nativeDurableReceipts":3,
+        from p0b_activation_suite import PublicationActivationRound
+        activation=PublicationActivationRound(s,self).run()
+        return {"checks":8,"publicationActivation":activation,
+                "autoNativeApplies":3,"nativeDurableReceipts":3,
                 "sourceOutageRecovered":True,"consumerRestartRecovered":True,
                 "signedB14EventsEnforcedNativeIPC":True,
                 "noManualRowSeed":True,"modelCalls":0,"g1Passed":False,
