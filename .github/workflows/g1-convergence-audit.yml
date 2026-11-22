@@ -5,6 +5,9 @@ on:
       - '.github/workflows/g1-convergence-audit.yml'
       - 'docs/01-research/g1-b01-acceptance-cases.json'
       - 'docs/01-research/g1-convergence-ledger.json'
+      - 'docs/01-research/g1-w20-formal-verdict.json'
+      - 'docs/01-research/61-g1-w20-real-external-unknown-formal-acceptance.md'
+      - 'scripts/verify_g1_w20.py'
       - 'experiments/contract-benchmark/spec.json'
       - 'scripts/check_g1_convergence.py'
   workflow_dispatch:
