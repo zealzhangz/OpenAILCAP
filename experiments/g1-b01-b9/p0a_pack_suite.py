@@ -8,13 +8,16 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 
+from p0a_docker_suite import DockerPlugin
 from pack_approval_gate import PackApprovalGate,PackGateDenied
 from projector import compile_release,check_compiled,hash_pack
 
 
 def run_suite(*, base,context, human_page, token_agent, token_runtime,
-              token_publisher, plugin_tool, http, broker, physical,
+              token_publisher, token_plugin, authority_db,
+              authority_config, http, broker, physical,
               native_physical, native_cmd, native_runtime, native_live_db,
               native_live_page, pack_v1, template, stage, make_mutation,check):
 
@@ -175,18 +178,28 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
                           executor=should_not_run),
         "PACK_APPROVAL_REQUIRED")
     # There is intentionally NO tool grant for pack.install for Agent or P.
-    plugin_attempt=plugin_tool("app-a","pack.install",{
-        "candidatePackHash":review["candidatePackHash"],
-        "actorId":"root","role":"administrator"})
+    docker_pack_client=DockerPlugin(
+        os.environ["S1_B9_PINNED_DOCKER_IMAGE"],base,token_plugin,
+        "app-a","p0a-pack-untrusted-container")
+    actual_docker= docker_pack_client.run({
+        "app":"app-a","tool":"pack.install",
+        "args":{"candidatePackHash":review["candidatePackHash"],
+                "actorId":"root","role":"administrator"}},
+        authority_db,authority_config)
+    plugin_attempt={"status":actual_docker.http_status,
+                    "body":actual_docker.result,
+                    "probes":actual_docker.probes}
     agent_attempt=tool(token_agent,"pack.install",{
         "candidatePackHash":review["candidatePackHash"]})
     check("P0A-28-default-deny-without-approval-and-unlisted-tools",
           missing=="PACK_APPROVAL_REQUIRED" and calls==[] and
           plugin_attempt["status"]==403 and
+          plugin_attempt["body"].get("error")=="TOOL_NOT_GRANTED" and
+          plugin_attempt["probes"].get("containerUid")==65534 and
           agent_attempt[0]==403 and
           physical()==before_unauth and
           native_physical(native_live_db)==live_before,
-          {"noApproval":"DENIED","plugin":plugin_attempt["status"],
+          {"noApproval":"DENIED","realDockerPlugin":plugin_attempt["status"],
            "agent":agent_attempt[0],"noNativeCliRun":True})
 
     no_priv=denied(
