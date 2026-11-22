@@ -36,10 +36,13 @@ from projector import compile_release,check_compiled,ProjectionRejected
 from p0a_browser_suite import run_suite
 from p0a_docker_suite import run_suite as run_docker_suite
 from p0a_pack_suite import run_suite as run_pack_suite
+from p0b_suite import SignedRuntimeSuite
 
 KERN="ailcapb9kern"
 RUNT="ailcapb9run"
 PLUG="ailcapb9plug"
+PUBL="ailcapb9pub"
+READ="ailcapb9ro"
 
 
 def execute(args,cwd=None,env=None,stdin=None,timeout=125,strict=True):
@@ -134,12 +137,13 @@ def main():
               json.dumps(observed,ensure_ascii=False),flush=True)
         if not ok:raise AssertionError(cid)
 
-    uids=[pwd.getpwnam(x).pw_uid for x in (KERN,RUNT,PLUG)]
+    uids=[pwd.getpwnam(x).pw_uid for x in (KERN,RUNT,PLUG,PUBL,READ)]
     check("B9-01-distinct-real-Linux-OS-owners",
-          len(set(uids))==3 and all(u>0 for u in uids)
+          len(set(uids))==5 and all(u>0 for u in uids)
           and os.geteuid() not in uids,
           {"kernelUid":uids[0],"saltcornUid":uids[1],
-           "pluginUid":uids[2]})
+           "pluginUid":uids[2],"publisherUid":uids[3],
+           "readonlyRouterUid":uids[4]})
     with tempfile.TemporaryDirectory(prefix="s1-b9-derive-") as tmp:
         home=Path(tmp);home.chmod(0o755)
         stage=home/"public-source";stage.mkdir(mode=0o755)
@@ -148,9 +152,12 @@ def main():
             "g1-b01-b4":("registry.py","policy.py","sandbox.py","worker.py"),
             "g1-b01-b5":("tool_broker.py",),
             "g1-b01-b7":("physical_sql_oracle.py",),
+            "g1-b01-b14":("signed_projection.py",),
             "g1-b01-b8":(),
             "g1-b01-b9":("kernel_service.py","native_oracle.py",
-                         "native_env_launcher.py","plugin_client.py"),
+                         "native_env_launcher.py","plugin_client.py",
+                         "projector.py","p0b_signed_release.py",
+                         "p0b_publisher.py","p0b_readonly_web.py"),
             "platform-saltcorn":("contract-pack.json","seed-contract.js")
         }.items():
             dst=stage/directory;dst.mkdir(mode=0o755)
@@ -336,6 +343,7 @@ def main():
         template=json.loads((stage/"platform-saltcorn"/
                              "contract-pack.json").read_text())
         kernelproc=None
+        signed_runtime=None
         try:
             with kernel_log.open("w",encoding="utf-8") as output:
                 kernelproc=subprocess.Popen([
@@ -800,6 +808,15 @@ def main():
                         native_physical=native_physical, physical=kernel_physical,
                         http=http, make_mutation=make_mutation, check=check)
                     evidence["p0a_docker"]=docker_round
+                    signed_runtime=SignedRuntimeSuite(
+                        home=home,stage=stage,authority_db=db,
+                        authority_dir=authority,kernel_base=base,
+                        kernel_token=token_runtime,
+                        publisher_token=token_publisher,
+                        template=template,native_physical=native_physical,
+                        physical=kernel_physical,execute=execute,
+                        single=single,wait_page=wait_page,context=context,
+                        check=check)
                     pack_round = run_pack_suite(
                         base=base, context=context, human_page=page,
                         token_agent=token_agent, token_runtime=token_runtime,
@@ -812,12 +829,16 @@ def main():
                         native_live_page=page_again,
                         pack_v1=first["compiled"]["projectionPack"],
                         template=template,stage=stage,
-                        make_mutation=make_mutation,check=check)
+                        make_mutation=make_mutation,check=check,
+                        signed_runtime=signed_runtime)
                     evidence["p0a_pack"]=pack_round
+                    evidence["p0b"]=pack_round["p0b"]
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":32,
+                        "originalB9Checks":36,"additionalChecks":41,
                         "pluginDockerSandboxValidated":True,
+                        "signedReadOnlyRuntimeHotSwapValidated":True,
+                        "nativeServerZeroRestartHotSwapValidated":False,
                         "pluginInstallerOrRevocationValidated":False,
                         "nativePackFullDiffApprovalValidated":"STAGING_ONLY",
                         "formalWOrTCFullPass":False}
@@ -838,6 +859,8 @@ def main():
                     context.close()
                     browser.close()
         finally:
+            if signed_runtime is not None:
+                signed_runtime.stop()
             stop_runtime()
             execute(["sudo","-n","pkill","-TERM","-u",KERN],
                     strict=False,timeout=8)
@@ -846,13 +869,17 @@ def main():
                 except subprocess.TimeoutExpired:kernelproc.terminate()
             # The trusted CI orchestrator cleans each OS-owned private dir,
             # not Agent or Saltcorn user with access to Kernel private DB.
+            owned=[authority,runtime,ready]
+            owned.extend(p for p in (
+                home/"published-private",home/"readonly-private",
+                home/"readonly-ready") if p.exists())
             execute(["sudo","-n","chown","-R",
                      str(os.getuid())+":"+str(os.getgid()),
-                     authority,runtime,ready],strict=False,timeout=12)
+                     *owned],strict=False,timeout=12)
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":68,
+                "expected":77,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -860,7 +887,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==68 and all(
+    return 0 if len(evidence["checks"])==77 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
