@@ -36,6 +36,8 @@ class ConsumerRound:
         self.home=suite.home
         self.priv=self.home/"consumer-private"
         self.ipc=self.home/"consumer-ipc"
+        self.publisher_ipc=self.home/"publisher-ipc"
+        self.publisher_sock=self.publisher_ipc/"oracle.sock"
         self.readydir=self.home/"consumer-ready"
         self.sock=self.ipc/"signed.sock"
         self.cfg=self.priv/"consumer-config.json"
@@ -43,6 +45,7 @@ class ConsumerRound:
         self.source_cfg=suite.authority_dir/"p0b-outbox-source.json"
         self.pubkey=self.stage/"p0b-public-ed25519.hex"
         self.source_token=secrets.token_urlsafe(42)
+        self.publisher_source_token=secrets.token_urlsafe(42)
         self.port=None
         self.source_meta=None
         self.source_proc=None
@@ -121,10 +124,12 @@ class ConsumerRound:
         if self.source_meta["uid"]!=pwd.getpwnam(KERN).pw_uid:
             raise AssertionError("SIGNED_SOURCE_NOT_REAL_KERNEL_UID")
         status,body=self._source_request(self.source_token)
-        if status!=200 or body["head"]!=2:
-            # The second successful restart occurs after B2's third form write.
-            if not(round_number==2 and status==200 and body["head"]==3):
-                raise AssertionError("SIGNED_SOURCE_HEAD_OR_AUTH_INVALID")
+        expected=(2 if round_number==1 else
+                  3 if round_number==2 else round_number+3)
+        if status!=200 or body.get("head")!=expected:
+            raise AssertionError(
+                "SIGNED_SOURCE_HEAD_OR_AUTH_INVALID expected="+str(expected)+
+                " actual="+str(body))
         return self.source_meta
 
     def _stop_source(self):
@@ -179,11 +184,14 @@ class ConsumerRound:
         if empty["rows"]!=[] or empty["cursor"]!=0:
             raise AssertionError("P0B_CONSUMER_NATIVE_WAS_SEEDED")
 
-        for dir in (self.priv,self.ipc,self.readydir):
+        for dir in (self.priv,self.ipc,self.publisher_ipc,self.readydir):
             dir.mkdir(mode=0o700)
         self.s.execute(["sudo","-n","chown","-R",
                         RUNT+":"+IPC_GROUP,self.ipc])
         self.s.execute(["sudo","-n","chmod","2750",self.ipc])
+        self.s.execute(["sudo","-n","chown","-R",
+                        RUNT+":ailcapb9pubipc",self.publisher_ipc])
+        self.s.execute(["sudo","-n","chmod","2750",self.publisher_ipc])
         self.s.execute(["sudo","-n","chown","-R",
                         RUNT+":"+RUNT,self.readydir])
         self.s.execute(["sudo","-n","chmod","0755",self.readydir])
@@ -200,7 +208,9 @@ class ConsumerRound:
         seed=self.home/"p0b-signed-source-seed.json"
         seed.write_text(json.dumps({
             "db":str(self.s.authority_db),"key":str(self.s.key),
-            "token":self.source_token,"port":self.port}))
+            "token":self.source_token,"port":self.port,
+            "publisherToken":self.publisher_source_token,
+            "template":str(self.s.stage/"platform-saltcorn"/"contract-pack.json")}))
         seed.chmod(0o600)
         self.s.execute(["sudo","-n","install","-o",KERN,"-g",KERN,
                         "-m","0600",seed,self.source_cfg])
@@ -228,7 +238,9 @@ class ConsumerRound:
             str(self.stage/"g1-b01-b9"/"p0b_consumer_native_ipc.py"),
             "--db",str(self.native_db),"--socket",str(self.sock),
             "--ready",str(ready),"--public-key-file",str(self.pubkey),
-            "--consumer-uid",str(pwd.getpwnam(CONS).pw_uid)
+            "--consumer-uid",str(pwd.getpwnam(CONS).pw_uid),
+            "--publisher-socket",str(self.publisher_sock),
+            "--publisher-uid",str(pwd.getpwnam(PUBL).pw_uid)
         ],cwd=str(self.stage),stdin=subprocess.DEVNULL,
           stdout=log.open("w"),stderr=subprocess.STDOUT)
         for _ in range(100):
@@ -426,7 +438,10 @@ class ConsumerRound:
                      self.broker_meta["uid"]})
         from p0b_activation_suite import PublicationActivationRound
         activation=PublicationActivationRound(s,self).run()
+        from p0b_reconcile_suite import AutoReconcileRound
+        automatic=AutoReconcileRound(s,self).run()
         return {"checks":8,"publicationActivation":activation,
+                "automaticReconcile":automatic,
                 "autoNativeApplies":3,"nativeDurableReceipts":3,
                 "sourceOutageRecovered":True,"consumerRestartRecovered":True,
                 "signedB14EventsEnforcedNativeIPC":True,

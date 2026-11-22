@@ -378,7 +378,7 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
     durable_round=signed_runtime.durable_consumer_round(
         native_cmd=native_cmd,native_runtime=native_runtime,
         human_page=human_page)
-    signed_runtime_result["checks"]=33
+    signed_runtime_result["checks"]=43
     signed_runtime_result["businessSource"]=business_round
     signed_runtime_result["durableConsumer"]=durable_round
     return {

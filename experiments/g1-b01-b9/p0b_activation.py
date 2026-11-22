@@ -142,6 +142,43 @@ class Activation:
     def read(self):
         return read(self.dbpath)
 
+    def lookup(self,actor,cmd):
+        """Read a durable activation receipt after HTTP outcome UNKNOWN.
+
+        Same B2 authority SQLite BEGIN IMMEDIATE serializes behind any
+        in-flight activation transaction. NOT_FOUND is *only* absence of
+        this Kernel-local receipt, never proof an external effect was undone.
+        Caller must be the same authorized publisher actor.
+        """
+        if (not isinstance(cmd,dict) or set(cmd)!={"changeId"} or
+            not isinstance(cmd["changeId"],str) or
+            not CHANGE.fullmatch(cmd["changeId"])):
+            raise ActivationRejected(422,"ACTIVATION_RECEIPT_QUERY_INVALID")
+        with sqlite3.connect(self.dbpath,timeout=10,isolation_level=None) as db:
+            db.row_factory=sqlite3.Row
+            db.execute("PRAGMA busy_timeout=10000")
+            try:
+                db.execute("BEGIN IMMEDIATE")
+                row=db.execute(
+                    "SELECT actor,request_hash,response "
+                    "FROM p0b_activation_receipts "
+                    "WHERE app='app-a' AND change_id=?",
+                    (cmd["changeId"],)).fetchone()
+                if row and row["actor"]!=actor:
+                    raise ActivationRejected(
+                        403,"ACTIVATION_RECEIPT_WRONG_ACTOR")
+                result={
+                    "app":"app-a","changeId":cmd["changeId"],
+                    "status":"COMMITTED" if row else "NOT_FOUND",
+                    "result":json.loads(row["response"]) if row else None,
+                    "requestHash":row["request_hash"] if row else None
+                }
+                db.commit()
+                return result
+            except BaseException:
+                if db.in_transaction:db.rollback()
+                raise
+
     def _candidate(self,digest):
         folder=self.folder
         st=folder.stat()
