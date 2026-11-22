@@ -46,6 +46,17 @@ jobs:
             2>&1 | tee /tmp/s1-b9-b2-regression.log
           (cd experiments/g1-b01-b5 && python3 -u -m unittest -v test_ir test_broker) \
             2>&1 | tee /tmp/s1-b9-b5-regression.log
+      - name: Pull real Docker sandbox image, pin actual image ID, test B6 host relay
+        run: |
+          set -euo pipefail
+          timeout 300s docker pull python:3.13-alpine
+          IMAGE_ID="$(docker image inspect python:3.13-alpine --format '{{.Id}}')"
+          [[ "$IMAGE_ID" =~ ^sha256:[a-f0-9]{64}$ ]]
+          echo "S1_B9_PINNED_DOCKER_IMAGE=$IMAGE_ID" >> "$GITHUB_ENV"
+          echo "S1_B9_ACTUAL_SANDBOX_IMAGE|$IMAGE_ID"
+          python3 -m py_compile experiments/g1-b01-b6/plugin_isolation.py experiments/g1-b01-b6/plugin_untrusted.py
+          (cd experiments/g1-b01-b6 && python3 -u -m unittest -v test_isolation) \
+            2>&1 | tee /tmp/s1-b9-b6-host-relay-policy.log
       - name: Create separate non-root authority, Saltcorn and plugin OS users
         run: |
           set -euo pipefail
@@ -58,7 +69,7 @@ jobs:
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9plug)" ]]
-      - name: Same-instance authority/native attack, Agent-plugin CAS race and physical oracle
+      - name: Same-instance authority/native attack, real Docker plugin, Chromium Agent CAS, physical SQL oracle
         env:
           DEEPSEEK_KEY: ''
         run: |
@@ -75,6 +86,7 @@ jobs:
             /tmp/s1-b9-projector-unit.log
             /tmp/s1-b9-b2-regression.log
             /tmp/s1-b9-b5-regression.log
+            /tmp/s1-b9-b6-host-relay-policy.log
             /tmp/s1-b9-evidence.json
             /tmp/s1-b9-real-e2e.log
           if-no-files-found: warn
