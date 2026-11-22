@@ -399,9 +399,15 @@ class ConsumerRound:
                            strict=False).stdout.strip()
         cons_kernel=self._call(CONS,["-c",test,s.authority_db],
                                strict=False).stdout.strip()
-        plug_sock=self._call(PLUG,["-c",test,self.sock],
+        socket_probe=("import socket,sys\n"
+                      "s=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)\n"
+                      "try:\n s.connect(sys.argv[1]);print('CONNECTED')\n"
+                      "except PermissionError:print('DENIED')\n"
+                      "except OSError as exc:print('UNEXPECTED_'+str(exc.errno))\n"
+                      "finally:s.close()")
+        plug_sock=self._call(PLUG,["-c",socket_probe,self.sock],
                              strict=False).stdout.strip()
-        read_sock=self._call(READ,["-c",test,self.sock],
+        read_sock=self._call(READ,["-c",socket_probe,self.sock],
                              strict=False).stdout.strip()
         source_bad=self._source_request("UNAUTHORIZED")[0]
         s.check("P0B-23-consumer-DAC-and-unsigned-Plugin-IPC-bypass-denied",
@@ -413,8 +419,8 @@ class ConsumerRound:
                 self.consumer_proc.poll() is None,
                 {"consumerReadsNativeDB":cons_db,
                  "consumerReadsKernelDB":cons_kernel,
-                 "pluginReadsNativeSocket":plug_sock,
-                 "readonlyReadsNativeSocket":read_sock,
+                 "pluginAFUnixSocketConnect":plug_sock,
+                 "readonlyAFUnixSocketConnect":read_sock,
                  "anonymousB14SourceStatus":401,
                  "durableHead":3,"nativeSignedBrokerUid":
                      self.broker_meta["uid"]})
