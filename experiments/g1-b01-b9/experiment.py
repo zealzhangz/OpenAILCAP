@@ -915,7 +915,8 @@ def main():
             owned.extend(p for p in (
                 home/"published-private",home/"readonly-private",
                 home/"readonly-ready",home/"consumer-private",
-                home/"consumer-ipc",home/"consumer-ready"
+                home/"consumer-ipc",home/"publisher-ipc",
+                home/"consumer-ready"
             ) if p.exists())
             execute(["sudo","-n","chown","-R",
                      str(os.getuid())+":"+str(os.getgid()),
