@@ -12,7 +12,7 @@ G1 **NOT_PASSED**。以 [W01—W24 冻结矩阵](31-g1-b01-acceptance-matrix.md)
 
 | 顺序 | 闭环任务与冻结用例 | 进入下一任务的实物证据 | 当前缺口 |
 |---|---|---|---|
-| P0-A | 一个权威进程/DB 边界，Web、Agent、真正沙箱插件均用可信身份/命令写；原生 Web/CLI/Pack 的所有越界写只能被拒绝或隔离在可丢弃派生库。W01—W16、W22；TC10、TC11、TC13、TC15 | 固定 SHA 的可重建环境、三种真实写入者、两进程竞争、原始 HTTP/Chromium、物理 DB/审计和权限负例；同 UID/root 能力、Pack 整包差异和缓存路径逐项记录 | B1/B2/B6/B7 的能力尚未集成；B8 证明 owner UID 原生旁路；B13/B14/B15 仍是限定单机边界 |
+| P0-A | 一个权威进程/DB 边界，Web、Agent、真正沙箱插件均用可信身份/命令写；原生 Web/CLI/Pack 的所有越界写只能被拒绝或隔离在可丢弃派生库。W01—W16、W22；TC10、TC11、TC13、TC15 | 固定 SHA 的可重建环境、三种真实写入者、两进程竞争、原始 HTTP/Chromium、物理 DB/审计和权限负例；同 UID/root 能力、Pack 整包差异和缓存路径逐项记录 | **已得局部证据：**B2/B5/B6 Docker Plugin/B7 独立 SQL/B9 Saltcorn 同一 authority.sqlite 和真实 Chromium/Agent 联合运行 60/60；**仍阻断：**插件生产安装/撤销、原生 Pack 全量 diff 默认拒绝/审核、Native owner UID 原生旁路、同 UID/root 边界、Native 发布热切换；B13/B14/B15 仍是限定单机路径 |
 | P0-B | B2 权威源 → 签名发布 → B15/B17 只读消费贯通；先校验最新权威源和依赖闭包，再原子切换，错误保持旧 verified 版本；覆盖代码、配置、流程和外部副作用。W17—W20、W23、W24；TC12、TC16、TC18 | 一次版本发布/故障/回滚的 DB、REST、浏览器、签名、Manifest、构建哈希与回执全链对照；真实 timeout UNKNOWN 后按原 changeId 查证 | B17 未校验 B2 最新源；B15 签名快照和 B4 代码发布没有完整共同事务/回滚；UNKNOWN 补偿缺完整场景 |
 | P1-C | 冻结合同业务端到端：1:N、金额边界、搜索、授权审批、状态机、合同号幂等、双应用隔离。TC01—TC05、TC08、TC15 | 从同一部署的人工创建到浏览器用户操作，独立 SQL/HTTP/DOM 验证 `spec.json` 全部 oracle | B2/B4 是若干业务切片，未逐项执行冻结的完整 TC 旅程 |
 | P1-D | 最小一次真实 LLM 自主建模/表单/流程和超出配置能力的代码扩展；真正 Build Worker、隔离执行、失败保持旧发布；模型断开仍可人工维护。TC06、TC07、TC09、TC10、TC12、TC13 | 先零模型预检和成本边界，再仅在执行器全绿时一次受限 DeepSeek 请求；保存输入/工具轨迹/构建/独立 oracle | B3/B4 已验证片段，尚非冻结的完整自主开发和人工交接验收 |
@@ -28,4 +28,4 @@ G1 **NOT_PASSED**。以 [W01—W24 冻结矩阵](31-g1-b01-acceptance-matrix.md)
 
 ## 下一次可改变决定的提交
 
-优先提交 **P0-A 的权威/派生双库贯通实验**：可信 Kernel 与不可信 Native/Web/Plugin 分 UID，Native 用真实 Field.update、浏览器、Pack 攻击派生库，独立审计权威 revision/receipt/Manifest 不变；有权命令修改后重新投影，浏览器无重启读回且旧表单冲突不能丢失更新。记录失败轨迹和测试缺口；仅在证据完整后再对关联 W 项作逐项 FULL PASS 裁定。全程不需新增模型调用。
+优先完成 **P0-A 真实原生 Pack 全量 diff、默认拒绝覆盖与高级审批**，并验证从 Kernel 最新签名发布状态原子生成可验证 Native 版本；**随后与 P0-B 联合贯通**：受权命令修改并发布后，B15/B17 通过真实新鲜度/依赖闭包校验原子切换运行端点，Chromium 无重启读到新版本，失败保持前一 verified 版，且完整记录外部 UNKNOWN/补偿。现有 [Docker 同实例局部证据](54-g1-p0a-real-docker-same-instance-evidence.md) 不等于上述正式门禁完成；每项仍需 W/TC 的独立 Oracle。零模型预检通过前不新增模型调用。
