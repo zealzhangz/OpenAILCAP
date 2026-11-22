@@ -17,9 +17,33 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/"g1-b01-b2"))
 sys.path.insert(0,str(HERE.parent/"g1-b01-b4"))
 sys.path.insert(0,str(HERE.parent/"g1-b01-b5"))
-from schema_core import Actor,SchemaStore
+sys.path.insert(0,str(HERE.parent/"g1-b01-b11"))
+from schema_core import Actor,SchemaStore,Rejected
 from registry import ExtensionRegistry
 from tool_broker import ToolBroker,make_server
+from projection_source import install as install_b11_outbox
+from p0b_authority_business import read_business,AuthorityDataRejected
+
+
+class BusinessHeadKernelBroker(ToolBroker):
+    """B9-only scoped read under the EXISTING runtimeToken release.read grant.
+
+    The public tool name business.head is intercepted here and never added
+    to B5's global capability list. Agent and Plugin lack release.read.
+    """
+    def call(self,token,app,tool,args):
+        if tool!="business.head":
+            return super().call(token,app,tool,args)
+        self.authorize(token,app,"release.read")
+        self._shape(args,())
+        if app!="app-a":
+            raise Rejected(403,"BUSINESS_HEAD_APP_FORBIDDEN")
+        try:
+            head=read_business(self.store.path)
+        except AuthorityDataRejected as e:
+            raise Rejected(503,e.code) from None
+        return {"app":"app-a","head":head["head"],
+                "rowsDigest":head["rowsDigest"]}
 
 
 class NoBuildInKernel:
@@ -46,10 +70,13 @@ def serve(config_path,ready_path):
     store.init()
     for app in ("app-a","app-b"):
         store.seed_app_for_test(app)
+    # B11 real AFTER-record-write triggers in the SAME authority.sqlite, not
+    # an independently populated demonstration database.
+    install_b11_outbox(dbfile)
     dbfile.chmod(0o600)
     registry=ExtensionRegistry(store,NoBuildInKernel())
     registry.init()
-    broker=ToolBroker(store,registry)
+    broker=BusinessHeadKernelBroker(store,registry)
     human=Actor("b9-human-web","app-a",can_publish=True,can_runtime=True)
     agent=Actor("b9-agent","app-a")
     plugin=Actor("p0a-native-plugin","app-a",kinds=("view",))
