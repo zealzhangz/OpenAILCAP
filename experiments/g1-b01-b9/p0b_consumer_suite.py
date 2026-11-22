@@ -438,7 +438,10 @@ class ConsumerRound:
                      self.broker_meta["uid"]})
         from p0b_activation_suite import PublicationActivationRound
         activation=PublicationActivationRound(s,self).run()
+        from p0b_reconcile_suite import AutoReconcileRound
+        automatic=AutoReconcileRound(s,self).run()
         return {"checks":8,"publicationActivation":activation,
+                "automaticReconcile":automatic,
                 "autoNativeApplies":3,"nativeDurableReceipts":3,
                 "sourceOutageRecovered":True,"consumerRestartRecovered":True,
                 "signedB14EventsEnforcedNativeIPC":True,
