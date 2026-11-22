@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """B9 REAL B2 Kernel -> derived actual Saltcorn Pack/SQLite/Chromium.
 
-CI: exact 2 non-root OS UIDs, genuine B2 release tool, Saltcorn @1.7.0-beta.5
+CI: 3 distinct non-root OS UIDs, genuine B2 release tool, Saltcorn @1.7.0-beta.5
 official CLI, native Web /field, physical SQLite read-only oracles for BOTH
 trust domains, tamper/rebuild, v1->v2->v1 rollback. No external model.
 LIMITS: Only model+view subset; workflow and B4 code remain on B2 kernel,
@@ -34,6 +34,7 @@ sys.path.insert(0,str(ROOT/"platform-saltcorn"/"browser"))
 from schema_core import sha
 from projector import compile_release,check_compiled,ProjectionRejected
 from p0a_browser_suite import run_suite
+from p0a_docker_suite import run_suite as run_docker_suite
 
 KERN="ailcapb9kern"
 RUNT="ailcapb9run"
@@ -790,10 +791,19 @@ def main():
                         native_db=restored["db"],
                         expected_native_columns=first["physical"]["viewColumns"])
                     evidence["p0a_web"]=next_round
+                    docker_round = run_docker_suite(
+                        context=context, base=base,
+                        token_plugin=token_plugin, token_agent=token_agent,
+                        authority_db=db, authority_config=config,
+                        native_db=restored["db"], native_page=page_again,
+                        native_physical=native_physical, physical=kernel_physical,
+                        http=http, make_mutation=make_mutation, check=check)
+                    evidence["p0a_docker"]=docker_round
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":15,
-                        "pluginDockerSandboxValidated":False,
+                        "originalB9Checks":36,"additionalChecks":24,
+                        "pluginDockerSandboxValidated":True,
+                        "pluginInstallerOrRevocationValidated":False,
                         "nativePackFullDiffApprovalValidated":False,
                         "formalWOrTCFullPass":False}
                     evidence["final"]={
@@ -802,7 +812,7 @@ def main():
                         "v1ProjectionHash":first["compiled"]["projectionPackHash"],
                         "v2ProjectionHash":second["compiled"]["projectionPackHash"],
                         "activeRelease":1,
-                        "authorityAppARevision":5,
+                        "authorityAppARevision":kernel_physical()["app-a"]["revision"],
                         "authorityAppBRevision":0,
                         "physicalSaltcornNativeWebBypassContained":True,
                         "physicalSaltcornNativeCliBypassContained":True,
@@ -827,7 +837,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":51,
+                "expected":60,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -835,7 +845,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==51 and all(
+    return 0 if len(evidence["checks"])==60 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
