@@ -91,12 +91,16 @@ if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--db",required=True)
     p.add_argument("--init",action="store_true")
+    p.add_argument("--inspect",action="store_true")
     p.add_argument("--socket")
     p.add_argument("--ready")
     p.add_argument("--public-key-file")
     p.add_argument("--consumer-uid",type=int)
     a=p.parse_args()
-    if a.init:
+    if a.inspect:
+        scoped(a.db)
+        print("P0B_NATIVE_DURABLE_ORACLE|"+json.dumps(native_snapshot(a.db)),flush=True)
+    elif a.init:
         print("P0B_NATIVE_EMPTY_INITIALIZED|"+
               json.dumps(initialize(a.db)),flush=True)
     else:
