@@ -42,3 +42,22 @@
 尽管本轮验证了**实际长期运行的、持久化的、可自动追平的 B14 签名 B11 消费**，但它仍是单实例、单 app、单合同模型的研究系统；Native UID 仍有直接修改可丢弃派生 SQLite 的 OS owner 权限，且目前尚未验证生产多 Consumer 主备、生产密钥托管/轮换、跨进程 crash-consistency 全边界、外部服务 `UNKNOWN`/changeId 补偿。B15 发布仍由受信 Controller 在核验通过后调用，**尚不是自动协调的发布事务**；B2 pointer 与 B15 snapshot 的窗口继续通过 503 fail-closed，尚非无停机的一致提交。Form/Workflow/B4 Code 全依赖产物和冻结合同业务旅程尚未真正贯通。
 
 **所有 42 项冻结 W/TC 仍 `NOT_RUN`，G1 `NOT_PASSED`。**下一步继续而且仅继续 P0-B：真实消费者之外的**发布一致性决策、工作流/代码/表单依赖闭包与不可知外部副作用**。不得拿 91 项局部集成断言冒充正式冻结矩阵 FULL PASS。
+
+
+## 5. 最新完整原始 CI 实测（2026-11-22，合并前）
+
+**最新完整成功**：[GitHub Actions #44982079396](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44982079396)，`completed/success`，运行代码 SHA **`6cf8676feb36358ec658a3c4d32e963eac123071`**，Job **137084552030**，[完整原始 Artifact #14737404471](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44982079396/artifacts/14737404471)。
+
+实际命令与结果：
+- **91/91** 同一 B2 authority.sqlite/真实 Saltcorn/独立 UID/B17 同 URL 的局部集成检查 **PASS**，`modelCalls=0`，`g1Passed=false`。
+- B9 `test_projector test_pack_approval_gate test_p0b_business` **49/49**，依赖原工程真实回归 B11 **28/28**、B12 **22/22**、B13 **22/22**、B14 **24/24**；B2 **18/18**、B5 **40/40**、B6 真 Docker 隔离策略 **25/25**。各项均是真实 GitHub Actions 日志中的 `Ran … tests / OK`，未直接等同正式验收 W/TC。
+- **P0B-16 PASS**：六独立 Linux UID `KERN=999`、`RUNT=997`、`PLUG=995`、`PUBL=994`、`READ=993`、`CONS=992`；新 Native 真实 `saltcorn reset-schema/install-pack` 后 **0** 条业务行，实际 B14 source bearer 验证。
+- **P0B-17 PASS**：新的 Native 物理 SQLite **cursor=2、receipts=2、mappings=2、records=2**，签名消费者自动提交、**从未手工 seed 该数据库**。
+- **P0B-18 PASS**：以真实 Consumer UID 将来源 1、2 两条签名事件原样通过 Native SignedBroker 重放，返回 **replayed=2, applied=0**，数据库完整内容与 cursor/receipt 不变。
+- **P0B-19 PASS**：终止真实 Consumer 进程 PID `6302`，由 PID `6370` 重新从 Native SQL **cursor=2** 恢复；无重复映射/回执，Kernel/Broker 均未重启。
+- **P0B-20 PASS**：实际关闭独立 Kernel 签名 Source，Consumer 状态 `SOURCE_UNAVAILABLE` 且 `failures=2`；同一 B2 Chrome 人工创建第三条合同时 **B11 head=3、Native cursor=2**，B17 返回 **503**，之前 verified 快照文件 **SHA 未改变**。
+- **P0B-21 PASS**：恢复同一固定端口、同一 Ed25519 私钥和 bearer，不重启 Consumer；**Native cursor/receipts/mappings=3** 自动追平；Publisher 尚未切换之前 B17 仍正确返回 503。
+- **P0B-22 PASS**：对 B2 真实三条、B14 三个已签事件和自动消费的 Native SQL 三条执行 B15 原子发布；原 B17 浏览器 **HTTP 200，三行，Release 仍 v1，Router 未重启**；不涉及第三条的手工 Native seed。
+- **P0B-23 PASS**：Consumer UID 直接打开 B2 及 Native SQL 分别获 `DENIED`；Plugin 和 Reader 两种非授权 UID **实际 `socket.connect(AF_UNIX)`** 都返回 `DENIED`；未授权 B14 来源请求 **401**，Native checkpoint 仍 3，B17 发布页面仍可用。
+
+前述最初功能跑绿但尚未覆盖真正 AF_UNIX connect 的 [#44981780941](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44981780941) 仅作为早期过程记录；**以上 #44982079396 才是本轮严格测试和完整依赖单元回归的有效证据**。此结果不证明跨 B2/B15 数据库全局原子发布、生产高可用、Form/Workflow/B4 Code 全依赖闭包、外部 UNKNOWN/补偿、Native UID 直接修改派生 DB 的消除；不改动 G1 门禁。
