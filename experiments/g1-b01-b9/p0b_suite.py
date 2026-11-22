@@ -302,6 +302,7 @@ class SignedRuntimeSuite:
                    {"fromVersion":1,"toVersion":3,
                     "realChromiumColumns":head,"browserReloadNoRestart":True,
                     "atomicFileHashChanged":True,"published":good})
+        authority_before=self.physical()
         blocked={}
         for method in ("POST","PUT","PATCH","DELETE"):
             blocked[method]=self._request(method)[0]
@@ -309,6 +310,7 @@ class SignedRuntimeSuite:
         self.check("P0B-07-B17-all-public-writes-rejected-no-snapshot-effects",
                    all(x==405 for x in blocked.values()) and
                    after_readonly==new_digest and
+                   self.physical()==authority_before and
                    self.router.poll() is None,
                    {"methods":blocked,"sameAtomicSnapshot":True,
                     "noKernelMutations":True})
