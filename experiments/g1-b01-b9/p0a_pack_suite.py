@@ -238,7 +238,11 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
     # one-shot approval, and ONLY for a separate disposable staging SQLite.
     staging_db=native_runtime/"p0a-approved-pack-v3-stage.sqlite"
     packfile=stage/"p0a-pack-admitted-v3.json"
-    if staging_db.exists() or packfile.exists():
+    # runtime-private is intentionally 0700, inaccessible to the trusted
+    # coordinator. Ask the actual Native owner UID to inspect it instead.
+    existing=native_cmd(["/usr/bin/test","-e",staging_db],
+                        native_live_db,strict=False)
+    if existing.returncode==0 or packfile.exists():
         raise AssertionError("P0A_PACK_STAGE_COLLISION")
     reset=native_cmd(["saltcorn","reset-schema","-f"],staging_db)
     if reset.returncode!=0:
