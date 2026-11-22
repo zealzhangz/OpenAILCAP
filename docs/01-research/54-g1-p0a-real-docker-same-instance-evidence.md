@@ -35,3 +35,16 @@
 任何容器触及私有 DB/配置、未经授权写入权威 SQLite、跨 App 污染、两个同 revision 都成功或物理账本/Chrome 不一致均应直接失败/No-Go，不得自动重复生成新 changeId。预期 B9 36 + 第一轮 6 + 第二轮 9 + 本轮 9 = **60 个局部检查**，新增 B6 relay unit regression；无任何模型调用。
 
 **只有真实 GitHub Actions 的成功运行及原始日志齐全后才可补写本文实测、追加冻结账本 partial_evidence。冻结的 42 个 case 状态不得因局部合格而自动改变。**
+
+
+## 2026-11-22 真实 GitHub CI 结果
+
+- **可重建代码 SHA：`ca3f8cf5db3c944a1a5fae8235b3a33e2ad0653b`**，[B9 同实例 Actions #44974547628](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44974547628) **completed/success**，Job **137061392720**，[原始 Artifact #14735390659](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44974547628/artifacts/14735390659)。原始 Artifact 同时保留所有 Docker/Chromium/CLI/物理 SQL 细节与新 B6 单测日志。
+- **B9 36/36 + P0A-01—06 6/6 + P0A-07—15 9/9 + P0A-16—24 9/9 = 60/60 同一部署局部运行检查通过**；Saltcorn Pack 编译 25/25、B2 18/18、B5 40/40、B6 Docker Relay/Isolation Policy 25/25 单元回归通过。**模型调用 0 次。**
+- **固定实际 Docker Image ID：**`sha256:67fd5f7b4b120eaa3308775fe87aff98a2492287576bd6656ef785d54a1b5605`。真实容器 `uid=65534`，尝试 host SQLite RW/read、宿主机密钥文件、Docker socket、互联网 1.1.1.1:443 全部拒绝；容器 read-only 不能写源文件；可信 Relay 持有且未向容器传递 Token。Plugin 对同一 authority.sqlite 的 B5 v3 draft.read 实际返回 200，**独立物理 SQL 不变**。
+- **权限负例真实 HTTP：**Plugin 请求 app.publish、code.publish、sql.admin、model upsert 统一 403，跨 app-b 为 403，伪造 actor/role/app 由 Broker 拒绝 422；每项均以独立权威 SQL 数据/事件/回执无变化核对。
+- **受限成功写入：**真正 Docker Plugin 的 View upsert 返回 200，**物理 revision 12→13，receipt/event +1，事件实际 actor=`p0a-native-plugin`**；不会调用 Saltcorn 的原生不可信写路由，也不会改动权威模型外的资源。
+- **真实竞争：**同一旧 revision 下，真实 Docker Plugin 409、Agent 200，一条事务成功，物理 winner=`P0A-Agent-Race-Title`。第一次 Docker 成功的原 changeId 在更高 revision 后重放返回 200/replayed=true，Agent 冒用和不同哈希冒用各 409，物理无副作用。**只观察到本次 OS 调度顺序，不推断两种调度都覆盖。**
+- **真实 Browser：**Chromium 登录设计器旧 revision，Docker 通过授权命令提交后浏览器 POST 409，独立 SQL 保留 Docker title。整个本轮恰有 3 个成功版本变更，revision 12→15，成功回执/事件各 +3；Saltcorn Native 已发布 v1 SQLite 原始物理快照相同，Chrome 合同仍可读取，app-b 未变化。
+- **真实失败保留：**开发中的旧工作流 [Actions #44974537859](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44974537859) 因当时尚未添加 Docker 镜像固定注入，明确失败于 `P0A_DOCKER_IMAGE_ID_MISSING`；后续 commit 补全实际 Docker pull+inspect 和 `S1_B9_PINNED_DOCKER_IMAGE` 注入并重新执行通过。该历史失败是环境装配未完成，不能伪称首轮即成功。
+- **门禁不变：G1 NOT_PASSED，W 0/24，TC 0/18 FULL PASS。** 真实 Docker 隔离已进入同实例证据，但插件生产安装/发现/撤销、系统级 Pack 差异批准、Native 真正无重启热发布与 B15/B17 新鲜度验证、全量 Code/Workflow/外部副作用回滚仍是实质阻断项。必须在同实例补齐，否则不能以此进入 G2。
