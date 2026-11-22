@@ -1,0 +1,26 @@
+{
+  "test_id": "W20",
+  "status": "PASS",
+  "frozen_expected": "remote execution timeout UNKNOWN; query actual side effect and receipt by original changeId, no new-ID blind replay",
+  "external_effect_change_id": "p0bnotify_5ae403855aaeec12c0fe31e5c68cfe7e0f65a831",
+  "independent_real_oracles": {
+    "B2AuthenticatedChromiumWorkflow": true,
+    "B2AuthorityPhysicalSQLAndKernelJournal": true,
+    "B11NativePhysicalCursorAndReceipts": true,
+    "seventhExternalOSUidPhysicalBusinessSQL": 986,
+    "actualExternalHTTPRequestTimedOutAfterCommit": true,
+    "externalReceiptHTTPAndPhysicalSQLCrossChecked": true,
+    "sameChangeIdNoExtraPost": true,
+    "negativeCredentialAndPayloadReplay": true
+  },
+  "G1Passed": false,
+  "W01_24AllPass": false,
+  "source_code_commit": "5a39591f6a3ce535d1f7f91ff548f7f2ab50146a",
+  "ci_run_url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44988774947",
+  "job_id": 137105048182,
+  "artifact_id": 14740927216,
+  "raw_artifact_url": "https://github.com/zealzhangz/OpenAILCAP/actions/runs/44988774947/artifacts/14740927216",
+  "verifier": "scripts/verify_g1_w20.py",
+  "source_evidence": "/tmp/s1-b9-evidence.json",
+  "source_independent_verdict": "/tmp/s1-g1-w20-verdict.json"
+}
