@@ -32,3 +32,17 @@
 **本轮只投影 B9 模型/视图和一个真实 Saltcorn seed 合同**。Native Business Rows 没有得到 B2 权威业务数据事件的逐行签名；真实 Native/Publisher 隔离仍信任 CI Controller 传递的独立 Native SQL oracle。未覆盖 Form/Workflow/B4 代码、发布事件 B14 原有 B11 业务 outbox、跨资源依赖闭包所有类型、外部副作用 UNKNOWN/补偿、生产 HA、多租户、同 UID/root 旁路与插件生产安装/撤销。不得以局部通过判定冻结 W17/W18/W24 FULL PASS，更不得自动进入 G2。
 
 本次预期增加 **9 项局部集成检查**，合计 **77 项**，DeepSeek **0 次**。只有对应 GitHub Actions 新 SHA 的原始日志和证据全部为绿色，才在本报告追加实测结果，并将关联冻结账本的 `partial_evidence` 更新；冻结状态不变。
+
+## 四、实际 GitHub Actions 结果（2026-11-22）
+
+- **真实完整运行**：[Actions #44978453572](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44978453572) **completed/success**，代码 SHA `b8bdb6a351ef24cd14ed189d2daf59ea2faa5779`，Job `137073486998`，原始 [Artifact #14736398493](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44978453572/artifacts/14736398493)。
+- **77/77 同实例真实集成局部检查全部 PASS**，旧 Pack 编译和审批策略 **39/39**、B2 **18/18**、B5 **40/40**、B6 **25/25**，模型调用 **0**；正式 `g1Passed=false`。与既有 P0-A 共用单一 B2 authority.sqlite、同一实际 Saltcorn/Chromium/Plugin/Agent 实例。
+- **P0B-01**：实际 Kernel UID `999` 从真实 B2 当前已发布 v1 Manifest 生成 B14 Ed25519 源签名；Saltcorn Native UID、独立 Plugin UID、Publisher UID `994` 和 Reader UID `993` 均实测 **DENIED** 访问 Kernel 私钥。Publisher/Reader 仅获得 pinned public key 和受限 read-only release 令牌。
+- **P0B-02**：真实 Publisher UID 在 2750 group-read 受控目录独立建立并原子替换 SQLite 公共快照；不同 Reader UID 的真实 Chromium HTTP 状态 200、`X-OpenAILCAP-Release: 1`，三列表头及真实 Saltcorn 合同编号，Renderer 不重启。
+- **P0B-03**：同一 B2 发布指针已经被 Chrome 推进到 **v3**，B15 快照仍 v1；B17 HTTP **503**，原 v1 Snapshot 文件哈希保持不变。明确证明**不将旧版伪装成最新版本**，但存在服务可用性窗口。
+- **P0B-04—05**：伪造签名被拒绝为 `PUBLISH_SOURCE_SIGNATURE_REJECTED`，Native View 数据列与声明不符被拒绝为 `PUBLISH_NATIVE_VIEW_MISMATCH`；模拟构建故障 `PUBLISH_BUILD_FAILURE_INJECTED`，经独立快照字节 SHA 与 HTTP 503 证实**旧 verified 文件没有被覆盖，也没有泄漏未验证新版本**。
+- **P0B-06**：真正 B15 Publisher 将经过签名/当前 B2 校验的新版本 v3 在同一个路径通过 SQLite 单文件 `fsync/os.replace` 原子切换；**同一浏览器/同一 HTTP URL `http://127.0.0.1:39255/view/s1_contract_list`** 经 reload 读取到 HTTP 200、`X-OpenAILCAP-Release: 3`、四列表头（合同编号、标题、金额、状态）及真实合同记录。已启动的 Renderer 和旧原生 Saltcorn 并未重启；这只保证新的**只读展示层**，不是 Saltcorn 所有原生页面的统一热更新。
+- **P0B-07**：同一只读路由真实 POST/PUT/PATCH/DELETE 各 405，快照字节未变化；该项加强了对**实际 B2 物理 SQL 不变**的断言，代码以修订 commit 为准。
+- **P0B-08—09**：B2 pointer 从 v3 回滚到 v1 后，未更换 snapshot 时 B17 明确 503；真实 Kernel UID 对当前 v1 重新签名、Publisher 将 v1 快照替换后，**相同已启动 Router 端口**与 Chrome reload 返回 HTTP 200、`X-OpenAILCAP-Release: 1`、原三列和合同。全过程 app-b 保持独立、Native 的 v1 正式展示仍不受派生库修改影响。
+- 开发过程早期独立运行 [Actions #44978443352](https://github.com/zealzhangz/OpenAILCAP/actions/runs/44978443352) 因未安装 `cryptography` 出现 `ModuleNotFoundError`，随后 CI 固定 `cryptography>=44,<48` 完整重跑已成功；保留此失败证据，不把过渡构建视为通过。
+- **验收结论不变：G1 NOT_PASSED；W 0/24、TC 0/18 FULL PASS**。现有结果为 P0-B 的**限定 Model/View/单条 Native seed 数据/只读展示**纵向贯通提供物理证据，但 B2 commit 与 Publisher replace 仍不是单事务，业务数据没有逐行签名，Form/Workflow/B4 Code 没有语义投影，且没有完成正式 W17—W24 的全覆盖 Oracle、外部 UNKNOWN 与补偿。下一工作继续围绕这些已知阻断闭环，不再新增平行实验方向。
