@@ -37,7 +37,8 @@ class BusinessHeadKernelBroker(ToolBroker):
         self.activation=Activation(store.path)
 
     def call(self,token,app,tool,args):
-        if tool in ("publication.read","publication.activate"):
+        if tool in ("publication.read","publication.activate",
+                    "publication.receipt"):
             if tool=="publication.read":
                 self.authorize(token,app,"release.read")
                 self._shape(args,())
@@ -51,6 +52,8 @@ class BusinessHeadKernelBroker(ToolBroker):
             if app!="app-a":
                 raise Rejected(403,"ACTIVATION_APP_FORBIDDEN")
             try:
+                if tool=="publication.receipt":
+                    return self.activation.lookup(actor.name,args)
                 return self.activation.activate(actor.name,args)
             except ActivationRejected as err:
                 raise Rejected(err.status,err.code) from None
