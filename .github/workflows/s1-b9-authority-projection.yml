@@ -88,6 +88,8 @@ jobs:
           id ailcapb9plug
           id ailcapb9pub
           id ailcapb9ro
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9external
+          id ailcapb9external
           id ailcapb9cons
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
@@ -99,6 +101,9 @@ jobs:
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9plug)" != "$(id -u ailcapb9ro)" ]]
+          for name in ailcapb9kern ailcapb9run ailcapb9plug ailcapb9pub ailcapb9ro ailcapb9cons; do
+            [[ "$(id -u "$name")" != "$(id -u ailcapb9external)" ]]
+          done
           for name in ailcapb9kern ailcapb9run ailcapb9plug ailcapb9pub ailcapb9ro; do
             [[ "$(id -u "$name")" != "$(id -u ailcapb9cons)" ]]
           done
@@ -110,6 +115,13 @@ jobs:
           python3 -u experiments/g1-b01-b9/experiment.py \
             --output /tmp/s1-b9-evidence.json \
             2>&1 | tee /tmp/s1-b9-real-e2e.log
+      - name: Independently judge frozen G1 W20 actual external business UNKNOWN
+        run: |
+          set -euo pipefail
+          python3 -u scripts/verify_g1_w20.py \
+            --evidence /tmp/s1-b9-evidence.json \
+            --output /tmp/s1-g1-w20-verdict.json \
+            2>&1 | tee /tmp/s1-g1-w20-independent-audit.log
       - name: Retain actual logs and structured authority/runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -126,4 +138,6 @@ jobs:
             /tmp/s1-b9-b14-regression.log
             /tmp/s1-b9-evidence.json
             /tmp/s1-b9-real-e2e.log
+            /tmp/s1-g1-w20-verdict.json
+            /tmp/s1-g1-w20-independent-audit.log
           if-no-files-found: warn
