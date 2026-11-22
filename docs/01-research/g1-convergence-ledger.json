@@ -10,7 +10,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md"
+        "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "三身份在同一正式内核生成 revision/hash/receipt/audit"
     },
@@ -19,7 +20,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/33-g1-b01-c2-native-route-evidence.md",
-        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "原生双标签旧表单在权威写路径原子 409 且物理读回"
     },
@@ -55,7 +57,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
-        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "真实受限插件和 Agent 并行同字段唯一提交"
     },
@@ -64,7 +67,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
-        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "两进程在目标权威数据库事务中一次成功一次 409"
     },
@@ -73,7 +77,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
-        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "较新变更后原 changeId 返回原始回执且审计零增量"
     },
@@ -82,7 +87,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
-        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "跨主体和摘要复用 changeId 无任何业务副作用"
     },
@@ -100,7 +106,8 @@
       "partial_evidence": [
         "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md",
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
-        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "真实原生 CLI 与 Web 越界只能修改派生库且权威隔离"
     },
@@ -117,7 +124,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
-        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "模型伪造身份经可信宿主工具实际拒绝"
     },
@@ -126,7 +134,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
-        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "三写入者只读和跨应用拒绝且敏感内容不泄露"
     },
@@ -144,7 +153,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
-        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md"
+        "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "真实插件安装运行和数据库旁路无未管理写入"
     },
@@ -152,7 +162,8 @@
       "status": "NOT_RUN",
       "package": "P0-B",
       "partial_evidence": [
-        "docs/01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md"
+        "docs/01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "同进程权威 DB、原生 REST、真实浏览器和缓存一致"
     },
@@ -184,7 +195,8 @@
       "status": "NOT_RUN",
       "package": "P1-E",
       "partial_evidence": [
-        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "同名资源跨应用数据库审计和工具权限全隔离"
     },
@@ -300,7 +312,8 @@
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
-        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md"
+        "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "同一文案人工 Agent 并发唯一成功与冲突"
     },
@@ -333,7 +346,8 @@
       "status": "NOT_RUN",
       "package": "P1-C",
       "partial_evidence": [
-        "docs/01-research/38-s1-b5-ir-parity-tool-broker-evidence.md"
+        "docs/01-research/38-s1-b5-ir-parity-tool-broker-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "两个合同应用同名资源及主体完整隔离"
     },
@@ -349,7 +363,8 @@
       "status": "NOT_RUN",
       "package": "P1-E",
       "partial_evidence": [
-        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md"
+        "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
       ],
       "missing_full_acceptance": "真实恶意参数工作区逃逸与凭据读取均拒绝"
     },
