@@ -123,9 +123,15 @@ class SignedRuntimeSuite:
             return exc.code,dict(exc.headers),exc.read(1048577)
 
     def _sha(self):
-        if not self.snapshot.exists():
-            return None
-        return hashlib.sha256(self.snapshot.read_bytes()).hexdigest()
+        # Publisher-private directory is 2750, inaccessible to runner UID.
+        # Ask the actual owner to inspect the atomic snapshot bytes.
+        script = ("import hashlib,sys,pathlib\n"
+                  "p=pathlib.Path(sys.argv[1 ])\n"
+                  "print(hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else 'MISSING')")
+        proof=self._user_call(PUBL,["-c",script,self.snapshot],
+                              strict=True,timeout=10)
+        digest=proof.stdout.strip()
+        return None if digest=="MISSING" else digest
 
     def _make_dirs(self):
         for folder in (self.pubdir,self.rodir,self.roready):
