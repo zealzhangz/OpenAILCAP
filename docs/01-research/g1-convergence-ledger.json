@@ -11,7 +11,8 @@
       "package": "P0-A",
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "三身份在同一正式内核生成 revision/hash/receipt/audit"
     },
@@ -96,7 +97,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md"
+        "docs/01-research/32-g1-b01-c1-real-ci-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "目标事务故障注入后物理资源版本与成功回执均回滚"
     },
@@ -107,7 +109,8 @@
         "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md",
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
         "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "真实原生 CLI 与 Web 越界只能修改派生库且权威隔离"
     },
@@ -115,7 +118,8 @@
       "status": "NOT_RUN",
       "package": "P0-A",
       "partial_evidence": [
-        "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md"
+        "docs/01-research/41-s1-b8-real-saltcorn-native-write-path-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "真实 Pack 全量差异审批及默认拒绝覆盖权威资源"
     },
@@ -125,7 +129,8 @@
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
         "docs/01-research/53-g1-p0a-real-human-agent-cas-evidence.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "模型伪造身份经可信宿主工具实际拒绝"
     },
@@ -135,7 +140,8 @@
       "partial_evidence": [
         "docs/01-research/34-g1-b01-b1-browser-agent-plugin-evidence.md",
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "三写入者只读和跨应用拒绝且敏感内容不泄露"
     },
@@ -154,7 +160,8 @@
       "partial_evidence": [
         "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
         "docs/01-research/52-g1-p0a-three-writer-integrated-regression.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "真实插件安装运行和数据库旁路无未管理写入"
     },
@@ -163,7 +170,8 @@
       "package": "P0-B",
       "partial_evidence": [
         "docs/01-research/50-s1-b17-readonly-adaptation-snapshot-comparison.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "同进程权威 DB、原生 REST、真实浏览器和缓存一致"
     },
@@ -171,7 +179,8 @@
       "status": "NOT_RUN",
       "package": "P0-B",
       "partial_evidence": [
-        "docs/01-research/48-s1-b15-host-firewall-atomic-public-snapshot-evidence.md"
+        "docs/01-research/48-s1-b15-host-firewall-atomic-public-snapshot-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "权威签名新鲜度与依赖断裂在发布前阻断"
     },
@@ -213,7 +222,8 @@
       "status": "NOT_RUN",
       "package": "P0-B",
       "partial_evidence": [
-        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md"
+        "docs/01-research/35-s1-b2-schema-runtime-manifest-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "数据字段与页面流程代码依赖闭包完整校验"
     },
@@ -321,7 +331,8 @@
       "status": "NOT_RUN",
       "package": "P0-B",
       "partial_evidence": [
-        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md"
+        "docs/01-research/37-s1-b4-real-deepseek-custom-code-sandbox-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "人工代码资产与 AI 页面修改跨域依赖和版本一致"
     },
@@ -355,7 +366,8 @@
       "status": "NOT_RUN",
       "package": "P0-B",
       "partial_evidence": [
-        "docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md"
+        "docs/01-research/43-s1-b10-real-saltcorn-traffic-cutover-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "故障发布回滚后用户可见版本与全部资产一致"
     },
@@ -364,7 +376,8 @@
       "package": "P1-E",
       "partial_evidence": [
         "docs/01-research/39-s1-b6-real-plugin-docker-isolation-evidence.md",
-        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md"
+        "docs/01-research/54-g1-p0a-real-docker-same-instance-evidence.md",
+        "docs/01-research/55-g1-p0a-pack-review-approved-stage-evidence.md"
       ],
       "missing_full_acceptance": "真实恶意参数工作区逃逸与凭据读取均拒绝"
     },
