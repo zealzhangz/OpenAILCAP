@@ -236,7 +236,7 @@ def run_suite(*, base,context, human_page, token_agent, token_runtime,
 
     # Real CLI (official @saltcorn/cli) is called ONLY through an admitted
     # one-shot approval, and ONLY for a separate disposable staging SQLite.
-    staging_db=native_runtime/"p0a-approved-pack-v3-stage.sqlite"
+    staging_db=native_runtime/"projection-p0a-approved-pack-v3-stage.sqlite"
     packfile=stage/"p0a-pack-admitted-v3.json"
     # runtime-private is intentionally 0700, inaccessible to the trusted
     # coordinator. Ask the actual Native owner UID to inspect it instead.
