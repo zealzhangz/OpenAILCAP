@@ -164,7 +164,9 @@ def main():
                          "p0b_publisher.py","p0b_readonly_web.py",
                          "p0b_signed_outbox_server.py",
                          "p0b_consumer_native_ipc.py",
-                         "p0b_durable_consumer.py"),
+                         "p0b_durable_consumer.py",
+                         "p0b_reconciler.py",
+                         "p0b_reconcile_fault_proxy.py"),
             "platform-saltcorn":("contract-pack.json","seed-contract.js",
                                  "p0b-seed-second-contract.js")
         }.items():
@@ -872,7 +874,7 @@ def main():
                     evidence["p0b"]=pack_round["p0b"]
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":65,
+                        "originalB9Checks":36,"additionalChecks":75,
                         "pluginDockerSandboxValidated":True,
                         "signedReadOnlyRuntimeHotSwapValidated":True,
                         "b11B14AuthorityDataSignedInSameKernel":True,
@@ -921,7 +923,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":101,
+                "expected":111,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -929,7 +931,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==101 and all(
+    return 0 if len(evidence["checks"])==111 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
