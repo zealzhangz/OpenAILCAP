@@ -124,10 +124,12 @@ class ConsumerRound:
         if self.source_meta["uid"]!=pwd.getpwnam(KERN).pw_uid:
             raise AssertionError("SIGNED_SOURCE_NOT_REAL_KERNEL_UID")
         status,body=self._source_request(self.source_token)
-        if status!=200 or body["head"]!=2:
-            # The second successful restart occurs after B2's third form write.
-            if not(round_number==2 and status==200 and body["head"]==3):
-                raise AssertionError("SIGNED_SOURCE_HEAD_OR_AUTH_INVALID")
+        expected=(2 if round_number==1 else
+                  3 if round_number==2 else round_number+3)
+        if status!=200 or body.get("head")!=expected:
+            raise AssertionError(
+                "SIGNED_SOURCE_HEAD_OR_AUTH_INVALID expected="+str(expected)+
+                " actual="+str(body))
         return self.source_meta
 
     def _stop_source(self):
