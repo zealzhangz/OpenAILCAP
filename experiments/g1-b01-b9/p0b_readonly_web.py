@@ -118,7 +118,8 @@ def load_snapshot(path,publisher_uid,public_key):
                 state["rows_digest"]!=payload["rowsDigest"]):
                 raise SnapshotDenied("SNAPSHOT_ROWS_NOT_B2_SIGNED")
             return {"payload":payload,"rows":rows,
-                    "digest":state["rows_digest"]}
+                    "digest":state["rows_digest"],
+                    "artifactSha256":hashlib.sha256(raw).hexdigest()}
     except SnapshotDenied:
         raise
     except (OSError,ValueError,TypeError,sqlite3.Error):
@@ -163,6 +164,52 @@ def current_head(config):
             head["head"],head["rowsDigest"])
 
 
+
+def publication_state(config):
+    """One B2 read transaction includes current release, B11 data and
+    active-publication pointer; the live Kernel grant is required.
+    """
+    req=Request(
+        config["kernelBase"]+"/v3/apps/app-a/tools/publication.read",
+        data=b"{}",headers={
+            "Authorization":"Bearer "+config["kernelReadToken"],
+            "Content-Type":"application/json"},method="POST")
+    try:
+        with urlopen(req,timeout=5) as resp:
+            if resp.status!=200:
+                raise SnapshotDenied("PUBLICATION_POINTER_UNAVAILABLE")
+            data=json.loads(resp.read(4097))
+    except (HTTPError,URLError,OSError,TimeoutError,ValueError):
+        raise SnapshotDenied("PUBLICATION_POINTER_UNAVAILABLE") from None
+    expected={"version","manifestHash","draftRevision",
+              "outboxHead","rowsDigest"}
+    if (not isinstance(data,dict) or set(data)!={
+        "app","epoch","active","source"} or data["app"]!="app-a" or
+        type(data["epoch"]) is not int or data["epoch"]<0 or
+        not isinstance(data["source"],dict) or
+        set(data["source"])!=expected):
+        raise SnapshotDenied("PUBLICATION_POINTER_INVALID")
+    active=data["active"]
+    if active is not None and (
+        not isinstance(active,dict) or
+        set(active)!=expected|{"snapshotSha256"} or
+        not isinstance(active["snapshotSha256"],str) or
+        not re.fullmatch(r"[0-9a-f]{64}",active["snapshotSha256"])
+    ):
+        raise SnapshotDenied("PUBLICATION_ACTIVE_INVALID")
+    return data
+
+
+def active_snapshot_path(config,publication):
+    """Reader does not use a caller-controlled file path.
+
+    Kernel controls only a SHA-256 filename. Publisher creates actual
+    verified immutable-in-use file in the fixed sibling candidates dir.
+    """
+    digest=publication["active"]["snapshotSha256"]
+    return Path(config["snapshot"]).parent/"candidates"/(digest+".sqlite")
+
+
 def render(data):
     p=data["payload"]
     columns=p["viewColumns"]
@@ -200,16 +247,39 @@ def server(config):
             if self.path!=ROUTE:
                 return self.reply(404,b"Not found")
             try:
-                old=current_head(config)
-                data=load_snapshot(config["snapshot"],
-                                   config["publisherUid"],config["publicKeyHex"])
+                before=publication_state(config)
+                active=before["active"]
+                if active is None:
+                    # Prior P0-B legacy path remains strictly fail-closed
+                    # until a Kernel activation is explicitly committed.
+                    old=current_head(config)
+                    data=load_snapshot(
+                        config["snapshot"],config["publisherUid"],
+                        config["publicKeyHex"])
+                    p=data["payload"]
+                    if old!=(p["version"],p["manifestHash"],
+                             p["draftRevision"],p["outboxHead"],
+                             p["rowsDigest"]):
+                        raise SnapshotDenied("SNAPSHOT_NOT_LATEST_SOURCE")
+                    html=render(data)
+                    if (current_head(config)!=old or
+                        publication_state(config)!=before):
+                        raise SnapshotDenied("B2_SOURCE_MOVED_DURING_RENDER")
+                    return self.reply(200,html,release=p["version"])
+                # Only ONE B2 atomic publication pointer is consulted;
+                # current domain source MUST equal active signed source.
+                if before["source"]!={k:active[k] for k in before["source"]}:
+                    raise SnapshotDenied("ACTIVE_PUBLICATION_NOT_LATEST_B2")
+                data=load_snapshot(
+                    active_snapshot_path(config,before),
+                    config["publisherUid"],config["publicKeyHex"])
                 p=data["payload"]
-                if old!=(p["version"],p["manifestHash"],p["draftRevision"],
-                         p["outboxHead"],p["rowsDigest"]):
-                    raise SnapshotDenied("SNAPSHOT_NOT_LATEST_SOURCE")
+                if (data["artifactSha256"]!=active["snapshotSha256"] or
+                    {k:p[k] for k in before["source"]}!=before["source"]):
+                    raise SnapshotDenied("ACTIVE_SNAPSHOT_BINDING_FAILED")
                 html=render(data)
-                if current_head(config)!=old:
-                    raise SnapshotDenied("B2_SOURCE_MOVED_DURING_RENDER")
+                if publication_state(config)!=before:
+                    raise SnapshotDenied("ACTIVATION_CHANGED_DURING_RENDER")
                 return self.reply(200,html,release=p["version"])
             except SnapshotDenied:
                 return self.reply(503,b"Verified published snapshot unavailable")
