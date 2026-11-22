@@ -39,6 +39,17 @@ jobs:
           cd experiments/g1-b01-b9
           python3 -u -m unittest -v test_projector test_pack_approval_gate test_p0b_business \
             2>&1 | tee /tmp/s1-b9-projector-unit.log
+      - name: B11 B12 B13 B14 signed-outbox durable Consumer/IPC regression
+        run: |
+          set -euo pipefail
+          (cd experiments/g1-b01-b11 && python3 -u -m unittest -v test_projection) \
+            2>&1 | tee /tmp/s1-b9-b11-regression.log
+          (cd experiments/g1-b01-b12 && python3 -u -m unittest -v test_consumer) \
+            2>&1 | tee /tmp/s1-b9-b12-regression.log
+          (cd experiments/g1-b01-b13 && python3 -u -m unittest -v test_ipc_guard) \
+            2>&1 | tee /tmp/s1-b9-b13-regression.log
+          (cd experiments/g1-b01-b14 && python3 -u -m unittest -v test_signed_security) \
+            2>&1 | tee /tmp/s1-b9-b14-regression.log
       - name: B2 trusted schema/store and B5 ToolBroker regressions
         run: |
           set -euo pipefail
@@ -64,13 +75,17 @@ jobs:
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9run
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9plug
           sudo -n groupadd --system ailcapb9public
+          sudo -n groupadd --system ailcapb9ipc
+          sudo -n usermod -aG ailcapb9ipc ailcapb9run
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9pub
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9public ailcapb9ro
+          sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9ipc ailcapb9cons
           id ailcapb9kern
           id ailcapb9run
           id ailcapb9plug
           id ailcapb9pub
           id ailcapb9ro
+          id ailcapb9cons
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9run)" ]]
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9plug)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9plug)" ]]
@@ -81,7 +96,10 @@ jobs:
           [[ "$(id -u ailcapb9kern)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9run)" != "$(id -u ailcapb9ro)" ]]
           [[ "$(id -u ailcapb9plug)" != "$(id -u ailcapb9ro)" ]]
-      - name: SAME B2 Kernel B14 Ed25519 B15 atomic Publisher B17 read-only Chromium v1-v3-rollback
+          for name in ailcapb9kern ailcapb9run ailcapb9plug ailcapb9pub ailcapb9ro; do
+            [[ "$(id -u "$name")" != "$(id -u ailcapb9cons)" ]]
+          done
+      - name: SAME B2 B11 signed durable Consumer AF_UNIX B14 B15/B17 Chromium replay outage recovery
         env:
           DEEPSEEK_KEY: ''
         run: |
@@ -99,6 +117,10 @@ jobs:
             /tmp/s1-b9-b2-regression.log
             /tmp/s1-b9-b5-regression.log
             /tmp/s1-b9-b6-host-relay-policy.log
+            /tmp/s1-b9-b11-regression.log
+            /tmp/s1-b9-b12-regression.log
+            /tmp/s1-b9-b13-regression.log
+            /tmp/s1-b9-b14-regression.log
             /tmp/s1-b9-evidence.json
             /tmp/s1-b9-real-e2e.log
           if-no-files-found: warn

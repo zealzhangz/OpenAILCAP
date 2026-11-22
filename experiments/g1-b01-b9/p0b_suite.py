@@ -21,6 +21,7 @@ from urllib.error import HTTPError
 from urllib.request import Request,urlopen
 
 from p0b_signed_release import verify,ReleaseSignatureRejected
+from p0b_consumer_suite import ConsumerRound
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"g1-b01-b14"))
 from signed_projection import verify_event,SignatureRefused
 
@@ -519,6 +520,13 @@ class SignedRuntimeSuite:
         return {"newSignedEvents":1,"businessRows":2,
                 "sameReleaseDataFreshnessValidated":True,
                 "manualNativeCatchupRequired":True}
+
+    def durable_consumer_round(self,*,native_cmd,native_runtime,human_page):
+        """Actual asynchronous B14 signed IPC consumer over this SAME B2."""
+        roundtrip=ConsumerRound(self,native_cmd=native_cmd,
+                                native_runtime=native_runtime,
+                                human_page=human_page)
+        return roundtrip.run()
 
     def stop(self):
         if self.page is not None:

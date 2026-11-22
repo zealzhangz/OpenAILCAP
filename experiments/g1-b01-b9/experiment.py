@@ -152,14 +152,19 @@ def main():
             "g1-b01-b4":("registry.py","policy.py","sandbox.py","worker.py"),
             "g1-b01-b5":("tool_broker.py",),
             "g1-b01-b7":("physical_sql_oracle.py",),
-            "g1-b01-b14":("signed_projection.py",),
-            "g1-b01-b11":("projection_source.py",),
+            "g1-b01-b14":("signed_projection.py",
+                            "signed_native_ipc.py","consumer_daemon.py"),
+            "g1-b01-b11":("projection_source.py","apply_worker.py"),
+            "g1-b01-b13":("native_ipc.py",),
             "g1-b01-b8":(),
             "g1-b01-b9":("kernel_service.py","native_oracle.py",
                          "native_env_launcher.py","plugin_client.py",
                          "projector.py","p0b_authority_business.py",
                          "p0b_signed_release.py",
-                         "p0b_publisher.py","p0b_readonly_web.py"),
+                         "p0b_publisher.py","p0b_readonly_web.py",
+                         "p0b_signed_outbox_server.py",
+                         "p0b_consumer_native_ipc.py",
+                         "p0b_durable_consumer.py"),
             "platform-saltcorn":("contract-pack.json","seed-contract.js",
                                  "p0b-seed-second-contract.js")
         }.items():
@@ -487,14 +492,43 @@ def main():
                     salt_base=start_saltcorn(first["db"],3139)
                     native_page=context.new_page()
                     login_native(native_page,salt_base,admin_password)
-                    view_page=context.new_page()
-                    view_page.goto(salt_base+"/view/s1_contract_list",
-                                   wait_until="domcontentloaded")
-                    rendered=view_page.content()
+                    # Native Saltcorn occasionally accepts /auth/login
+                    # before its first View render is ready. Retry ONLY the
+                    # read navigation, bounded, with a fresh Chromium tab;
+                    # never bypass the real HTTP 200/contract-row assertion.
+                    view_errors=[]
+                    view_page=None
+                    rendered=""
+                    for attempt in range(1,4):
+                        candidate=context.new_page()
+                        try:
+                            response=candidate.goto(
+                                salt_base+"/view/s1_contract_list",
+                                wait_until="domcontentloaded",timeout=18000)
+                            rendered=candidate.content()
+                            if (response and response.status==200 and
+                                "HT-2026-000001" in rendered):
+                                view_page=candidate
+                                break
+                            view_errors.append(
+                                "attempt="+str(attempt)+" status="+
+                                str(response.status if response else None))
+                        except Exception as exc:
+                            from playwright.sync_api import TimeoutError as PwTimeout
+                            if not isinstance(exc,PwTimeout):
+                                raise
+                            view_errors.append("attempt="+str(attempt)+" timeout")
+                        candidate.close()
+                        time.sleep(.4)
+                    if view_page is None:
+                        raise AssertionError(
+                            "B9_NATIVE_REAL_VIEW_UNAVAILABLE "+str(view_errors))
                     check("B9-15-genuine-Saltcorn-native-HTML-renders-v1-rows",
                           "HT-2026-000001" in rendered and
                           "s1_contract_list" in view_page.url,
-                          {"httpHtml":200,"realNativeContract":True})
+                          {"httpHtml":200,"realNativeContract":True,
+                           "nativeViewAttempt":len(view_errors)+1,
+                           "transientNavigationRetries":view_errors})
                     edit=context.new_page()
                     fid=first["physical"]["fieldLabels"]
                     fieldid=execute([
@@ -838,11 +872,12 @@ def main():
                     evidence["p0b"]=pack_round["p0b"]
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":47,
+                        "originalB9Checks":36,"additionalChecks":55,
                         "pluginDockerSandboxValidated":True,
                         "signedReadOnlyRuntimeHotSwapValidated":True,
                         "b11B14AuthorityDataSignedInSameKernel":True,
                         "sameVersionBusinessHeadFreshnessValidated":True,
+                        "signedDurableConsumerRestartOutageAndReplay":True,
                         "nativeServerZeroRestartHotSwapValidated":False,
                         "pluginInstallerOrRevocationValidated":False,
                         "nativePackFullDiffApprovalValidated":"STAGING_ONLY",
@@ -877,14 +912,16 @@ def main():
             owned=[authority,runtime,ready]
             owned.extend(p for p in (
                 home/"published-private",home/"readonly-private",
-                home/"readonly-ready") if p.exists())
+                home/"readonly-ready",home/"consumer-private",
+                home/"consumer-ipc",home/"consumer-ready"
+            ) if p.exists())
             execute(["sudo","-n","chown","-R",
                      str(os.getuid())+":"+str(os.getgid()),
                      *owned],strict=False,timeout=12)
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":83,
+                "expected":91,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -892,7 +929,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==83 and all(
+    return 0 if len(evidence["checks"])==91 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
