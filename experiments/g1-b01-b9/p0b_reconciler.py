@@ -25,7 +25,7 @@ from p0b_publisher import publish,PublishRejected
 from p0b_readonly_web import load_snapshot,SnapshotDenied
 from p0b_signed_release import verify,ReleaseSignatureRejected
 
-KEYS={"kernelBase","kernelReadToken","kernelActivateToken","sourceUrl",
+KEYS={"kernelBase","activateBase","activateTimeoutMs","kernelReadToken","kernelActivateToken","sourceUrl",
       "sourceToken","nativeSocket","output","publicKeyHex","packTemplate",
       "intervalMs","journal","status"}
 SOURCE=("version","manifestHash","draftRevision","outboxHead","rowsDigest")
@@ -50,6 +50,9 @@ def config(path):
         not all(isinstance(c[k],str) and len(c[k])>24 for k in
                 ("kernelReadToken","kernelActivateToken","sourceToken")) or
         not c["kernelBase"].startswith("http://127.0.0.1:") or
+        not c["activateBase"].startswith("http://127.0.0.1:") or
+        type(c["activateTimeoutMs"]) is not int or
+        not 100<=c["activateTimeoutMs"]<=5000 or
         not c["sourceUrl"].startswith("http://127.0.0.1:") or
         not c["sourceUrl"].endswith("/v5/apps/app-a/projection/signed-release") or
         not c["nativeSocket"].startswith("/tmp/s1-b9-derive-") or
@@ -88,8 +91,13 @@ def post(url,token,data,timeout=4):
 
 
 def tool(c,operation,args,high=False):
-    return post(c["kernelBase"]+"/v3/apps/app-a/tools/"+operation,
-                c["kernelActivateToken"] if high else c["kernelReadToken"],args)
+    base=(c["activateBase"] if operation=="publication.activate"
+          else c["kernelBase"])
+    timeout=(c["activateTimeoutMs"]/1000 if operation=="publication.activate"
+             else 4)
+    return post(base+"/v3/apps/app-a/tools/"+operation,
+                c["kernelActivateToken"] if high else c["kernelReadToken"],
+                args,timeout=timeout)
 
 
 def oracle(c):
@@ -206,6 +214,14 @@ def step(c):
         raise Pending("B2_SOURCE_NOT_VERIFIABLE")
     source=current["source"]
     active=current["active"]
+    # Resolve a persisted UNKNOWN FIRST, even if the Kernel activation
+    # already made the current snapshot equal the desired source.
+    unknown=jobs(c,("SUBMITTED","UNKNOWN","OPERATOR_REQUIRED"))
+    if unknown:
+        cid,original,_=unknown[0]
+        r=receipt(c,cid,json.loads(original))
+        return {"state":"RECONCILED_AFTER_UNKNOWN","epoch":r["epoch"],
+                "head":r["active"]["outboxHead"],"changeId":cid}
     if isinstance(active,dict) and {
         k:active[k] for k in SOURCE}==source:
         try:
@@ -218,12 +234,6 @@ def step(c):
                         "epoch":current["epoch"]}
         except (OSError,SnapshotDenied,ValueError,KeyError):
             pass
-    unknown=jobs(c,("SUBMITTED","UNKNOWN","OPERATOR_REQUIRED"))
-    if unknown:
-        cid,original,_=unknown[0]
-        r=receipt(c,cid,json.loads(original))
-        return {"state":"RECONCILED_AFTER_UNKNOWN","epoch":r["epoch"],
-                "head":r["active"]["outboxHead"],"changeId":cid}
     physical=oracle(c)
     if physical["cursor"]!=source["outboxHead"]:
         return {"state":"WAIT_NATIVE_CURSOR","head":source["outboxHead"],
