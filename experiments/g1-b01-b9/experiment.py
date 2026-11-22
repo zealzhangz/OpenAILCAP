@@ -872,7 +872,7 @@ def main():
                     evidence["p0b"]=pack_round["p0b"]
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":55,
+                        "originalB9Checks":36,"additionalChecks":65,
                         "pluginDockerSandboxValidated":True,
                         "signedReadOnlyRuntimeHotSwapValidated":True,
                         "b11B14AuthorityDataSignedInSameKernel":True,
@@ -921,7 +921,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":91,
+                "expected":101,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -929,7 +929,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==91 and all(
+    return 0 if len(evidence["checks"])==101 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
