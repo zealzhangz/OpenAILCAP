@@ -35,6 +35,7 @@ from schema_core import sha
 from projector import compile_release,check_compiled,ProjectionRejected
 from p0a_browser_suite import run_suite
 from p0a_docker_suite import run_suite as run_docker_suite
+from p0a_pack_suite import run_suite as run_pack_suite
 
 KERN="ailcapb9kern"
 RUNT="ailcapb9run"
@@ -799,19 +800,32 @@ def main():
                         native_physical=native_physical, physical=kernel_physical,
                         http=http, make_mutation=make_mutation, check=check)
                     evidence["p0a_docker"]=docker_round
+                    pack_round = run_pack_suite(
+                        base=base, context=context, human_page=page,
+                        token_agent=token_agent, token_runtime=token_runtime,
+                        token_publisher=token_publisher,
+                        plugin_tool=plugin_tool,http=http,broker=broker,
+                        physical=kernel_physical,native_physical=native_physical,
+                        native_cmd=native_cmd,native_runtime=runtime,
+                        native_live_db=restored["db"],
+                        native_live_page=page_again,
+                        pack_v1=first["compiled"]["projectionPack"],
+                        template=template,stage=stage,
+                        make_mutation=make_mutation,check=check)
+                    evidence["p0a_pack"]=pack_round
                     evidence["p0a"]={
                         "scope":"same B9 kernel, plugin UID, Agent and Native",
-                        "originalB9Checks":36,"additionalChecks":24,
+                        "originalB9Checks":36,"additionalChecks":32,
                         "pluginDockerSandboxValidated":True,
                         "pluginInstallerOrRevocationValidated":False,
-                        "nativePackFullDiffApprovalValidated":False,
+                        "nativePackFullDiffApprovalValidated":"STAGING_ONLY",
                         "formalWOrTCFullPass":False}
                     evidence["final"]={
                         "v1ManifestHash":pub1["manifestHash"],
                         "v2ManifestHash":pub2["manifestHash"],
                         "v1ProjectionHash":first["compiled"]["projectionPackHash"],
                         "v2ProjectionHash":second["compiled"]["projectionPackHash"],
-                        "activeRelease":1,
+                        "activeRelease":kernel_physical()["app-a"]["publishedVersion"],
                         "authorityAppARevision":kernel_physical()["app-a"]["revision"],
                         "authorityAppBRevision":0,
                         "physicalSaltcornNativeWebBypassContained":True,
@@ -837,7 +851,7 @@ def main():
             evidence["summary"]={
                 "passed":sum(x["status"]=="PASS" for x in evidence["checks"]),
                 "attempted":len(evidence["checks"]),
-                "expected":60,
+                "expected":68,
                 "modelCalls":0,"g1Passed":False
             }
             Path(args.output).write_text(json.dumps(
@@ -845,7 +859,7 @@ def main():
             print("S1_B9_RESULT "+
                   json.dumps(evidence["summary"],ensure_ascii=False),
                   flush=True)
-    return 0 if len(evidence["checks"])==60 and all(
+    return 0 if len(evidence["checks"])==68 and all(
         x["status"]=="PASS" for x in evidence["checks"]) else 1
 
 
