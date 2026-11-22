@@ -65,6 +65,7 @@ jobs:
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9plug
           sudo -n groupadd --system ailcapb9public
           sudo -n groupadd --system ailcapb9ipc
+          sudo -n usermod -aG ailcapb9ipc ailcapb9run
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin ailcapb9pub
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9public ailcapb9ro
           sudo -n useradd --system --no-create-home --shell /usr/sbin/nologin -G ailcapb9ipc ailcapb9cons
