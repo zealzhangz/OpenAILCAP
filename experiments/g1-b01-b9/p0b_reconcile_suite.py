@@ -84,7 +84,17 @@ class AutoReconcileRound:
                 d["source"]["outboxHead"]==n):
                 return d
             return None
-        return self._poll(probe,seconds)
+        try:
+            return self._poll(probe,seconds)
+        except AssertionError as err:
+            logfile=self.home/"p0b-autoreconcile.log"
+            raise AssertionError(
+                "P0B_AUTO_ACTIVE_HEAD_TIMEOUT "+str(n)+" epoch="+str(epoch)+
+                " state="+repr(self._status())+
+                " journal="+repr(self._journal())+
+                " daemonLog="+(logfile.read_text()[-1400:]
+                              if logfile.exists() else "MISSING")
+            ) from err
 
     def _api(self,tool,token,cmd):
         req=Request(self.s.base+"/v3/apps/app-a/tools/"+tool,
