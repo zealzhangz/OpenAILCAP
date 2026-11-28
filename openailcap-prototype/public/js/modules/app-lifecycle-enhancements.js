@@ -13,7 +13,7 @@ const snapshotApp = id => {
   const app=Store.find('apps',id);if(!app)return null;
   const pick=(key)=>((Store.get(key)||[]).filter(x=>x.appId===id));
   const models=pick('models');
-  return {app:structuredClone(app),appSpec:structuredClone((Store.get('appSpecs')||[]).filter(x=>x.meta?.appId===id)),
+  return {app:structuredClone(app),appSpec:structuredClone((Store.get('appSpecs')||[]).find(x=>x.meta?.appId===id)||null),
     models:structuredClone(models),relations:structuredClone((Store.get('relations')||[]).filter(r=>models.some(m=>m.id===r.from)&&models.some(m=>m.id===r.to))),
     forms:structuredClone(pick('forms')),logicFlows:structuredClone(pick('logicFlows')),
     bpmDefs:structuredClone(pick('bpmDefs'))};
@@ -128,7 +128,7 @@ Object.assign(AppsBase,{
       okText:'生成并下载 JSON',onOk:()=>{
         const includeSeed=document.getElementById('artSeed').checked;
         const artifact={format:'openailcap-app-bundle',bundleVersion:'1.0.0',generatedAt:new Date().toISOString(),
-          app:snapshot.app,appSpecs:snapshot.appSpec,models:document.getElementById('artSchema').checked?snapshot.models:[],
+          app:snapshot.app,appSpec:snapshot.appSpec,models:document.getElementById('artSchema').checked?snapshot.models:[],
           relations:snapshot.relations,forms:snapshot.forms,logicFlows:snapshot.logicFlows,bpmDefs:snapshot.bpmDefs,
           assets:document.getElementById('artAssets').checked?[]:undefined,seedData:includeSeed?{}:undefined};
         const bytes=JSON.stringify(artifact);
