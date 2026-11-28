@@ -19,78 +19,48 @@
 >
 # OpenAILCAP 第 3 步：技术架构设计
 
-## 3.1 技术栈最终确定
+## 3.1 技术栈最终确定（唯一基线）
 
-### 核心技术栈
+> 本节取代历史版本中“Express/NestJS 可选”“Temporal 作为通用流程引擎”等互相冲突的描述。当前原型与目标生产架构分层：原型为原生 HTML/CSS/ES Modules + Node.js 内置 HTTP 静态服务器 + localStorage；生产平台目标为 React 18 + TypeScript + NestJS + PostgreSQL/Prisma。原型不是生产栈实现，不得据此推断生产后端已交付。
 
-```
-层级           | 技术选择                    | 版本   | 理由
----|---|---|---
-前端框架       | React                       | 18.x  | 现代、生态强、团队熟悉
-前端语言       | TypeScript                  | 5.x   | 类型安全、可维护性高
-UI 库          | Ant Design Pro              | 5.x   | 企业级、组件完整、中文支持好
-状态管理       | Redux Toolkit               | 1.9+  | 生态成熟、DevTools 完善
-HTTP 客户端    | axios + React Query         | 最新  | 缓存管理、自动重试
-编辑器相关     | react-dnd（拖拽）           | 16.x  | 表单/流程设计器基础
-代码编辑       | Monaco Editor               | 最新  | VS Code 同款、功能完整
+### 生产平台基线
 
-后端框架       | Express                     | 4.x   | 轻量、高效、中间件丰富
-后端语言       | TypeScript                  | 5.x   | 类型安全、现代开发体验
-API 框架       | NestJS (可选)               | 10.x  | 微服务友好、企业级
-数据库 ORM     | Prisma                      | 5.x   | 类型安全、迁移系统完善
-验证库         | Joi / Zod                   | 最新  | 运行时类型检查
-日志库         | Winston                     | 3.x   | 结构化日志、多输出
-任务队列       | Bull (Redis-based)          | 4.x   | 轻量、可靠、易于扩展
+| 层次 | 唯一主选型 | 职责与边界 |
+|---|---|---|
+| Web 工作台 | React 18 + TypeScript 5 + Vite | 生产前端；按页面功能映射逐步迁移现有原型，不允许删减入口和交互 |
+| UI 组件 | Ant Design 5 + 自研设计系统 | 通用表格、表单、弹窗、反馈；设计器画布使用专用组件 |
+| 路由/状态 | React Router 6 + Redux Toolkit | 路由权限、共享 AppSpec 状态、异步状态 |
+| API | NestJS 10 + TypeScript | 唯一平台业务 API；静态原型服务器不承载业务 API |
+| API 契约 | REST + OpenAPI 3.1 + Zod/DTO | 统一请求、响应、错误码、版本和兼容策略 |
+| 数据库/ORM | PostgreSQL 15+ + Prisma 5 | 统一 UUID 主键；迁移纳入版本控制 |
+| 缓存/短任务 | Redis 7 + BullMQ | 缓存、短时异步任务和重试；不承载长周期业务流程语义 |
+| Agent 长任务 | Temporal | Agent 规划、检查点、恢复和长任务编排；不替代 BPMN 引擎 |
+| BPMN | BPMN 2.0 兼容流程引擎（独立 ADR/POC 选型门） | 长周期人工审批、定时器、事件、补偿和流程实例 |
+| LogicFlow | 自研确定性 DAG 执行器 | 短时、无持久人工等待的逻辑计算；有界执行、幂等和确定性 |
+| 文件/制品 | S3 兼容对象存储 + 不可变 Artifact Registry | 上传、版本、SBOM、签名、晋级和回滚 |
+| 可观测性 | OpenTelemetry + Prometheus/Grafana + 集中日志 | Trace/Metric/Log 关联、告警与审计分离 |
+| 测试 | Vitest/Jest + Playwright + API/DB 集成测试 | 单元、契约、集成、浏览器 E2E、安全和恢复测试 |
 
-数据库         | PostgreSQL                  | 15.x  | 功能完整、可靠、开源
-缓存           | Redis                       | 7.x   | 高性能、持久化、支持多数据结构
-消息队列       | Redis (简化版) / RabbitMQ   | -     | MVP 用 Redis，扩展用 RabbitMQ
-文件存储       | Minio (S3 兼容)             | 最新  | 开源、自建、完全控制
-搜索引擎       | Elasticsearch (可选)        | 8.x   | 审计日志搜索优化
+### 明确禁止的混用
 
-流程引擎       | Temporal                    | 1.x   | 企业级、分布式、容错强
-代码生成       | @babel/parser + codegen    | 最新  | AST 解析、类型安全的代码生成
-AI 集成        | LangChain                   | 0.1+  | 模型无关、链式操作、RAG 支持
-安全/加密      | bcryptjs, jsonwebtoken      | 最新  | 密码、token、加密
-权限库         | Casbin (或 @casl/ability)   | 最新  | 灵活的权限模型、易于扩展
+1. 不得同时把 Express 和 NestJS 描述为平台业务 API 主框架。
+2. 不得把 Temporal、BullMQ 和 BPMN 引擎当作可互换的流程引擎。
+3. SaaS 共享库统一采用 `tenant_id + PostgreSQL RLS`；私有化独立部署可配置独立数据库。禁止动态租户表与上述方案并存。
+4. 所有业务模型、表单、逻辑、BPMN、权限、集成和部署描述均以版本化 AppSpec 为源；SQL/Prisma、BPMN XML、前端和权限策略是可追溯生成物。
+5. 组件版本在实施仓库锁文件与 SBOM 中固定；本文版本范围是架构基线，不代表当前原型已安装或生产已验证。
 
-DevOps         | Docker                      | 最新  | 容器化、隔离、易于部署
-编排           | docker-compose              | 最新  | MVP 本地部署、一键启动
-CI/CD          | GitHub Actions (后期)       | -     | 集成 GitHub、免费额度足
-监控           | Prometheus + Grafana        | 最新  | 开源、可观测、告警完善
-日志中心       | ELK Stack (Loki 更轻量)     | 最新  | 日志聚合、全文搜索
-```
+### 原型与生产实现的分层
 
----
+| 项目 | 当前可运行原型 | 目标生产平台 |
+|---|---|---|
+| 前端 | Vanilla JS ES Modules、HTML、CSS | React + TypeScript |
+| 服务端 | Node.js 内置 HTTP，仅静态资源 | NestJS 业务 API |
+| 状态 | 浏览器 localStorage | PostgreSQL 持久化 + Redis 缓存 |
+| AI | 本地规则/模板模拟，显式 LOCAL DEMO | 受控 Agent Orchestrator + Tool Registry |
+| Logic/BPM | 图结构编辑/仿真，不产生真实业务副作用 | Logic DAG 执行器 / BPMN 2.0 引擎 |
+| 交付物 | 原型 JSON 配置导出 | 不可变、可签名、可晋级 Artifact |
 
-### 技术选型理由总结
-
-**为什么选择 TypeScript + Express + React？**
-
-```
-优势：
-✓ 全栈 TypeScript - 团队统一语言，知识迁移低
-✓ 类型安全 - 减少运行时错误 30-50%
-✓ 现代工具链 - esbuild/vite/webpack 编译快
-✓ 社区生态 - npm 包最多、第三方库完善
-✓ 可维护性 - 代码自文档化、IDE 支持强
-
-劣势及解决方案：
-✗ 单线程 - 用 Bull 任务队列做异步处理
-✗ 内存占用 - Kubernetes 自动扩展
-✗ 冷启动 - Lambda/Vercel 不考虑，自建服务器启动快
-
-vs JeecgBoot (Java)：
-  Java 优势：性能、企业成熟度
-  我们劣势：性能稍弱，但对中小企业足够
-  我们优势：开发速度快 50%、前后端统一语言
-  
-vs lowcode-engine (前端中心)：
-  我们优势：有完整后端、工作流、权限系统
-  
-vs AppSmith (混合栈)：
-  我们优势：技术栈统一、易于团队协作、二开成本低
-```
+原型代码路径与设计映射以 `doc/整改/2026-11-28_设计-原型一致性契约.md` 为准。只有生产实现及其测试证据通过后，才能将相应设计能力标记为“已实现”。
 
 ---
 
