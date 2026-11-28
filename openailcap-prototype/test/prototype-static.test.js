@@ -139,11 +139,11 @@ test('Prisma generator emits valid scalar mappings, constraints and bidirectiona
     {id:'order',name:'Order',fields:[{name:'id',type:'string',pk:true,req:true},{name:'customer_id',type:'string',req:true},{name:'amount',type:'decimal',req:true,len:'10,2'},{name:'note',type:'text',req:false}]}
   ];
   const schema=api.generate(models,[{id:'r1',from:'order',f:'customer_id',to:'customer',t:'id',type:'N:1'}]);
-  assert.match(schema,/email\\s+String\\s+@unique\\s+@db\\.VarChar\\(128\\)/);
-  assert.match(schema,/amount\\s+Decimal\\s+@db\\.Decimal\\(10,2\\)/);
-  assert.match(schema,/note\\s+String\\?\\s+@db\\.Text/);
-  assert.match(schema,/customer\\s+Customer\\s+@relation\\("Rel_Order_customer_id_Customer", fields: \\[customer_id\\], references: \\[id\\]\\)/);
-  assert.match(schema,/orderRecords\\s+Order\\[\\]\\s+@relation\\("Rel_Order_customer_id_Customer"\\)/);
+  assert.match(schema,/email\s+String\s+@unique\s+@db\.VarChar\(128\)/);
+  assert.match(schema,/amount\s+Decimal\s+@db\.Decimal\(10,2\)/);
+  assert.match(schema,/note\s+String\?\s+@db\.Text/);
+  assert.match(schema,/customer\s+Customer\s+@relation\("Rel_Order_customer_id_Customer", fields: \[customer_id\], references: \[id\]\)/);
+  assert.match(schema,/orderRecords\s+Order\[\]\s+@relation\("Rel_Order_customer_id_Customer"\)/);
 });
 
 test('Prisma generator rejects unsupported types and broken or incompatible relation references',async()=>{
