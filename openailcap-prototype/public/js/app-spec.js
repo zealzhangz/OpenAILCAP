@@ -3,14 +3,17 @@
  * must additionally run the canonical JSON Schema validator and domain-specific checks.
  */
 const AppSpec = {
-  VERSION:'1.0.0',
+  VERSION:'1.1.0',
+  SUPPORTED_VERSIONS:['1.0.0','1.1.0'],
   validate(spec) {
     const errors=[];
     const need=(condition,path,message)=>{if(!condition)errors.push({path,message});};
     need(!!spec&&typeof spec==='object'&&!Array.isArray(spec),'$','must be an object');
     if(!spec||typeof spec!=='object'||Array.isArray(spec))return {valid:false,errors};
-    need(spec.schemaVersion===this.VERSION,'schemaVersion','unsupported AppSpec version');
-    for(const key of ['meta','dataModels','relations','ui','forms','logic','workflows','security','i18n','deployment'])
+    need(this.SUPPORTED_VERSIONS.includes(spec.schemaVersion),'schemaVersion','unsupported AppSpec version');
+    const required=['meta','dataModels','relations','ui','forms','logic','workflows','security','i18n','deployment'];
+    if(spec.schemaVersion==='1.1.0')required.push('dictionaries');
+    for(const key of required)
       need(Object.prototype.hasOwnProperty.call(spec,key),'$.'+key,'required property is missing');
     need(typeof spec.meta?.appId==='string'&&!!spec.meta.appId,'meta.appId','must be a non-empty string');
     need(typeof spec.meta?.name==='string'&&!!spec.meta.name,'meta.name','must be a non-empty string');
@@ -19,7 +22,26 @@ const AppSpec = {
       need(Array.isArray(spec[key]),key,'must be an array');
     if(errors.length)return {valid:false,errors};
     const models=spec.dataModels,forms=spec.forms;
-    const modelIds=new Set(),formIds=new Set();
+    const modelIds=new Set(),formIds=new Set(),dictionaryIds=new Set(),dictionaryCodes=new Set();
+    const dictionaries=Array.isArray(spec.dictionaries)?spec.dictionaries:[];
+    if(spec.schemaVersion==='1.1.0'){
+      dictionaries.forEach((d,i)=>{
+        const path='dictionaries['+i+']';
+        need(typeof d.id==='string'&&!!d.id,path+'.id','must be a non-empty string');
+        need(!dictionaryIds.has(d.id),path+'.id','duplicate dictionary id');dictionaryIds.add(d.id);
+        need(typeof d.code==='string'&&!!d.code,path+'.code','must be a non-empty string');
+        need(!dictionaryCodes.has(d.code),path+'.code','duplicate dictionary code');dictionaryCodes.add(d.code);
+        need(Number.isInteger(d.version)&&d.version>0,path+'.version','must be a positive integer');
+        need(['list','tree'].includes(d.type),path+'.type','must be list or tree');
+        need(Array.isArray(d.items),path+'.items','must be an array');
+        const visit=(items,itemPath)=>{const values=new Set();(items||[]).forEach((item,j)=>{
+          const p=itemPath+'['+j+']';need(item&&['string','number'].includes(typeof item.value),p+'.value','must be a string or number');
+          need(item&&item.labels&&typeof item.labels==='object'&&!Array.isArray(item.labels)&&Object.keys(item.labels).length>0,p+'.labels','must contain locale labels');
+          if(item&&item.labels)Object.entries(item.labels).forEach(([locale,label])=>need(typeof label==='string',p+'.labels.'+locale,'must be a string'));
+          if(item){need(!values.has(String(item.value)),p+'.value','duplicate sibling value');values.add(String(item.value));if(item.children!==undefined){need(d.type==='tree',p+'.children','children are only allowed in tree dictionaries');need(Array.isArray(item.children),p+'.children','must be an array');visit(item.children,p+'.children');}}
+        });};visit(d.items,path+'.items');
+      });
+    }
     models.forEach((m,i)=>{
       if(!m||typeof m!=='object'||Array.isArray(m)){need(false,'dataModels['+i+']','must be an object');return;}
       need(typeof m.id==='string'&&!!m.id,'dataModels['+i+'].id','must be a non-empty string');
@@ -45,6 +67,12 @@ const AppSpec = {
       (f.fields||[]).forEach((field,j)=>{
         const exists=models.some(m=>(m.fields||[]).some(x=>x.name===field.field));
         need(exists,'forms['+i+'].fields['+j+'].field','field must exist in an AppSpec data model');
+        if(field.dictionaryRef){
+          need(spec.schemaVersion==='1.1.0','forms['+i+'].fields['+j+'].dictionaryRef','dictionary references require AppSpec 1.1.0');
+          const dictionary=dictionaries.find(d=>d.id===field.dictionaryRef.dictionaryId);
+          need(!!dictionary,'forms['+i+'].fields['+j+'].dictionaryRef.dictionaryId','references an unknown dictionary');
+          if(dictionary)need(dictionary.version===field.dictionaryRef.version,'forms['+i+'].fields['+j+'].dictionaryRef.version','dictionary version mismatch');
+        }
       });
     });
     (spec.ui.pages||[]).forEach((p,i)=>{
