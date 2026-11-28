@@ -5,12 +5,12 @@
     string:{type:'String',native:n=>n?('@db.VarChar('+n+')'):''},
     text:{type:'String',native:()=> '@db.Text'},
     int:{type:'Int',native:()=>''},
-    decimal:{type:'Decimal',native:n=>{if(!n)return '@db.Decimal(18,2)';const m=String(n).match(/^(\\d{1,2})\\s*,\\s*(\\d{1,2})$/);if(!m)throw Error('decimal 长度/精度必须为 precision,scale，例如 10,2');return '@db.Decimal('+m[1]+','+m[2]+')';}},
+    decimal:{type:'Decimal',native:n=>{if(!n)return '@db.Decimal(18,2)';const m=String(n).match(/^(\d{1,2})\s*,\s*(\d{1,2})$/);if(!m)throw Error('decimal 长度/精度必须为 precision,scale，例如 10,2');return '@db.Decimal('+m[1]+','+m[2]+')';}},
     boolean:{type:'Boolean',native:()=>''},
     datetime:{type:'DateTime',native:()=> '@db.Timestamptz(6)'},
     json:{type:'Json',native:()=>''}
   };
-  function fail(errors){const e=new Error('Prisma Schema 生成失败：\\n- '+errors.join('\\n- '));e.name='PrismaSchemaError';throw e;}
+  function fail(errors){const e=new Error('Prisma Schema 生成失败：\n- '+errors.join('\n- '));e.name='PrismaSchemaError';throw e;}
   function generate(models,relations,onlyId){
     const selected=(models||[]).filter(m=>!onlyId||m.id===onlyId);
     if(!selected.length)fail([onlyId?'指定实体不存在':'没有可生成的实体']);
@@ -26,23 +26,22 @@
         if(!IDENT.test(f.name||''))errors.push(m.name+'.'+(f.name||'(空)')+' 不是合法字段标识符');
         if(names.has(f.name))errors.push(m.name+'.'+f.name+' 字段重复');
         names.add(f.name);
-        if(!f.pk&&!TYPE_MAP[f.type])errors.push(m.name+'.'+f.name+' 不支持类型 '+f.type+'；enum 请先定义显式 Prisma enum');
+        if(!TYPE_MAP[f.type])errors.push(m.name+'.'+f.name+' 不支持类型 '+f.type+'；enum 请先定义显式 Prisma enum');
         if(f.pk&&f.req===false)errors.push(m.name+'.'+f.name+' 主键不能为可空');
       });
       if((m.fields||[]).filter(f=>f.pk).length!==1)errors.push(m.name+' 必须且只能有一个主键字段');
     });
-    const rels=(relations||[]).filter(r=>selected.some(m=>m.id===r.from)||selected.some(m=>m.id===r.to));
+    const rels=(relations||[]).filter(r=>selected.some(m=>m.id===r.from)&&selected.some(m=>m.id===r.to));
     const relationLines=new Map(selected.map(m=>[m.id,[]]));
     const relationNames=new Set();
     rels.forEach((r,i)=>{
       const child=byId.get(r.from),parent=byId.get(r.to);
-      if(!child||!parent){errors.push('关系 '+(r.id||i)+' 的两端实体必须同时包含在本次生成范围内');return;}
       const fk=(child.fields||[]).find(f=>f.name===r.f),target=(parent.fields||[]).find(f=>f.name===r.t);
       if(!fk)errors.push('关系 '+(r.id||i)+' 外键字段 '+child.name+'.'+r.f+' 不存在');
       if(!target)errors.push('关系 '+(r.id||i)+' 引用字段 '+parent.name+'.'+r.t+' 不存在');
       if(fk&&target&&fk.type!==target.type)errors.push('关系 '+(r.id||i)+' 两端字段类型不一致：'+fk.type+' / '+target.type);
-      if(!fk||!target)return;
-      const oneToOne=/1\\s*:\\s*1/.test(r.type||'')||!!fk.unique;
+      if(!fk||!target) return;
+      const oneToOne=/1\s*:\s*1/.test(r.type||'')||!!fk.unique;
       const name='Rel_'+child.name+'_'+r.f+'_'+parent.name;
       if(relationNames.has(name))errors.push('关系名称冲突：'+name);
       relationNames.add(name);
@@ -55,8 +54,7 @@
     const blocks=selected.map(m=>{
       const lines=['model '+m.name+' {'];
       (m.fields||[]).forEach(f=>{
-        const spec=TYPE_MAP[f.type],type=f.pk?'String':spec.type;
-        let line='  '+f.name.padEnd(20)+' '+type;
+        const spec=TYPE_MAP[f.type];let line='  '+f.name.padEnd(20)+' '+spec.type;
         if(!f.pk&&!f.req)line+='?';
         if(f.pk)line+=' @id';
         if(f.unique&&!f.pk)line+=' @unique';
@@ -64,22 +62,22 @@
           const v=f.default;
           if(typeof v==='number'&&Number.isFinite(v))line+=' @default('+v+')';
           else if(typeof v==='boolean')line+=' @default('+v+')';
-          else if(typeof v==='string'&&/^[A-Za-z_][A-Za-z0-9_]*$/.test(v)&&['now','autoincrement','uuid','cuid'].includes(v))line+=' @default('+v+'())';
+          else if(typeof v==='string'&&['now','autoincrement','uuid','cuid'].includes(v))line+=' @default('+v+'())';
           else if(typeof v==='string')line+=' @default("'+v.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'")';
           else errors.push(m.name+'.'+f.name+' 默认值类型不受支持');
         }else if(f.pk&&f.generated==='uuid')line+=' @default(uuid())';
         else if(f.pk&&f.generated==='cuid')line+=' @default(cuid())';
         if(f.updatedAt)line+=' @updatedAt';
-        try{if(spec)line+=' '+spec.native(f.len);}catch(e){errors.push(m.name+'.'+f.name+': '+e.message);}
+        try{line+=' '+spec.native(f.len);}catch(e){errors.push(m.name+'.'+f.name+': '+e.message);}
         lines.push(line);
       });
       lines.push(...relationLines.get(m.id));
       (m.fields||[]).filter(f=>f.index&&!f.pk&&!f.unique).forEach(f=>lines.push('  @@index(['+f.name+'])'));
       lines.push('  @@map("'+m.name.toLowerCase()+'")','}');
-      return lines.join('\\n');
+      return lines.join('\n');
     });
     if(errors.length)fail(errors);
-    return 'datasource db {\\n  provider = "postgresql"\\n  url      = env("DATABASE_URL")\\n}\\n\\ngenerator client {\\n  provider = "prisma-client-js"\\n}\\n\\n'+blocks.join('\\n\\n')+'\\n';
+    return 'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}\n\ngenerator client {\n  provider = "prisma-client-js"\n}\n\n'+blocks.join('\n\n')+'\n';
   }
   root.PrismaSchema={generate};
 })(typeof window!=='undefined'?window:globalThis);
