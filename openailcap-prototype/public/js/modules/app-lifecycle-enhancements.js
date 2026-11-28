@@ -19,6 +19,42 @@ const snapshotApp = id => {
     bpmDefs:structuredClone(pick('bpmDefs'))};
 };
 Object.assign(AppsBase,{
+
+  detail(id) {
+    const app=Store.find('apps',id);if(!app)return UI.toast('应用不存在','err');
+    const versions=(Store.get('appVersions')||[]).find(x=>x.appId===id)?.list||[];
+    const artifacts=(Store.get('artifacts')||[]).filter(x=>x.appId===id);
+    const shares=(Store.get('appShares')||[]).filter(x=>x.appId===id);
+    UI.modal({title:(app.icon||'📦')+' '+UI.esc(app.name),size:'lg',footer:false,body:
+      '<div class="tabs" id="adTabs"><button class="tab active" onclick="AppDetail.tab(0)">概览</button><button class="tab" onclick="AppDetail.tab(1)">版本历史</button><button class="tab" onclick="AppDetail.tab(2)">制品</button><button class="tab" onclick="AppDetail.tab(3)">访问授权</button></div>'+
+      '<div class="tab-pane active" id="adp0">'+UI.kvGrid([['应用 ID',app.id],['描述',UI.esc(app.desc||'')],['状态',app.status],['版本',app.version],['负责人',app.owner],['访问范围',app.acl||'未配置'],['环境','dev '+app.env.dev+' / test '+app.env.test+' / prod '+app.env.prod]])+
+      '<div class="btn-row mt10"><button class="btn" onclick="AppsM.exportApp(\''+id+'\')">导出配置</button><button class="btn" onclick="AppsM.artifact(\''+id+'\')">生成配置制品</button><button class="btn" onclick="AppsM.share(\''+id+'\')">新增授权申请</button></div></div>'+
+      '<div class="tab-pane" id="adp1">'+(versions.length?versions.map((v,i)=>'<div class="item flex"><div><b>'+UI.esc(v.v)+'</b><div class="muted">'+UI.esc(v.note||'')+' · '+UI.esc(v.time||'')+'</div></div><span class="spacer"></span><button class="btn btn-sm" onclick="AppsM.rollback(\''+id+'\','+i+')" '+(v.snapshot?'':'disabled')+'>恢复快照</button></div>').join(''):'<div class="empty">暂无版本</div>')+'</div>'+
+      '<div class="tab-pane" id="adp2">'+(artifacts.length?artifacts.map(a=>'<div class="item">📦 '+UI.esc(a.version)+' · '+a.sizeBytes+' bytes · '+UI.esc(a.status)+'</div>').join(''):'<div class="empty">暂无配置制品。点击概览中的“生成配置制品”。</div>')+'</div>'+
+      '<div class="tab-pane" id="adp3">'+(shares.length?shares.map(a=>'<div class="item">'+UI.esc(a.subject)+' · '+UI.esc(a.role)+' · '+UI.esc(a.status)+'</div>').join(''):'<div class="empty">暂无本地授权申请</div>')+'</div>'});
+  },
+  del(id) {
+    const app=Store.find('apps',id);if(!app)return UI.toast('应用不存在','err');
+    UI.confirm('将应用「'+UI.esc(app.name)+'」移入回收站？关联设计数据会保留，30 天内可恢复。',()=>{
+      const snapshot=snapshotApp(id);
+      ensureCollection('appRecycleBin').push({id:'recycle_'+Date.now(),appId:id,deletedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+30*86400000).toISOString(),snapshot});
+      Store.data.apps=Store.data.apps.filter(x=>x.id!==id);Store.save();this.draw();UI.toast('应用已移入回收站，关联数据已保留');
+    });
+  },
+  recycleBin() {
+    const rows=Store.get('appRecycleBin')||[];
+    UI.modal({title:'应用回收站',size:'lg',footer:false,body:rows.length?rows.map((r,i)=>'<div class="item flex"><div><b>'+UI.esc(r.snapshot?.app?.name||r.appId)+'</b><div class="muted">删除于 '+UI.esc(r.deletedAt)+' · 到期 '+UI.esc(r.expiresAt)+'</div></div><span class="spacer"></span><button class="btn btn-sm btn-p" onclick="AppsM.restore(\''+r.id+'\')">恢复</button></div>').join(''):'<div class="empty">回收站为空</div>'});
+  },
+  restore(recycleId) {
+    const rows=Store.get('appRecycleBin')||[],entry=rows.find(x=>x.id===recycleId);
+    if(!entry)return UI.toast('回收站记录不存在','err');
+    if(Date.now()>Date.parse(entry.expiresAt))return UI.toast('已超过保留期限，不能恢复','err');
+    const snap=entry.snapshot,app=snap?.app;if(!app)return UI.toast('缺少应用快照，不能恢复','err');
+    ensureCollection('apps').push(structuredClone(app));
+    const replace=(key,items)=>{Store.data[key]=(Store.data[key]||[]).filter(x=>x.appId!==entry.appId).concat(structuredClone(items||[]));};
+    replace('appSpecs',snap.appSpec||[]);replace('models',snap.models);replace('forms',snap.forms);replace('logicFlows',snap.logicFlows);replace('bpmDefs',snap.bpmDefs);
+    Store.data.appRecycleBin=rows.filter(x=>x.id!==recycleId);Store.save();UI.closeModal();this.draw();UI.toast('应用及其设计数据已恢复');
+  },
   fromTemplate(key) {
     const templates={
       crm:{name:'CRM 客户关系管理',desc:'客户档案、商机、跟进记录与销售漏斗',icon:'👥',models:[['Customer','客户档案',['name','phone','email','level']],['Opportunity','销售商机',['title','amount','stage','owner']],['FollowUp','跟进记录',['customer_id','content','next_at']]]},
