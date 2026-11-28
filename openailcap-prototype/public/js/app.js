@@ -156,12 +156,36 @@ const AI = {
     setTimeout(() => { typing.innerHTML = ''; typing.textContent = this.reply(q); }, 700 + Math.random()*600);
   },
   reply(q) {
-    const s = q.toLowerCase();
-    if (s.includes('请假') || s.includes('审批') || s.includes('流程')) return `好的，我已理解你想要【请假审批】类应用。基于澄清对话，建议如下方案：\n\n📋 数据模型：LeaveRequest（emp_id, days, type, reason）\n🧭 BPM 流程：直属主管 → (days>3? 部门总监) → HR 备案\n🔐 角色：员工/主管/HR\n📈 报表：请假统计（按类型/部门）\n\n已为你生成草稿应用「请假审批」，去【应用管理】查看 → 点右上角"打开"即可编辑。`;
-    if (s.includes('模型') || s.includes('数据表') || s.includes('er')) return `我推荐的数据模型如下（已同步到【数据建模】画布）：\n\nCustomer 客户表：id🔑 name level(dict) phone(SM4加密) email\nOrder 订单表：id🔑 order_no(UQ) customer_id→Customer amount status(dict) order_date\nOrderLine 明细：id🔑 order_id→Order sku qty price\n\n关系：Order N:1 Customer；OrderLine N:1 Order\n索引建议：order_no 唯一索引、(customer_id, order_date) 复合索引。`;
-    if (s.includes('函数') || s.includes('代码') || s.includes('折扣') || s.includes('计算')) return `已为你生成 TypeScript 函数（可在【逻辑编排】或【代码开发】中查看）：\n\nfunction calcDiscount(order, customer) {\n  if (customer.level==='A1' && order.amount>100000) return 0.15;\n  if (customer.level==='A2') return 0.10;\n  if (order.amount>10000) return 0.05;\n  return 0;\n}\n\n配套单测 8 个用例已生成，覆盖率 96%。安全性检查：无注入风险 ✅`;
-    if (s.includes('待办') || s.includes('任务')) return `你当前有 ${Store.get('tasks').filter(t=>t.state==='pending').length} 个待办：\n\n🔴 订单 SO-2026-1101 审批（3h12m 后超期）\n🟠 请假单 LV-2026-088 审批（1 天内）\n🔴 合同 CT-2026-032 用印审批（已超期 2h）\n\n建议优先处理已超期的用印审批。去【任务待办】处理 →`;
-    if (s.includes('审批人') || s.includes('配置') || s.includes('怎么')) return `BPM 审批人支持 5 种配置方式（【BPM 流程】→ 选中节点 → 右侧面板）：\n1️⃣ 指定人：直接选某个员工\n2️⃣ 直属主管：按组织架构汇报线自动定位\n3️⃣ 指定岗位：如"总经理(p1)"所有在职人员\n4️⃣ 指定部门：如"仓库验收 → 销售一部(d3)"\n5️⃣ 表达式：如 \${order.owner.dept.manager}\n\n也可开启 AI 智能分配（按负载+专长加权）。`;
-    return `收到！关于「${q}」\n\n我结合平台知识给出要点：\n• 若是新建应用 → 推荐走"AI 一句话生成"，5 分钟出骨架\n• 若是复杂逻辑 → 用【逻辑编排】可视化节点，可导出 TS 代码\n• 若涉及权限 → 【权限管理】矩阵支持到按钮/字段级\n• 国标合规相关 → 【安全合规】已内置国密 SM2/3/4\n\n需要我直接帮你做哪一步？可以回复"生成XX应用"或"打开XX模块"。`;
-  },
+    const text=String(q||'').trim(),s=text.toLowerCase();
+    if (/生成|创建|搭建|开发一个/.test(text) && /应用|系统|审批|工单|管理/.test(text)) {
+      if (globalThis.AppsM?.aiWizard) {
+        AppsM.aiWizard();
+        return '已打开应用生成向导。当前原型使用本地规则模板，不会调用真实大模型；请在向导中补充需求、确认计划，生成结果会先保存为可编辑草稿。';
+      }
+      return '应用生成模块尚未就绪，请先打开应用管理页面。';
+    }
+    if (s.includes('模型') || s.includes('数据表') || s.includes('er')) {
+      App.go('model');
+      return '已打开数据建模工作区。这里展示的是浏览器原型数据；如需新增实体，请在画布中操作。当前全局助手不会声称已自动写入模型。';
+    }
+    if (s.includes('函数') || s.includes('代码') || s.includes('折扣') || s.includes('计算')) {
+      App.go('flow');
+      return '已打开逻辑编排工作区。可以在此创建节点和连线；当前原型尚未连接真实代码 Agent、编译器或自动化测试服务。';
+    }
+    if (s.includes('待办') || s.includes('任务')) {
+      const pending=Store.get('tasks').filter(t=>t.state==='pending');
+      return '当前原型数据中有 '+pending.length+' 项待办：\n\n'+
+        (pending.length?pending.map((t,i)=>(i+1)+'. '+t.title+'（'+t.pri+'，SLA '+t.sla+'）').join('\n'):'暂无待办')+
+        '\n\n以上来自浏览器本地演示数据，不代表服务端实时任务。';
+    }
+    if (s.includes('审批人') || s.includes('配置') || s.includes('怎么')) {
+      App.go('bpm');
+      return '已打开 BPM 流程设计器。原型支持查看和编辑演示流程图；指定人、直属主管、岗位、部门和表达式等审批人策略，仍需连接组织服务和真实 BPM 引擎后才能在运行时生效。';
+    }
+    if (s.includes('国标') || s.includes('l3') || s.includes('合规') || s.includes('国密')) {
+      App.go('sec');
+      return '已打开安全合规工作区。请以 doc/整改/GB-T46900-2025_39子域追踪台账.md 的 S0–S5 状态和测试证据为准；原型页面不构成国标符合性结论，国密能力也不能仅凭界面展示认定已实现。';
+    }
+    return '收到你的问题：「'+text+'」。当前全局助手是本地规则演示，尚未连接真实 LLM/Agent 服务。它可以帮助定位应用管理、数据建模、逻辑编排、BPM、待办和安全合规工作区；不会伪称已经完成生成、测试、部署或合规检查。';
+  }
 };
