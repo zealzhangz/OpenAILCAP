@@ -179,6 +179,9 @@ test('M04 form runtime exposes executable validation, visibility and local submi
     assert.ok(source.includes(token),'missing M04 runtime behavior: '+token);
   assert.ok(source.includes("case 'required'")&&source.includes("case 'positive'")&&source.includes("case 'regex'"));
   assert.ok(source.includes('Form.previewRuntime=function()'), 'runtime preview must not replace the original design preview');
+  assert.ok(source.includes('formDictionaryRef')&&source.includes('dictCode'), 'form fields must support local dictionary references');
+  assert.ok(source.includes("f.type==='radio'")&&source.includes("f.type==='checkbox'"), 'dictionary-backed choice controls must render native selection controls');
+  assert.ok(source.includes("controls.filter(el=>el.checked).map(el=>el.value)"), 'checkbox submissions must persist selected values as arrays');
   const designer=await read('public/js/modules/form-designer.js');
   assert.ok(designer.includes('FormM.preview()')&&designer.includes('FormM.previewRuntime()'), 'both design and runtime preview actions must remain available');
   const html=await read('public/index.html');
