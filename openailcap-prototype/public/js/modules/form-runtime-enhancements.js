@@ -82,9 +82,9 @@
     return errors;
   };
   Form.evaluateVisibility=function(expression,values){
-    const m=String(expression||'').trim().match(/^([A-Za-z_][A-Za-z0-9_]*)\s*(>=|<=|==|!=|>|<)\s*(.+)$/);
+    const m=String(expression||'').trim().match(/^([A-Za-z_][A-Za-z0-9_]*)\\s*(>=|<=|==|!=|>|<)\\s*(-?\\d+(?:\\.\\d+)?|'[^'\\\\]*'|"[^"\\\\]*")$/);
     if(!m)return false;
-    const actual=values[m[1]],raw=m[3].trim().replace(/^['"]|['"]$/g,'');
+    const actual=values[m[1]],raw=m[3].replace(/^['"]|['"]$/g,'');
     if(actual===undefined)return false;
     const a=Number(actual),b=Number(raw),numeric=String(actual).trim()!==''&&Number.isFinite(a)&&Number.isFinite(b);
     const left=numeric?a:String(actual),right=numeric?b:raw;
