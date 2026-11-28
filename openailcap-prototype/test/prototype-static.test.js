@@ -171,3 +171,28 @@ test('organization enhancements replace random permissions and toast-only transf
   const html=await read('public/index.html');
   assert.ok(html.indexOf('js/modules/organization-enhancements.js')>html.indexOf('js/modules/organization.js'));
 });
+
+
+test('M04 form runtime exposes executable validation, visibility and local submission persistence',async()=>{
+  const source=await read('public/js/modules/form-runtime-enhancements.js');
+  for(const token of ['evaluateRule','validateValues','evaluateVisibility','formSubmissions','formRevision','LOCAL DEMO'])
+    assert.ok(source.includes(token),'missing M04 runtime behavior: '+token);
+  assert.ok(source.includes("case 'required'")&&source.includes("case 'positive'")&&source.includes("case 'regex'"));
+  const html=await read('public/index.html');
+  assert.ok(html.indexOf('js/modules/form-runtime-enhancements.js')>html.indexOf('js/modules/form-designer-enhancements.js'));
+});
+
+test('M04 validation rule evaluation rejects invalid inputs and safely evaluates supported conditions',async()=>{
+  const source=await read('public/js/modules/form-runtime-enhancements.js');
+  const sandbox={App:{mods:{form:{}}},Store:{},UI:{esc:x=>String(x),toast:()=>{},modal:()=>{}},document:{},Date,Number,RegExp,Set};
+  vm.runInNewContext(source,sandbox);
+  const form=sandbox.App.mods.form;
+  assert.equal(form.evaluateRule({type:'required'},''),false);
+  assert.equal(form.evaluateRule({type:'positive'},'-1'),false);
+  assert.equal(form.evaluateRule({type:'max',value:'10'},'11'),false);
+  assert.equal(form.evaluateRule({type:'length',value:'2-4'},'a'),false);
+  assert.equal(form.evaluateRule({type:'regex',value:'^[A-Z]+$'},'abc'),false);
+  assert.equal(form.evaluateVisibility('amount >= 100',{amount:'120'}),true);
+  assert.equal(form.evaluateVisibility('amount >= 100',{amount:'20'}),false);
+  assert.equal(form.evaluateVisibility('amount >= 100; alert(1)',{amount:'120'}),false);
+});
