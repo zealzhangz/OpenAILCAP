@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Logs & runtime
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local env & secrets
+.env
+.env.local
+.env.*.local
+
+# Build output (if added later)
+dist/
+build/
+coverage/
+
+# Prototype runtime artifacts (localStorage is browser-side; nothing to ignore here yet)

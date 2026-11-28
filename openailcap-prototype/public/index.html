@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenAILCAP MVP 2.0 — AI 原生低代码平台原型</title>
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/modules.css">
+</head>
+<body>
+<div id="app">
+  <!-- ============ Sidebar ============ -->
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-mark">O</div>
+      <div><b>OpenAILCAP</b><small data-i18n="app.tagline">AI 原生低代码平台</small></div>
+    </div>
+    <nav class="nav-scroll" id="nav"></nav>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <div id="main">
+    <div id="topbar">
+      <div id="crumb"></div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="btnSearch" title="全局搜索 (Ctrl+K)">🔍</button>
+        <button class="icon-btn" id="btnLang" title="切换语言">🌐<span id="langLabel" style="font-size:10px;margin-left:2px">中</span></button>
+        <button class="icon-btn" id="btnMsg" title="消息中心">🔔<i class="dot"></i></button>
+        <button class="icon-btn" id="btnTheme" title="主题">🌙</button>
+        <div class="flex" style="gap:8px;padding-left:6px;border-left:1px solid var(--border)">
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700">张</div>
+          <div style="line-height:1.2"><div style="font-size:12px;font-weight:700">张三</div><div class="muted">平台管理员</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="page"></div>
+  </div>
+</div>
+
+<!-- Global AI assistant -->
+<button class="ai-fab" id="aiFab" title="AI 助手 (Ctrl+I)">🤖</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-h">🤖 AI 开发助手 <span class="badge-live">LIVE</span>
+    <span class="grow"></span>
+    <button class="icon-btn" id="aiClose" style="width:26px;height:26px">✕</button>
+  </div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-chips" id="aiChips"></div>
+  <div class="ai-input">
+    <textarea id="aiInput" placeholder="输入需求，如：做一个请假审批流程…（Enter 发送）"></textarea>
+    <button class="btn btn-p" id="aiSend">发送</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
+
+<!-- Global search overlay -->
+<div class="modal-mask" id="searchMask">
+  <div class="modal" style="width:600px;align-self:start;margin-top:10vh">
+    <div class="modal-h">🔍 全局搜索<span class="x" onclick="UI.closeSearch()">✕</span></div>
+    <div class="modal-b">
+      <input class="input" id="searchInput" placeholder="搜索应用、模型、流程、员工、菜单…">
+      <div id="searchResults" class="mt10"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+<script src="js/modules/app-management.js"></script>
+<script src="js/modules/organization.js"></script>
+<script src="js/modules/data-modeling.js"></script>
+<script src="js/modules/form-designer.js"></script>
+<script src="js/modules/logic-flow.js"></script>
+<script src="js/modules/bpm-designer.js"></script>
+<script src="js/modules/tasks.js"></script>
+<script src="js/modules/report-designer.js"></script>
+<script src="js/modules/settings.js"></script>
+<script src="js/modules/data-management.js"></script>
+<script src="js/modules/security.js"></script>
+<script src="js/modules/operations.js"></script>
+<script>App.boot();</script>
+</body>
+</html>

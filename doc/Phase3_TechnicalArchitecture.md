@@ -1,0 +1,746 @@
+# OpenAILCAP 第 3 步：技术架构设计
+
+## 3.1 技术栈最终确定
+
+### 核心技术栈
+
+```
+层级           | 技术选择                    | 版本   | 理由
+---|---|---|---
+前端框架       | React                       | 18.x  | 现代、生态强、团队熟悉
+前端语言       | TypeScript                  | 5.x   | 类型安全、可维护性高
+UI 库          | Ant Design Pro              | 5.x   | 企业级、组件完整、中文支持好
+状态管理       | Redux Toolkit               | 1.9+  | 生态成熟、DevTools 完善
+HTTP 客户端    | axios + React Query         | 最新  | 缓存管理、自动重试
+编辑器相关     | react-dnd（拖拽）           | 16.x  | 表单/流程设计器基础
+代码编辑       | Monaco Editor               | 最新  | VS Code 同款、功能完整
+
+后端框架       | Express                     | 4.x   | 轻量、高效、中间件丰富
+后端语言       | TypeScript                  | 5.x   | 类型安全、现代开发体验
+API 框架       | NestJS (可选)               | 10.x  | 微服务友好、企业级
+数据库 ORM     | Prisma                      | 5.x   | 类型安全、迁移系统完善
+验证库         | Joi / Zod                   | 最新  | 运行时类型检查
+日志库         | Winston                     | 3.x   | 结构化日志、多输出
+任务队列       | Bull (Redis-based)          | 4.x   | 轻量、可靠、易于扩展
+
+数据库         | PostgreSQL                  | 15.x  | 功能完整、可靠、开源
+缓存           | Redis                       | 7.x   | 高性能、持久化、支持多数据结构
+消息队列       | Redis (简化版) / RabbitMQ   | -     | MVP 用 Redis，扩展用 RabbitMQ
+文件存储       | Minio (S3 兼容)             | 最新  | 开源、自建、完全控制
+搜索引擎       | Elasticsearch (可选)        | 8.x   | 审计日志搜索优化
+
+流程引擎       | Temporal                    | 1.x   | 企业级、分布式、容错强
+代码生成       | @babel/parser + codegen    | 最新  | AST 解析、类型安全的代码生成
+AI 集成        | LangChain                   | 0.1+  | 模型无关、链式操作、RAG 支持
+安全/加密      | bcryptjs, jsonwebtoken      | 最新  | 密码、token、加密
+权限库         | Casbin (或 @casl/ability)   | 最新  | 灵活的权限模型、易于扩展
+
+DevOps         | Docker                      | 最新  | 容器化、隔离、易于部署
+编排           | docker-compose              | 最新  | MVP 本地部署、一键启动
+CI/CD          | GitHub Actions (后期)       | -     | 集成 GitHub、免费额度足
+监控           | Prometheus + Grafana        | 最新  | 开源、可观测、告警完善
+日志中心       | ELK Stack (Loki 更轻量)     | 最新  | 日志聚合、全文搜索
+```
+
+---
+
+### 技术选型理由总结
+
+**为什么选择 TypeScript + Express + React？**
+
+```
+优势：
+✓ 全栈 TypeScript - 团队统一语言，知识迁移低
+✓ 类型安全 - 减少运行时错误 30-50%
+✓ 现代工具链 - esbuild/vite/webpack 编译快
+✓ 社区生态 - npm 包最多、第三方库完善
+✓ 可维护性 - 代码自文档化、IDE 支持强
+
+劣势及解决方案：
+✗ 单线程 - 用 Bull 任务队列做异步处理
+✗ 内存占用 - Kubernetes 自动扩展
+✗ 冷启动 - Lambda/Vercel 不考虑，自建服务器启动快
+
+vs JeecgBoot (Java)：
+  Java 优势：性能、企业成熟度
+  我们劣势：性能稍弱，但对中小企业足够
+  我们优势：开发速度快 50%、前后端统一语言
+  
+vs lowcode-engine (前端中心)：
+  我们优势：有完整后端、工作流、权限系统
+  
+vs AppSmith (混合栈)：
+  我们优势：技术栈统一、易于团队协作、二开成本低
+```
+
+---
+
+## 3.2 系统架构设计（C4 Model）
+
+### Level 1：系统上下文图
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                          OpenAILCAP 平台                      │
+│                                                               │
+│  用户在浏览器中用 AI 一句话配置低代码应用                      │
+│  - 表单设计 / 工作流 / 权限 / 自定义代码                      │
+│  - AI 自动生成代码、测试、部署                               │
+└─────────────────────────────────────────────────────────────┘
+         ▲                        ▼                     ▲
+         │                        │                     │
+         │                        │                     │
+    开发者/                   部署到              第三方
+    业务人员                 Docker/K8s         服务
+         │                        │             (支付/短信)
+         │                        │                     │
+    邮件告警                   Git 仓库            API 网关
+```
+
+### Level 2：容器图
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                        用户浏览器                              │
+│  ┌─────────────────────────────────────┐                      │
+│  │  OpenAILCAP Web 应用                 │                     │
+│  │  (React SPA)                         │                     │
+│  │  - 应用编辑器                        │                     │
+│  │  - 表单设计器                        │                     │
+│  │  - 工作流设计器                      │                     │
+│  │  - 代码编辑器                        │                     │
+│  │  - 权限管理中心                      │                     │
+│  └─────────────────────────────────────┘                      │
+└────────────────────────────────────────────────────────────────┘
+              ▲                              ▼
+              │ HTTPS/WebSocket              │ HTTP/REST
+              │ (gzip压缩)                   │
+              │                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                      API 网关 / 负载均衡                          │
+│                    (Nginx / HAProxy)                              │
+└──────────────────────────────────────────────────────────────────┘
+              │
+              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                   OpenAILCAP 后端服务                             │
+│                                                                   │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │ BFF 层 (Business For Frontend)                             │  │
+│  │  - 应用管理 API                                            │  │
+│  │  - 表单元数据 API                                          │  │
+│  │  - AI 对话 API (LangChain 集成)                           │  │
+│  │  - 代码生成 API                                            │  │
+│  │  - 权限和审计中间件                                        │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                              ▼                                    │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │ 核心业务服务层                                             │  │
+│  │  ├─ 应用管理服务                                           │  │
+│  │  ├─ 表单元数据服务                                         │  │
+│  │  ├─ 工作流引擎 (Temporal 集成)                            │  │
+│  │  ├─ 代码生成引擎 (AST + 模板)                             │  │
+│  │  ├─ 自动测试服务 (Jest)                                   │  │
+│  │  ├─ 部署管理服务 (Docker)                                 │  │
+│  │  └─ 权限和审计服务                                         │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                              ▼                                    │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │ AI 能力层                                                  │  │
+│  │  ├─ LangChain + GPT-4 / Llama                             │  │
+│  │  ├─ 提示词管理和优化                                       │  │
+│  │  ├─ AI 输出验证和纠正                                      │  │
+│  │  └─ 用户反馈学习                                           │  │
+│  └────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+              ▼                    ▼            ▼
+        ┌─────────────┐    ┌───────────┐  ┌────────────┐
+        │ PostgreSQL  │    │  Redis    │  │   Minio    │
+        │ 应用配置    │    │ 缓存      │  │ 文件存储   │
+        │ 数据        │    │ Session   │  │ 应用包     │
+        │ 审计日志    │    │ 任务队列  │  │            │
+        └─────────────┘    └───────────┘  └────────────┘
+
+              ▼                    ▼
+        ┌──────────────┐    ┌────────────────┐
+        │ Temporal     │    │ Docker         │
+        │ 工作流执行   │    │ 代码执行沙箱   │
+        │ 任务管理     │    │ 资源隔离       │
+        └──────────────┘    └────────────────┘
+
+              ▼
+        ┌──────────────┐
+        │ Git 仓库     │
+        │ 版本管理     │
+        │ 代码审计     │
+        └──────────────┘
+```
+
+### Level 3：组件图（后端）
+
+```
+API 网关层：
+┌─────────────────────────────────────────────────┐
+│ Express 应用                                     │
+│  ├─ 路由定义 (/api/*)                          │
+│  ├─ 中间件栈                                     │
+│  │  ├─ 日志中间件 (morgan/winston)              │
+│  │  ├─ 认证中间件 (JWT)                         │
+│  │  ├─ 权限验证中间件 (RBAC/ABAC)              │
+│  │  ├─ 速率限制 (express-rate-limit)           │
+│  │  └─ 错误处理中间件                           │
+│  └─ 请求处理                                     │
+└─────────────────────────────────────────────────┘
+
+业务逻辑层：
+┌─────────────────────────────────────────────────┐
+│ 应用管理模块                                      │
+│  ├─ ApplicationService                           │
+│  ├─ ApplicationRepository (Prisma)              │
+│  └─ ApplicationValidator                        │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 表单元数据模块                                    │
+│  ├─ FormService                                  │
+│  ├─ FormValidator                               │
+│  └─ FormRepository                              │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ AI 代码生成模块                                   │
+│  ├─ CodeGenerationService                       │
+│  ├─ PromptTemplateManager                       │
+│  ├─ CodeValidator (ESLint + SonarQube)         │
+│  └─ TestGenerationService (Jest)               │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 工作流引擎模块                                    │
+│  ├─ WorkflowService (Temporal client)          │
+│  ├─ BPMNParser                                  │
+│  ├─ TaskService                                 │
+│  └─ WorkflowMonitor                            │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 权限和审计模块                                    │
+│  ├─ PermissionService (Casbin)                  │
+│  ├─ AuditLogger                                 │
+│  ├─ UserService                                 │
+│  └─ RoleService                                 │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 部署管理模块                                      │
+│  ├─ DeploymentService                           │
+│  ├─ DockerBuilder                               │
+│  ├─ HealthChecker                               │
+│  └─ GrayReleaseManager                          │
+└─────────────────────────────────────────────────┘
+
+数据访问层：
+┌─────────────────────────────────────────────────┐
+│ Prisma ORM (所有模块共用)                       │
+│  ├─ 数据库连接管理                               │
+│  ├─ 数据迁移                                     │
+│  └─ 事务管理                                     │
+└─────────────────────────────────────────────────┘
+
+外部集成：
+┌─────────────────────────────────────────────────┐
+│ AI 模型集成                                      │
+│  ├─ OpenAI GPT-4 (via LangChain)               │
+│  ├─ Llama 本地部署                             │
+│  └─ 模型切换路由                                │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 存储系统                                         │
+│  ├─ PostgreSQL 连接 (Prisma)                    │
+│  ├─ Redis 客户端                                │
+│  ├─ Minio 客户端                                │
+│  └─ Elasticsearch 客户端                        │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+## 3.3 数据流设计
+
+### 核心流程 1：AI 一句话生成系统
+
+```
+时序图：
+
+用户                浏览器              后端 BFF           AI 引擎        代码生成
+ │                  │                   │                 │              │
+ │─ 输入需求 ───────>│                   │                 │              │
+ │  "订单管理"       │─ POST /api/      │                 │              │
+ │                  │  generateApp    │                 │              │
+ │                  │                 │─ 提取实体 ──────>│              │
+ │                  │                 │  (NLU)         │              │
+ │                  │                 │                │              │
+ │◄─ 显示问卷 ──────│◄─ 返回问卷        │◄─ 澄清问题      │              │
+ │  (3-5个)         │  JSON            │                │              │
+ │                  │                 │                │              │
+ │─ 填写问卷 ───────>│                 │                │              │
+ │                  │─ POST /api/     │                │              │
+ │                  │  generateApp    │                │              │
+ │                  │  (answers)      │                │              │
+ │                  │                 │─ 生成计划 ─────>│              │
+ │                  │                 │                │─ 返回计划    │
+ │                  │                 │◄─ 返回计划      │              │
+ │                  │◄─ 返回计划       │                │              │
+ │                  │  (预计字段数等)  │                │              │
+ │                  │                 │                │              │
+ │─ 点击确认生成 ───>│                 │                │              │
+ │                  │─ POST /api/     │                │              │
+ │                  │  generateApp    │                │              │
+ │                  │  (confirm)      │                │              │
+ │                  │                 │                │              │
+ │◄─ 显示进度条 ────│                 │                │              │
+ │  (50%, 75%...)   │                 │─ 生成表单元数据 ───────────────>│
+ │                  │                 │  (AST + 模板)   │◄─ 代码      │
+ │                  │                 │                │              │
+ │                  │                 │─ 自动单测       │              │
+ │                  │                 │  (Jest)         │              │
+ │                  │                 │                │              │
+ │                  │                 │─ 代码审查       │              │
+ │                  │                 │  (ESLint)       │              │
+ │                  │                 │                │              │
+ │◄─ 生成完成 ──────│◄─ 返回应用 ID   │                │              │
+ │  跳转应用详情    │  和详情          │                │              │
+ │                  │                 │                │              │
+```
+
+**数据流详细步骤：**
+
+```
+Step 1: 需求理解
+  输入：用户文本描述
+  输出：结构化需求对象
+  {
+    appType: "Sales Order",
+    description: "订单管理系统",
+    estimatedFields: 20,
+    estimatedUsers: 100
+  }
+
+Step 2: 澄清对话
+  输入：结构化需求
+  处理：生成澄清问卷
+  输出：5 个结构化问题
+  [
+    { question: "这是什么行业的订单？", options: [...] },
+    { question: "需要多少个用户？", options: [...] },
+    ...
+  ]
+
+Step 3: 需求补齐
+  输入：用户回答
+  处理：补充隐含需求
+  输出：完整需求规格
+  {
+    appType: "Sales Order",
+    industry: "Electronics",
+    userCount: 100,
+    needsInventory: true,
+    needsReporting: false,
+    fields: [...],
+    workflow: [...],
+    roles: [...]
+  }
+
+Step 4: 代码生成
+  输入：完整需求规格
+  处理：AST + 模板系统
+  输出：
+    - TypeScript 类型定义
+    - Prisma Schema
+    - Express Routes
+    - React 表单组件
+
+Step 5: 测试生成
+  输入：生成的代码
+  处理：AI 生成 Jest 单元测试
+  输出：测试代码 + 覆盖率报告
+
+Step 6: 代码审查
+  输入：生成的代码 + 测试
+  处理：
+    - ESLint 检查
+    - SonarQube 安全扫描
+    - 性能检查
+  输出：问题列表 + 修复建议
+
+Step 7: 部署
+  输入：审查通过的代码
+  处理：
+    - 存储到 Git
+    - Docker 打包
+    - 本地启动
+  输出：应用 URL
+```
+
+---
+
+### 核心流程 2：用户操作与权限验证
+
+```
+认证流程：
+用户 ──> 登录页 ──> 输入用户名密码 ──> 后端验证 ──> 生成 JWT Token
+                                        ↓
+                                    存储 Redis
+                                        ↓
+                      返回 Token 给浏览器 (HttpOnly Cookie)
+
+权限验证流程（每个 API 请求）：
+请求 ──> 提取 Token ──> 验证签名 ──> 获取用户信息 ──> RBAC 检查
+                                        ↓
+                      不通过 → 403 Forbidden
+                                        ↓
+                      通过 → 执行业务逻辑
+                                        ↓
+                      返回结果
+
+RBAC 权限模型：
+用户 ──belongs to──> 角色 ──has──> 权限
+              ├─ Admin
+              ├─ Developer
+              ├─ Reviewer
+              └─ Viewer
+
+权限类型：
+  ├─ 应用级 (create_app, edit_app, delete_app, deploy_app)
+  ├─ 功能级 (edit_form, view_data, modify_workflow)
+  └─ 数据级 (通过 WHERE 子句在 SQL 层实现)
+```
+
+---
+
+## 3.4 API 网关与中间件设计
+
+### 认证与授权中间件栈
+
+```typescript
+// 中间件执行顺序
+app.use(express.json());                    // 1. 解析 JSON
+app.use(morgan('combined'));                 // 2. 日志
+app.use(expressRateLimit());                 // 3. 速率限制
+app.use(authMiddleware);                     // 4. JWT 认证
+app.use(permissionMiddleware);               // 5. 权限检查
+app.use(auditMiddleware);                    // 6. 审计日志
+app.use(errorHandler);                       // 7. 错误处理
+
+// 认证中间件示例
+export async function authMiddleware(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Missing token' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// 权限检查中间件示例
+export async function permissionMiddleware(req, res, next) {
+  const { resource, action } = req.query; // 从路由提取
+  
+  const hasPermission = await permissionService.check(
+    req.user.id,
+    resource,
+    action
+  );
+  
+  if (!hasPermission) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  
+  next();
+}
+
+// 审计中间件示例
+export async function auditMiddleware(req, res, next) {
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    // 记录请求和响应
+    auditService.log({
+      userId: req.user.id,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      timestamp: new Date(),
+      details: req.body
+    });
+    
+    originalSend.call(this, data);
+  };
+  
+  next();
+}
+```
+
+---
+
+## 3.5 部署拓扑
+
+### MVP 本地部署（docker-compose）
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: openailcap
+      POSTGRES_PASSWORD: dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+  temporal:
+    image: temporalio/auto-setup:latest
+    environment:
+      TEMPORAL_PERSISTENCE_DEFAULT_SCHEMA: temporal
+      TEMPORAL_PERSISTENCE_VISIBILITY_SCHEMA: temporal_visibility
+    ports:
+      - "7233:7233"
+      - "6233:6233"
+    depends_on:
+      - postgres
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:dev_password@postgres:5432/openailcap
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your_jwt_secret_here
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - temporal
+    volumes:
+      - ./src:/app/src
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://localhost:3001
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+```
+
+---
+
+## 3.6 可扩展性设计
+
+### 多租户架构
+
+```
+Schema 级隔离（MVP 推荐）：
+
+PostgreSQL:
+  public schema
+    ├─ users (全局用户)
+    ├─ tenants (租户信息)
+    └─ tenant_configs (租户配置)
+  
+  schema: tenant_001
+    ├─ applications
+    ├─ forms
+    ├─ form_data
+    ├─ workflows
+    ├─ audit_logs
+    └─ ...
+  
+  schema: tenant_002
+    ├─ applications
+    ├─ forms
+    ├─ ...
+    
+查询自动加租户过滤：
+  SELECT * FROM tenant_001.forms WHERE app_id = ?
+
+Redis:
+  tenant_001:session:* (用户 session)
+  tenant_001:cache:forms:* (表单缓存)
+  tenant_002:session:*
+  ...
+
+隔离优势：
+  ✓ 数据完全隔离
+  ✓ 性能良好
+  ✓ 易于备份恢复
+  ✓ 安全性高
+```
+
+### 水平扩展策略
+
+```
+后端扩展：
+  1 个后端 → N 个后端（Kubernetes + HPA）
+  负载均衡：Nginx / HAProxy
+  
+缓存扩展：
+  Redis Sentinel (高可用)
+  Redis Cluster (大数据量)
+  
+数据库扩展：
+  Read 副本（查询扩展）
+  Sharding（写扩展）
+  
+任务处理扩展：
+  Bull 队列自动分布式
+  Temporal 分布式工作流
+```
+
+---
+
+## 3.7 安全架构
+
+```
+分层安全模型：
+
+┌─ 传输层安全 ────────────┐
+│ ✓ TLS 1.3                │
+│ ✓ HSTS                   │
+│ ✓ CORS 白名单            │
+└──────────────────────────┘
+         ↓
+┌─ 认证层 ────────────────┐
+│ ✓ JWT + HttpOnly Cookie  │
+│ ✓ 密码加密 (bcrypt)      │
+│ ✓ 多因素认证 (MFA)       │
+└──────────────────────────┘
+         ↓
+┌─ 授权层 ────────────────┐
+│ ✓ RBAC 基础模型          │
+│ ✓ ABAC 属性条件          │
+│ ✓ 细粒度权限             │
+└──────────────────────────┘
+         ↓
+┌─ 应用层安全 ────────────┐
+│ ✓ 输入验证               │
+│ ✓ SQL 参数化查询         │
+│ ✓ XSS 防护               │
+│ ✓ CSRF 令牌              │
+│ ✓ 速率限制               │
+│ ✓ WAF 规则               │
+└──────────────────────────┘
+         ↓
+┌─ 数据安全 ────────────────┐
+│ ✓ 存储加密 (AES-256)       │
+│ ✓ 敏感字段掩盖            │
+│ ✓ 备份加密                │
+│ ✓ 数据隐私 (GDPR)         │
+└────────────────────────────┘
+         ↓
+┌─ 审计与监控 ────────────┐
+│ ✓ 完整审计日志           │
+│ ✓ 不可篡改日志           │
+│ ✓ 实时告警               │
+│ ✓ 安全事件记录           │
+└──────────────────────────┘
+```
+
+---
+
+## 3.8 性能指标与 SLA
+
+```
+性能目标：
+
+指标                      | MVP 目标    | 生产目标   | 测试方法
+---|---|---|---
+API 响应时间 (95分位)      | <500ms      | <300ms    | 压测
+首屏加载时间               | <2s         | <1s       | 灯塔审计
+并发用户数                 | 100+        | 1000+     | JMeter
+吞吐量 (req/sec)           | 1000+       | 5000+     | 压测
+可用性 (SLA)               | 99%         | 99.5%     | 监控
+错误率                     | <0.1%       | <0.01%    | 监控
+
+SLA 承诺：
+  ✓ 生产：99.5% 可用性
+  ✓ RTO (恢复时间目标) ≤ 5 分钟
+  ✓ RPO (恢复点目标) ≤ 15 分钟
+  ✓ 周期性备份：每 4 小时一次
+```
+
+---
+
+## 3.9 交付物清单
+
+```
+架构设计：
+[✓] C4 Model (System Context / Container / Component / Code)
+[✓] 数据流设计 (核心 2 个流程)
+[✓] API 网关设计
+[✓] 中间件栈设计
+[✓] 部署拓扑 (docker-compose)
+[✓] 多租户隔离方案
+[✓] 水平扩展策略
+[✓] 安全架构
+[✓] 性能指标和 SLA
+
+技术规范：
+[✓] 技术栈确定
+[✓] 开源库选择 (前端 15+ 库, 后端 10+ 库)
+[✓] 数据库设计初稿
+[✓] API 设计规范
+
+运维设计：
+[✓] 本地开发环境 (docker-compose)
+[✓] 监控和告警策略
+[✓] 日志聚合方案
+[✓] 灾难恢复方案
+```
+
+---
+
+**第 3 步完成时间：1-1.5 周**
+
+**下一步：第 4 步 - 细化功能设计**
+  - 7 个核心模块的详细需求
+  - 页面设计（粒度到按钮）
+  - 数据库设计详稿
+
