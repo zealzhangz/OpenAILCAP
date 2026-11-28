@@ -98,6 +98,32 @@ test('AppSpec validator accepts a consistent graph and rejects broken references
   assert.ok(result.errors.some(e=>e.path.includes('edges[0].t')));
 });
 
+test('AppSpec 1.1 validates versioned dictionary definitions and form references while retaining 1.0 compatibility',async()=>{
+  const source=await read('public/js/app-spec.js');
+  const validator=vm.runInNewContext(source+'; AppSpec');
+  const base={
+    schemaVersion:'1.1.0',meta:{appId:'a1',name:'A'},dataModels:[{id:'m1',fields:[{name:'status',type:'string'}]}],
+    relations:[],ui:{pages:[]},forms:[{id:'f1',name:'F',fields:[{id:'x1',label:'Status',field:'status',type:'select',dictionaryRef:{dictionaryId:'d1',version:2}}]}],
+    logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'not-deployed',environments:[]},
+    dictionaries:[{id:'d1',code:'status',name:'Status',version:2,type:'tree',items:[{value:'open',labels:{'zh-CN':'打开'},children:[{value:'closed',labels:{'zh-CN':'关闭'}}]}]}]
+  };
+  assert.equal(validator.validate(base).valid,true);
+  const broken=structuredClone(base);broken.forms[0].fields[0].dictionaryRef.version=1;
+  assert.ok(validator.validate(broken).errors.some(e=>e.path.includes('dictionaryRef.version')));
+  const missing=structuredClone(base);missing.forms[0].fields[0].dictionaryRef.dictionaryId='missing';
+  assert.ok(validator.validate(missing).errors.some(e=>e.path.includes('dictionaryRef.dictionaryId')));
+  const legacy=structuredClone(base);legacy.schemaVersion='1.0.0';delete legacy.dictionaries;delete legacy.forms[0].fields[0].dictionaryRef;
+  assert.equal(validator.validate(legacy).valid,true);
+});
+
+test('M04 promotes local dictionary bindings into versioned AppSpec references only on schema 1.1.0',async()=>{
+  const source=await read('public/js/modules/form-runtime-enhancements.js');
+  assert.ok(source.includes("spec.schemaVersion!=='1.1.0'"));
+  assert.ok(source.includes('dictionaryRef:{dictionaryId:dictionary.id,version:1}'));
+  assert.ok(source.includes("next.dictionaries=(Store.get('dicts')||[]).map"));
+  assert.ok(source.includes("labels:{'zh-CN':item.zh||item.en||String(item.v),'en-US':item.en||item.zh||String(item.v)}"));
+});
+
 test('AI generated AppSpec includes its form foreign key and relation in the canonical document',async()=>{
   const source=await read('public/js/modules/app-management.js');
   assert.ok(source.includes("{name:'party_id',type:'string',req:true,ref:'BusinessParty'}"));
