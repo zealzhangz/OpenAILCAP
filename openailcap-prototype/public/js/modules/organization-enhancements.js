@@ -44,7 +44,9 @@
     }});
   };
   Org.drawChg=function(){
-    const requests=ensure('orgChangeRequests',[]);\n    const pending=requests.filter(x=>x.status==='pending');\n    const resolved=requests.filter(x=>x.status!=='pending');
+    const requests=ensure('orgChangeRequests',[]);
+    const pending=requests.filter(x=>x.status==='pending');
+    const resolved=requests.filter(x=>x.status!=='pending');
     const history=Store.get('empChanges')||[];
     const requestHtml=pending.map(r=>{
       const employee=Store.find('employees',r.employeeId);
