@@ -7,6 +7,11 @@
     "dev": "node server.js",
     "start": "node server.js",
     "test": "node --test",
-    "check": "node --test"
+    "check": "npm test",
+    "test:schemas": "node --test test/app-spec-schema.test.js"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   }
 }
