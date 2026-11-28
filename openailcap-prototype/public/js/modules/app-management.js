@@ -65,7 +65,7 @@ App.mods.apps = {
       </div>
       <div class="grid cols-3" id="tplGrid">
         ${[['CRM 管理系统','👥','客户/商机/跟进'],['进销存','🏬','商品/库存/出入库'],['OA 审批中心','✅','通用审批模板']]
-        .map(([n,i,d])=>`<div class="item" style="cursor:pointer" onclick="UI.toast('模板 ${n} 已载入（演示）')">
+        .map(([n,i,d])=>`<div class="item" style="cursor:pointer" onclick="AppsM.fromTemplate('${n==='CRM 管理系统'?'crm':n==='进销存'?'inventory':'oa'}')">
           <div style="font-size:26px">${i}</div><b>${n}</b><div class="muted">${d}</div></div>`).join('')}
       </div>`});
   },
