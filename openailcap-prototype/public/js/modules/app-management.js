@@ -159,6 +159,7 @@ App.mods.apps = {
         {name:'id',type:'string',pk:true,req:true,len:36},
         {name:'record_no',type:'string',req:true,unique:true,len:48},
         {name:'title',type:'string',req:true,len:160},
+        {name:'party_id',type:'string',req:true,ref:'BusinessParty'},
         {name:'description',type:'text'},
         {name:'status',type:'string',req:true,len:32},
         {name:'created_at',type:'datetime',req:true},
@@ -185,6 +186,7 @@ App.mods.apps = {
       schemaVersion:'1.0.0',
       meta:{appId,name:appName,description:w.description,industry:w.answers[0],concurrency:w.answers[1],modules:w.answers[2],cryptoRequired,version:'0.1.0',status:'draft'},
       dataModels:[mainModel,partyModel],
+      relations:[{id:relationId,from:mainModelId,f:'party_id',to:partyModelId,t:'id',type:'N:1'}],
       ui:{pages:[{id:'page_'+appId,name:'业务管理',formId}]},
       forms:[form],
       logic:[logic],
@@ -199,6 +201,8 @@ App.mods.apps = {
       i18n:{locales:['zh-CN','en-US']},
       deployment:{status:'not-deployed',environments:['dev','test','prod']}
     };
+    const validation=AppSpec.validate(appSpec);
+    if(!validation.valid){UI.toast('AppSpec 校验失败：'+validation.errors.map(e=>e.path+' '+e.message).join('；'),'err');return;}
     const names=['解析需求','生成 AppSpec','生成数据模型','生成表单定义','生成逻辑编排','生成审批与权限配置','保存草稿'];
     let s=0;
     UI.modal({title:'正在生成应用草稿',icon:'⚙️',size:'lg',footer:false,body:`
