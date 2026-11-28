@@ -12,8 +12,9 @@ const downloadJson = (filename,value) => {
 const snapshotApp = id => {
   const app=Store.find('apps',id);if(!app)return null;
   const pick=(key)=>((Store.get(key)||[]).filter(x=>x.appId===id));
+  const models=pick('models');
   return {app:structuredClone(app),appSpec:structuredClone((Store.get('appSpecs')||[]).filter(x=>x.meta?.appId===id)),
-    models:structuredClone(pick('models')),relations:structuredClone((Store.get('relations')||[]).filter(r=>models.some(m=>m.id===r.from)&&models.some(m=>m.id===r.to))),
+    models:structuredClone(models),relations:structuredClone((Store.get('relations')||[]).filter(r=>models.some(m=>m.id===r.from)&&models.some(m=>m.id===r.to))),
     forms:structuredClone(pick('forms')),logicFlows:structuredClone(pick('logicFlows')),
     bpmDefs:structuredClone(pick('bpmDefs'))};
 };
