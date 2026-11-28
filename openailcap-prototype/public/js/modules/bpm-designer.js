@@ -13,6 +13,9 @@ App.mods.bpm = {
     <div class="page-head"><h1>🧭 BPM 流程设计器</h1><span class="sub">${d.name} ${d.version} · BPMN 2.0 · 回退/委托/抄送 · 规则引擎 · 仿真</span>
       <span class="spacer"></span>
       <button class="btn" onclick="BpmM.simulate()">🧪 流程仿真</button>
+      <button class="btn" onclick="BpmM.connect()">↗ 连线</button>
+      <button class="btn" onclick="BpmM.removeEdge()">删除连线</button>
+      <button class="btn" onclick="BpmM.save()">💾 保存</button>
       <button class="btn" onclick="BpmM.rules()">📐 规则引擎</button>
       <button class="btn" onclick="BpmM.importBpmn()">📥 导入 BPMN</button>
       <button class="btn" onclick="BpmM.exportBpmn()">📤 导出 XML</button>
