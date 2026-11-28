@@ -21,6 +21,7 @@ App.mods.form = {
       <select class="input" style="width:auto" onchange="FormM.setLayout(this.value)">
         ${FormM.LAYOUTS.map(l=>`<option>${l}</option>`).join('')}</select>
       <button class="btn" onclick="FormM.preview()">👁️ 预览</button>
+      <button class="btn" onclick="FormM.previewRuntime()">▶️ 运行预览</button>
       <button class="btn" onclick="FormM.multiLang()">🌐 多语言</button>
       <button class="btn btn-p" onclick="FormM.save()">💾 保存</button>
     </div>
