@@ -82,7 +82,7 @@
     return errors;
   };
   Form.evaluateVisibility=function(expression,values){
-    const m=String(expression||'').trim().match(/^([A-Za-z_][A-Za-z0-9_]*)\\s*(>=|<=|==|!=|>|<)\\s*(-?\\d+(?:\\.\\d+)?|'[^'\\\\]*'|"[^"\\\\]*")$/);
+    const m=String(expression||'').trim().match(/^([A-Za-z_][A-Za-z0-9_]*)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?|'[^'\\]*'|"[^"\\]*")$/);
     if(!m)return false;
     const actual=values[m[1]],raw=m[3].replace(/^['"]|['"]$/g,'');
     if(actual===undefined)return false;
