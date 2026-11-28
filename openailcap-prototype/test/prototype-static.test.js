@@ -196,3 +196,15 @@ test('M04 validation rule evaluation rejects invalid inputs and safely evaluates
   assert.equal(form.evaluateVisibility('amount >= 100',{amount:'20'}),false);
   assert.equal(form.evaluateVisibility('amount >= 100; alert(1)',{amount:'120'}),false);
 });
+
+
+test('M04 legacy string rules remain executable after rule normalization',async()=>{
+  const source=await read('public/js/modules/form-runtime-enhancements.js');
+  const store={data:{forms:[{id:'f1',fields:[{id:'a',field:'amount',label:'金额',req:true,rules:['positive','max:9999999']}]}]},get(key){return this.data[key];},save(){}};
+  const sandbox={App:{mods:{form:{}}},Store:store,UI:{esc:x=>String(x),toast:()=>{},modal:()=>{}},document:{},Date,Number,RegExp,Set};
+  vm.runInNewContext(source,sandbox);
+  const form=sandbox.App.mods.form;
+  assert.equal(form.validateValues(store.data.forms[0],{amount:'10'}).length,0);
+  assert.ok(form.validateValues(store.data.forms[0],{amount:'-1'}).length>0);
+  assert.equal(typeof store.data.forms[0].fields[0].rules[0],'object');
+});
