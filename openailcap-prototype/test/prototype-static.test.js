@@ -102,6 +102,7 @@ test('AI generated AppSpec includes its form foreign key and relation in the can
   const source=await read('public/js/modules/app-management.js');
   assert.ok(source.includes("{name:'party_id',type:'string',req:true,ref:'BusinessParty'}"));
   assert.ok(source.includes("relations:[{id:relationId,from:mainModelId,f:'party_id',to:partyModelId,t:'id',type:'N:1'}]"));
+  assert.ok(source.includes('snapshot:snapshotApp(appId)'));
   assert.ok(source.includes('const validation=AppSpec.validate(appSpec)'));
 });
 
@@ -118,6 +119,7 @@ test('application lifecycle provides recoverable deletion and real local exports
   for(const token of ['recycleBin()','restore(recycleId)','appRecycleBin','downloadJson','exportApp(id)','exportAll()'])
     assert.ok(source.includes(token),token);
   assert.ok(source.includes('expiresAt'));
+  assert.ok(source.includes("find(x=>x.meta?.appId===id)||null"));
 });
 
 test('global assistant does not fabricate LLM, test coverage, deployment or compliance results',async()=>{
