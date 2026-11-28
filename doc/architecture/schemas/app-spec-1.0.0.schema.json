@@ -9,6 +9,7 @@
     "schemaVersion",
     "meta",
     "dataModels",
+    "relations",
     "ui",
     "forms",
     "logic",
@@ -169,6 +170,12 @@
       "type": "array",
       "items": {
         "type": "object"
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relation"
       }
     }
   },
@@ -507,6 +514,38 @@
             },
             "additionalProperties": true
           }
+        }
+      },
+      "additionalProperties": true
+    },
+    "relation": {
+      "type": "object",
+      "required": [
+        "id",
+        "from",
+        "f",
+        "to",
+        "t",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "f": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "t": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
         }
       },
       "additionalProperties": true
