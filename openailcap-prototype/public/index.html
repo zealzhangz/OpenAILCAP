@@ -6,6 +6,7 @@
 <title>OpenAILCAP MVP 2.0 — AI 原生低代码平台原型</title>
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/modules.css">
+<link rel="stylesheet" href="css/workbench-redesign.css">
 </head>
 <body>
 <div id="app">
@@ -33,6 +34,7 @@
         </div>
       </div>
     </div>
+    <div class="prototype-notice" role="status" aria-live="polite"><strong>交互式原型</strong><span>本地演示数据 · localStorage · 非生产后端</span><code>AppSpec 1.0.0</code></div>
     <div id="page"></div>
   </div>
 </div>
@@ -40,7 +42,7 @@
 <!-- Global AI assistant -->
 <button class="ai-fab" id="aiFab" title="AI 助手 (Ctrl+I)">🤖</button>
 <div class="ai-panel" id="aiPanel">
-  <div class="ai-h">🤖 AI 开发助手 <span class="badge-live">LIVE</span>
+  <div class="ai-h">🤖 AI 开发助手 <span class="badge-live">LOCAL DEMO</span>
     <span class="grow"></span>
     <button class="icon-btn" id="aiClose" style="width:26px;height:26px">✕</button>
   </div>
@@ -68,15 +70,26 @@
 
 <script src="js/i18n.js"></script>
 <script src="js/store.js"></script>
+<script src="js/app-spec.js"></script>
+<script src="js/app-spec-migrations.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/app.js"></script>
 <script src="js/modules/app-management.js"></script>
+<script src="js/modules/app-lifecycle-enhancements.js"></script>
 <script src="js/modules/organization.js"></script>
+<script src="js/modules/organization-enhancements.js"></script>
+<script src="js/prisma-schema.js"></script>
 <script src="js/modules/data-modeling.js"></script>
+<script src="js/modules/data-modeling-enhancements.js"></script>
 <script src="js/modules/form-designer.js"></script>
+<script src="js/modules/form-designer-enhancements.js"></script>
+<script src="js/modules/form-runtime-enhancements.js"></script>
 <script src="js/modules/logic-flow.js"></script>
+<script src="js/modules/logic-flow-enhancements.js"></script>
 <script src="js/modules/bpm-designer.js"></script>
+<script src="js/modules/bpm-designer-enhancements.js"></script>
+<script src="js/modules/bpm-ai-enhancement.js"></script>
 <script src="js/modules/tasks.js"></script>
 <script src="js/modules/report-designer.js"></script>
 <script src="js/modules/settings.js"></script>

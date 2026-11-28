@@ -1,4 +1,10 @@
-# OpenAILCAP 技术栈清单 & 部署方案
+> **2026-11-28 技术栈与部署补充：唯一基线要求**
+>
+> 评审报告指出 Express/NestJS、Temporal/Bull、租户隔离和流程执行职责冲突。整改期间以 `doc/Phase3_TechnicalArchitecture.md` 顶部架构补充为准，必须通过 ADR 固化组件职责、版本、部署拓扑、故障模式、升级策略和许可证。NestJS 是唯一平台 API 框架；PostgreSQL/Prisma 是统一业务数据基线；BPMN 引擎、LogicFlow 执行器、Agent 长任务和短任务队列职责分离。
+>
+> 部署交付必须覆盖单机开发、测试/预发/生产、多节点高可用、离线/私有化、升级回滚、备份恢复、监控日志追踪、密钥管理、SBOM 和灾备演练。多环境晋级复用同一不可变 Artifact，禁止在生产环境临时重新编译。
+>
+># OpenAILCAP 技术栈清单 & 部署方案
 # MVP 完整技术规范
 
 **版本：** v1.0  

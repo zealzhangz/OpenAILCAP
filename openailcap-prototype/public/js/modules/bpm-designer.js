@@ -13,6 +13,9 @@ App.mods.bpm = {
     <div class="page-head"><h1>🧭 BPM 流程设计器</h1><span class="sub">${d.name} ${d.version} · BPMN 2.0 · 回退/委托/抄送 · 规则引擎 · 仿真</span>
       <span class="spacer"></span>
       <button class="btn" onclick="BpmM.simulate()">🧪 流程仿真</button>
+      <button class="btn" onclick="BpmM.connect()">↗ 连线</button>
+      <button class="btn" onclick="BpmM.removeEdge()">删除连线</button>
+      <button class="btn" onclick="BpmM.save()">💾 保存</button>
       <button class="btn" onclick="BpmM.rules()">📐 规则引擎</button>
       <button class="btn" onclick="BpmM.importBpmn()">📥 导入 BPMN</button>
       <button class="btn" onclick="BpmM.exportBpmn()">📤 导出 XML</button>
@@ -28,7 +31,7 @@ App.mods.bpm = {
       <div class="dz-right" id="bpmProps"><div class="muted">点击节点配置</div></div>
     </div>
     <div class="card mt14"><div class="card-h">节点库 <span class="spacer"></span>
-      <button class="btn btn-sm" onclick="UI.toast('🤖 AI 已生成「请假三级审批」流程：主管→总监→HR，含金额网关与 SLA')">🤖 AI 生成流程</button></div>
+      <button class="btn btn-sm" onclick="BpmM.aiGen()">🤖 AI 生成流程</button></div>
       <div class="card-b"><div class="flex wrap" style="gap:6px">
       ${BpmM.NODES.map(([c,t,l])=>`<span class="dz-item" draggable="true" style="margin:0" ondragstart="BpmM.drag='${t}'"
         onclick="BpmM.drop(null,'${t}')">${l}</span>`).join('')}</div></div></div>`;

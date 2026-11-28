@@ -15,7 +15,7 @@ App.mods.model = {
         <button class="btn btn-sm" onclick="ModelM.autoLayout()">⤢ 自动布局</button>
         <button class="btn btn-sm" onclick="ModelM.genSchema()">生成 Prisma</button>
         <button class="btn btn-sm" onclick="ModelM.genDDL()">生成 SQL DDL</button>
-        <button class="btn btn-sm" onclick="UI.toast('迁移预览：3 tables, 0 breaking changes')">迁移预览</button>
+        <button class="btn btn-sm" onclick="ModelM.migrationPreview()">迁移预览</button>
         <span class="spacer"></span><span class="muted">拖拽表体可移动 · 点击表编辑字段</span>
       </div>
       <div class="er-canvas"><div class="er-inner" id="erInner"><svg class="er-svg" id="erSvg"></svg></div></div>

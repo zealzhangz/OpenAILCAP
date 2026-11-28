@@ -1,0 +1,145 @@
+/* OpenAILCAP Workbench Visual System v1
+ * Distinctive engineering-workbench direction.
+ * Keep all existing module DOM, event handlers and feature entry points intact.
+ */
+:root {
+  --oac-ink:#1d2b34; --oac-sidebar:#172d3a; --oac-canvas:#f3f6f7;
+  --oac-paper:#fff; --oac-teal:#176b78; --oac-teal-hover:#105763;
+  --oac-copper:#c66a43; --oac-line:#d9e2e6; --oac-muted:#647681;
+  --oac-success:#28765f; --oac-warning:#a96720; --oac-danger:#b44747;
+  --primary:var(--oac-teal); --primary-h:var(--oac-teal-hover);
+  --primary-soft:#e8f2f3; --accent:var(--oac-copper);
+  --success:var(--oac-success); --success-soft:#e7f2ed;
+  --warning:var(--oac-warning); --warning-soft:#fbf1e2;
+  --danger:var(--oac-danger); --danger-soft:#f8eaea;
+  --info:#3d718a; --info-soft:#eaf1f5;
+  --bg:var(--oac-canvas); --surface:var(--oac-paper);
+  --border:var(--oac-line); --text:var(--oac-ink);
+  --text-2:#50616b; --text-3:var(--oac-muted);
+  --sidebar-w:248px; --header-h:56px;
+  --radius:7px; --radius-sm:5px;
+  --shadow:0 1px 2px rgba(24,47,59,.06),0 5px 16px rgba(24,47,59,.045);
+  --font:"Aptos","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+html { scroll-behavior:smooth; }
+body { background:var(--oac-canvas); color:var(--oac-ink); font-size:13px; letter-spacing:0; }
+button,input,select,textarea { font:inherit; }
+:focus-visible { outline:3px solid rgba(23,107,120,.32); outline-offset:2px; }
+
+/* Product navigation */
+#sidebar { background:var(--oac-sidebar); border-right:1px solid #29424f; }
+.logo { height:64px; padding:0 20px; border-bottom-color:#2b424e; }
+.logo-mark { border-radius:6px; background:var(--oac-teal); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
+.logo b { font-size:14px; letter-spacing:.15px; }
+.logo small { color:#9eb1ba; margin-top:3px; }
+.nav-scroll { padding:14px 0 22px; }
+.nav-group-title { padding:18px 20px 7px; color:#91a7b1; font-size:10px; letter-spacing:.8px; }
+.nav-item { position:relative; min-height:36px; margin:2px 10px; padding:8px 12px; border-radius:5px; color:#c5d2d8; font-size:12.5px; }
+.nav-item:hover { background:#254451; color:#fff; }
+.nav-item.active { color:#fff; background:#244d59; font-weight:650; }
+.nav-item.active::before { content:""; position:absolute; left:-10px; top:7px; bottom:7px; width:3px; border-radius:0 3px 3px 0; background:#75c2c5; }
+.nav-item .badge { background:var(--oac-copper); }
+.nav-item .badge.soft { background:#36515e; color:#dbe5e8; }
+
+/* Header and content */
+#topbar { padding:0 24px; background:#fff; border-bottom:1px solid var(--oac-line); }
+#crumb { color:#42545e; font-size:12.5px; font-weight:600; }
+.topbar-right { gap:7px; }
+#page { padding:24px 28px 36px; background:var(--oac-canvas); }
+.page-head { gap:14px; margin-bottom:20px; min-height:38px; }
+.page-head h1 { color:var(--oac-ink); font-size:21px; font-weight:700; letter-spacing:-.35px; }
+.page-head .sub { color:var(--oac-muted); font-size:12px; }
+
+/* Surfaces and data density */
+.card { border:1px solid var(--oac-line); border-radius:7px; box-shadow:0 1px 2px rgba(29,43,52,.035); }
+.card-h { padding:13px 16px; border-bottom:1px solid #e8edef; font-size:13px; color:#2a3b44; }
+.card-b { padding:16px; }
+.grid { gap:14px; }
+.stat-tile { border:1px solid var(--oac-line); border-radius:7px; padding:13px 15px; box-shadow:none; }
+.stat-tile .v { font-size:22px; font-weight:700; color:#20333d; letter-spacing:-.4px; }
+.stat-tile .l { color:#70818a; font-size:11.5px; }
+.tbl th { background:#f4f7f8; color:#53646d; border-bottom-color:#dce5e8; }
+.tbl td { border-bottom-color:#edf1f2; }
+.tbl tr:hover td { background:#f4f8f8; }
+
+/* Controls */
+.btn { min-height:32px; padding:7px 12px; border-radius:5px; border-color:#d4dfe3; color:#334750; transition:background-color .14s,border-color .14s,color .14s; }
+.btn:hover { border-color:var(--oac-teal); color:var(--oac-teal); background:#f2f8f8; }
+.btn-p { background:var(--oac-teal); border-color:var(--oac-teal); color:#fff; box-shadow:0 1px 1px rgba(23,107,120,.15); }
+.btn-p:hover { background:var(--oac-teal-hover); border-color:var(--oac-teal-hover); color:#fff; }
+.btn-danger { color:var(--oac-danger); }
+.icon-btn { border-color:transparent; background:transparent; border-radius:5px; }
+.icon-btn:hover { background:#edf4f5; border-color:#d6e5e7; color:var(--oac-teal); }
+.input,select.input,textarea.input { border-color:#d5e0e4; border-radius:5px; background:#fff; }
+.input:focus { border-color:var(--oac-teal); box-shadow:0 0 0 3px rgba(23,107,120,.12); }
+.tabs { border-bottom-color:#d8e2e5; }
+.tab.active { color:var(--oac-teal); border-bottom-color:var(--oac-teal); }
+.tag-purple { background:#f0edf5; color:#625276; }
+
+/* Editors: maintain the existing feature layout but make it feel like a professional IDE */
+.designer { border:1px solid var(--oac-line); border-radius:7px; overflow:hidden; background:#fff; }
+.dz-left,.dz-right { background:#f8fafb; border-color:#dce5e8; }
+.dz-left-h { color:#41545e; background:#f1f5f6; border-bottom:1px solid #dce5e8; }
+.dz-center { background:#fff; }
+.dz-toolbar { min-height:46px; padding:8px 12px; border-bottom:1px solid #dce5e8; background:#f8fafb; }
+.er-canvas,.flow-wrap { background-color:#f8fafb; background-image:radial-gradient(#d6e0e3 .8px,transparent .8px); background-size:18px 18px; }
+.er-table,.flow-node { box-shadow:0 2px 7px rgba(28,51,62,.08); border-color:#cddadd; }
+.node-selected,.er-table.selected { outline:2px solid rgba(23,107,120,.6); }
+.modal-mask { background:rgba(17,38,48,.48); }
+.modal { border:1px solid #d8e2e5; border-radius:9px; }
+.modal-h,.modal-f { border-color:#e5ebed; }
+.toast { border-radius:6px; box-shadow:0 5px 18px rgba(24,47,59,.12); }
+
+/* AI companion: a contextual engineering panel, not a floating chatbot gimmick */
+.ai-fab { background:var(--oac-teal)!important; box-shadow:0 5px 18px rgba(23,107,120,.25)!important; }
+.ai-panel { border:1px solid #cddde0!important; border-radius:9px!important; box-shadow:0 18px 50px rgba(20,43,54,.2)!important; }
+.ai-h { background:#f0f6f6!important; color:#203740!important; border-bottom:1px solid #dce7e8!important; }
+.badge-live { background:#e5f1ed!important; color:#28765f!important; }
+
+/* Responsive workbench: preserve every navigation item and let panels scroll instead of hiding features */
+@media (max-width:1100px) {
+  :root { --sidebar-w:220px; }
+  #page { padding:20px; }
+  .cols-4 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:760px) {
+  body { overflow:auto; }
+  #app { display:block; height:auto; min-height:100vh; }
+  #sidebar { width:100%; max-height:220px; }
+  .logo { height:52px; }
+  .nav-scroll { display:flex; flex-wrap:wrap; overflow:auto; padding:5px 8px 10px; }
+  .nav-group-title { width:100%; padding:8px 10px 2px; }
+  .nav-item { flex:0 0 auto; margin:2px; }
+  .nav-item.active::before { left:0; top:auto; bottom:-2px; width:100%; height:2px; }
+  #main { min-height:calc(100vh - 220px); }
+  #topbar { padding:0 12px; }
+  #page { padding:16px 12px 28px; overflow:visible; }
+  .cols-2,.cols-3,.cols-4,.cols-23,.cols-32 { grid-template-columns:1fr; }
+  .designer { overflow:auto; }
+  .designer > * { min-width:680px; }
+  .page-head h1 { font-size:19px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
+}
+
+
+/* Persistent prototype boundary notice: visible on every workspace, not only in docs. */
+.prototype-notice {
+  display:flex; align-items:center; gap:10px; min-height:30px;
+  padding:5px 28px; color:#52656d; background:#edf4f4;
+  border-bottom:1px solid #d9e5e6; font-size:11px;
+}
+.prototype-notice strong {
+  color:#176b78; font-weight:700; letter-spacing:.2px;
+}
+.prototype-notice code {
+  margin-left:auto; padding:2px 6px; border-radius:4px;
+  color:#52656d; background:#fff; border:1px solid #d9e5e6;
+  font:10px var(--mono);
+}
+@media (max-width:760px) {
+  .prototype-notice { padding:6px 12px; flex-wrap:wrap; gap:5px 9px; }
+  .prototype-notice code { margin-left:0; }
+}

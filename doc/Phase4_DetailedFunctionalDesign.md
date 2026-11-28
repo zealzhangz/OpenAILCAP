@@ -1,4 +1,12 @@
-# OpenAILCAP 第 4 步：细化功能设计（企业级设计文档）
+> **2026-11-28 功能详细设计补充：100% 功能保留**
+>
+> 本文中原有功能均纳入强制交付范围，不得因为原型重构、前端框架迁移、视觉简化或技术栈调整而删除。以 `doc/整改/2026-11-28_功能保留与验收追踪矩阵.md` 的 P01-P18 页面、AI01-AI10 能力和 14 模块范围为基线。
+>
+> 所有功能必须从“入口存在”升级为“业务闭环”：输入校验→权限判定→状态变更→持久化→跨模块引用更新→审计→结果反馈→失败恢复。Toast 只作结果提示，不能代替保存、审批、发布、部署、密钥轮换、API Key 吊销或备份恢复。
+>
+> 设计文档中每个功能必须写明主流程、失败流程、边界条件、角色权限、数据契约、错误码、审计字段、性能约束和 E2E 用例。演示数据必须标识，不能将随机 KPI 或硬编码状态计入完成率。
+>
+># OpenAILCAP 第 4 步：细化功能设计（企业级设计文档）
 
 ## 4.1 应用管理中心
 
@@ -784,4 +792,141 @@ CREATE TABLE user_roles (
   - 使用 Meta Astryx 创建高保真原型
   - 功能引导向导
   - 操作手册编写
+
+
+
+---
+
+# 2026-11-28 首批模块详细设计基线（M01—M04）
+
+> 本节将应用管理、组织架构、数据建模、表单设计与当前交互原型逐项对齐。这里的“原型已实现”仅指浏览器内交互和 localStorage 演示；不代表生产 API、身份权限、审计服务或外部系统集成已经交付。页面中的 Toast、固定数据、随机值和模拟响应均不作为业务闭环证据。
+
+## M01 应用管理中心（路由 apps）
+
+### 领域对象与 AppSpec 边界
+
+- Application：`id`、`tenantId`、`name`、`description`、`type`、`ownerId`、`status`、`currentVersionId`、`createdAt`、`updatedAt`。
+- AppRevision：`id`、`appId`、`revision`、`appSpec`、`schemaVersion`、`createdBy`、`createdAt`、`changeSummary`；版本不可变。
+- Artifact：`id`、`appId`、`revisionId`、`compilerVersion`、`manifest`、`digest`、`signatureRef`、`status`；内容不可变，digest 必须由真实制品字节计算。
+- ShareGrant：`id`、`appId`、`subjectId`、`permissionSet`、`expiresAt`、`revokedAt`。
+- AppSpec `meta` 是应用定义元数据；版本和制品生命周期元数据由平台服务管理，不能伪装成 AppSpec 内的可变字段。
+
+### 主流程
+
+1. 创建：用户选择 AI 辅助、模板或手工方式 → 校验名称/类型/租户配额 → 建立草稿 AppSpec → 执行 Schema + 语义校验 → 保存首个 revision。
+2. 编辑：读取指定 revision → 基于 ETag/版本号提交变更 → 服务端校验 → 写入新 revision；并发冲突返回 409/412，不覆盖他人变更。
+3. 发布：选择不可变 revision → 编译 → 单测/契约/安全扫描 → 生成制品 manifest 与 digest → 审批 → 晋级目标环境；失败时保留原环境版本并记录原因。
+4. 分享：校验调用者授权 → 选择最小权限、对象范围和有效期 → 创建可撤销 grant；链接必须是服务端生成的随机高熵令牌，数据库仅保存令牌哈希，不能在 UI 中拼接固定 token。
+5. 删除：软删除并保留恢复期限；恢复前检查唯一约束、引用和权限；期限到期后按保留策略清理，并审计。
+6. 导出/导入：导出版本化配置包和 manifest；导入先解析、校验 schemaVersion、依赖、权限和冲突，再由用户确认写入；导出包不包含密钥、会话和个人敏感信息。
+
+### 权限与审计
+
+权限动作：`app:create/read/update/delete/restore/share/export/import/version:create/compile/promote`。对象级策略至少校验 tenant、应用归属、owner/team grant 和环境范围。审计事件：`app.created`、`app.spec.updated`、`app.version.created`、`artifact.compiled`、`artifact.promoted`、`app.share.granted/revoked`、`app.deleted/restored`。记录 actor、tenant、resource、before/after 摘要、traceId、时间和结果；不写入明文 token/密钥。
+
+### 异常与验收
+
+- 名称冲突、无权限、租户配额、schema 不兼容、ETag 冲突、编译失败、制品签名失败、审批拒绝、晋级失败、分享过期/撤销均需明确错误码和可恢复状态。
+- E2E：创建三种方式；编辑并形成新 revision；回滚创建新 revision（不得改写历史）；软删除/恢复；导出后重新导入；分享过期/撤销；无权限用户不能读取/导出；制品摘要与实际字节一致。
+
+### 当前原型核对
+
+- 有：创建入口、模板/手工/规则模拟 AI 草稿、详情、版本列表、回收站/恢复、部分 JSON 导出、localStorage 状态。
+- 未形成真实闭环：详情内回退仍为 Toast；分享仍为演示申请且链接示例不可用；制品生成仍是 Toast，历史样例含伪造 checksum 风险；`versions()` 入口曾仅提示用户进入详情；批量导入/发布/制品签名与跨环境晋级无后端。
+- 验收状态：D1（本节设计基线）；P1（部分交互）；I1/V1/S1 未证明。
+
+## M02 组织架构（路由 org）
+
+### 领域对象
+
+- Department：`id`、`tenantId`、`code`、`name`、`parentId`、`managerId`、`status`、`validFrom/validTo`。
+- Position：`id`、`code`、`name`、`grade`、`permissionTemplateId`。
+- Employee：`id`、`employeeNo`、`displayName`、`departmentId`、`positionId`、`managerId`、`status`、`contactRef`。
+- OrgChange：`id`、`subjectId`、`changeType`、`before`、`after`、`reason`、`approvalId`、`effectiveAt`、`actorId`。
+
+### 主流程与约束
+
+- 组织树写入必须检查同租户、父节点存在、禁止自引用/环路、编码唯一、负责人有效且具备管理资格。
+- 员工调岗/晋升先生成变更申请，审批通过后按生效时间更新组织关系；禁止 UI 点击即修改组织事实。
+- 员工停用需检查待办、流程参与者、负责人引用和账号状态；禁止删除仍被引用的员工。
+- 权限模板采用版本化策略定义；编辑时显示继承、显式授权和拒绝项，保存前展示权限差异并要求有权限的审批/确认。
+- Excel 导入先上传到隔离区，校验模板版本、列映射、编码唯一、引用完整、组织环路和数据权限；预览成功/失败行后事务提交，支持错误行下载和幂等重试。
+- AD/LDAP 同步必须使用最小权限服务账号、增量游标、属性映射、冲突策略和 dry-run；同步结果可追溯，不允许“同步完成”固定 Toast 代替真实连接。
+
+### 权限、审计与验收
+
+权限动作：`org:read`、`department:manage`、`position:manage`、`employee:manage`、`org:import`、`directory:sync`、`permission-template:approve`。审计覆盖部门/岗位/员工变更、权限模板发布、导入批次、外部目录同步，保留前后值摘要和来源系统。
+E2E：树节点新增/编辑/删除约束；员工调岗申请审批前后状态；停用引用检查；模板权限差异；Excel 有效/无效混合批次；LDAP 断连、重复游标和冲突恢复。
+
+### 当前原型核对（2026-11-28 更新）
+
+- 有：部门树、员工/岗位详情、部门/岗位本地新增编辑、员工启停、本地变更记录展示；新增确定性权限模板矩阵（按岗位模板给出稳定默认项，支持编辑并持久化到 localStorage）；调岗/晋升生成待审批变更申请，支持本地模拟通过/驳回，只有通过后才更新员工组织属性并写入变更历史；调岗校验部门/岗位引用、禁止本人主管和汇报线环路。
+- 明确限制：审批仅是本地演示状态机，不连接 BPM/HR 系统、不代表真实审批人；权限模板未实现版本化、权限差异审批或生产 PDP/PEP；Excel 导入没有真实文件解析；AD/LDAP 同步仍为固定模拟；部门删除未完成下属/引用完整性保护。
+- 验收状态：D1；P1 本地交互增强；新增静态自动化基线覆盖持久化权限、申请状态和环路检查；I1/V1/S1 未证明。
+
+## M03 数据建模（路由 model）
+
+### 领域对象与模型约束
+
+- DataModel：`id`、`appId`、`name`、`displayName`、`schemaVersion`、`fields[]`、`indexes[]`、`constraints[]`。
+- Field：`name`、`type`、`nullable`、`primaryKey`、`unique`、`default`、`length/precision/scale`、`references`、`encryptionProfileRef`、`dictionaryRef`。
+- Relation：`id`、`fromModel/fromField`、`toModel/toField`、`cardinality`、`onDelete/onUpdate`。
+- Dictionary、View 必须具备独立 ID、版本、租户/应用范围和引用校验。
+
+### 主流程与生成器要求
+
+1. 模型编辑在草稿副本中进行；名称、字段名、类型、主键、外键、索引、默认值和引用在保存前统一校验。
+2. 关系必须映射到真实外键字段；删除实体/字段前显示级联影响，禁止静默破坏引用。
+3. Prisma/DDL 生成器必须由同一规范化模型 IR 确定性生成；类型映射、nullable、主键、复合唯一索引、关系反向字段、数据库映射、默认值和加密字段策略均需有测试。
+4. 迁移预览必须生成可审阅的 up/down 或明确不可逆说明；生产执行要求备份、锁、超时、审批、迁移记录和失败恢复。原型按钮不得执行真实数据库迁移。
+5. SQL 逆向导入需使用受限 SQL parser；不执行导入 SQL，不接受多语句副作用；解析结果先进入候选模型，用户确认后写入 AppSpec。
+6. 加密字段只引用密钥管理配置，不得在 Schema/模型中存储密钥或宣称勾选 SM4 即完成国密保护。
+
+### 权限、审计与验收
+
+权限动作：`model:read/create/update/delete/import/export/compile/migration:preview/migration:execute`。审计模型字段、关系、索引、字典、视图和迁移操作。E2E/单测至少覆盖合法/非法标识符、所有类型映射、nullable、Decimal 精度、复合主键/唯一索引、外键双向关系、循环引用、删除依赖、SQL parser 恶意输入、迁移失败恢复及确定性重复生成。
+
+### 当前原型核对（2026-11-28 更新）
+
+- 有：ER 画布、实体/字段本地编辑、关系展示、候选模型确认、DDL 预览；新增独立确定性 Prisma Schema 生成器，支持 string/text/int/decimal/boolean/datetime/json 标量映射、必填/可空、单字段主键与唯一约束、字符串长度、Decimal 精度、默认值、updatedAt、单字段索引，以及所选模型集合内的双向 N:1/1:1 关系字段。
+- 生成器对非法标识符、重复实体/字段、缺失或不兼容关系字段、缺失/多主键、未显式定义的 enum 和非法 Decimal 精度执行失败关闭；不会将未知类型静默降级为 String。单实体生成仅生成该实体，不生成集合外关系。
+- 明确限制：当前尚未支持复合主键/复合唯一约束、复合索引、完整 Prisma enum 定义、关系 onDelete/onUpdate、所有数据库原生类型及完整 AppSpec IR 编译；生成结果尚未通过 Prisma CLI validate/数据库迁移验证，仍是浏览器本地预览。
+- 仍未完成：迁移执行、SQL parser、字典项编辑、视图定义器、国密密钥引用/加密实现。国密字段开关只是模型标记。
+- 验收状态：D1；P1 部分交互；新增 Node 单测覆盖已支持映射与失败路径；I1/V1/S1 未证明。不得将本地生成器描述为生产编译器或可执行迁移能力。
+
+## AppSpec 1.1.0 字典规范迁移（2026-11-28）
+
+- AppSpec 1.0.0 保持不可变；新增 `doc/architecture/schemas/app-spec-1.1.0.schema.json`，不在旧版本中静默增加字段。
+- 1.1.0 新增顶层 `dictionaries[]`，字典具有稳定 `id`、唯一 `code`、名称、正整数 `version`、`list/tree` 类型和层级 `items[]`；每个项以 `value` 标识，以 locale-keyed `labels` 提供展示文本，树节点可包含 children。
+- 表单字段通过 `dictionaryRef: { dictionaryId, version }` 引用字典的不可变版本。引用必须存在且版本匹配；1.0.0 不允许声明该引用。
+- 浏览器校验器兼容 1.0.0/1.1.0；只有 1.1.0 强制要求 dictionaries 并执行字典 ID/code 唯一、版本、类型、节点结构及表单引用检查。它仍是子集校验器，不替代完整 JSON Schema 2020-12 服务端校验。
+- 原型提交时将本地字典映射为 AppSpec 1.1.0 的 locale labels，当前演示版本固定为 1；若表单绑定字典但 AppSpec 仍为 1.0.0，则阻止提交，要求显式迁移。不得将本地 Store 字典版本 1 误认为已实现持久化版本仓库。
+- 新增 `openailcap-prototype/public/js/app-spec-migrations.js`：提供显式、非破坏性的 1.0.0→1.1.0 迁移预览；接收调用方提供的本地字典快照，按 `dictCode` 精确匹配并转换为 `dictionaryRef`，校验表单 `modelRef`/字段引用；未知/重复字典 code、外部字典来源和引用不完整时失败关闭。预览返回迁移副本、错误和变更路径，不写 Store、不自动保存；1.1.0 输入按幂等 no-op 处理。调用方必须在展示差异并取得用户确认后自行持久化。该迁移器仅覆盖当前已定义字段，不是通用 schema migration framework，也不实现版本回滚、服务端字典仓库或事务。
+
+## M04 表单设计（路由 form）
+
+### 领域对象
+
+- FormDefinition：`id`、`appId`、`modelRef`、`version`、`layout`、`fieldRefs[]`、`rules[]`、`i18n`、`submitPolicy`。
+- FormField：`id`、`modelFieldRef`、`key`、`label`、`componentType`、`required`、`defaultValue`、`visibilityRule`、`validationRules[]`、`span`、`translations`。
+- FormSubmission：`id`、`formVersion`、`payload`、`status`、`submittedBy`、`submittedAt`；运行时提交必须绑定具体表单版本。
+
+### 主流程与约束
+
+- 组件拖放生成字段草稿；字段 key 必须与 AppSpec 数据模型字段一致，不能只在 UI 中改名而不更新模型引用。
+- 属性编辑包括标签、组件类型、必填、默认值、布局、校验、联动、可见/只读条件和多语言；规则需可解析、可测试，不允许点击标签只弹 Toast。
+- 保存时校验字段引用、重复 key、规则表达式、组件与数据类型兼容、必填与默认值冲突，并写入新的表单 revision。
+- 预览模式应使用真实控件执行客户端校验；提交/暂存必须给出本地模拟和生产 API 两种状态的明确边界。
+- 国际化翻译应保留 locale key、源文、译文、状态和人工审核记录；AI 翻译为建议，不直接覆盖已审核文本。
+
+### 权限、审计与验收
+
+权限动作：`form:read/design/update/publish/preview/submit`。审计字段增删改、规则调整、布局变更、表单版本发布和提交。E2E：拖放组件、属性变更、规则有效/无效、模型字段引用、撤销重做、保存重载、预览校验、locale 切换、键盘操作和窄屏布局。
+
+### 当前原型核对（2026-11-28 更新）
+
+- 有：画布拖放、字段属性编辑、布局切换、撤销/重做、字段建议选择；新增可编辑并执行的 required/positive/min/max/length/regex 规则，支持旧版字符串规则兼容；预览页使用实际输入控件，执行必填及字段规则校验，支持安全受限的比较表达式条件显示；提交/暂存写入 `formSubmissions` 本地记录，并绑定表单 ID、修订号、payload、状态和时间。 原有设计态预览保持原样，另增独立的可执行本地运行预览入口，避免用运行时子集覆盖既有组件预览。
+- 校验失败时显示字段级错误；成功后明确标注 LOCAL DEMO，数据只保存在当前浏览器。条件表达式仅支持单字段与数字/字符串常量的比较，不执行任意 JS。
+- 新增：字段属性可引用本地数据字典；下拉、单选、复选在绑定字典后渲染原生选择控件，树形字典按层级展平显示；复选提交为值数组。该引用目前保存在原型表单字段 `dictCode`，依赖浏览器 Store 字典，不代表 AppSpec 1.0.0 已纳入字典规范或生产字典服务。\n- 新增本地提交门禁：点击“校验并提交 AppSpec”时，按表单 modelRef 校验模型存在性、字段 key 唯一性、字段引用存在性及基础控件类型兼容性；通过后将表单映射写入浏览器 Store 中对应 AppSpec，并调用当前浏览器子集校验器。缺少 AppSpec 或引用校验失败时阻止写入。该流程仍是 LOCAL DEMO，不替代服务端 JSON Schema 2020-12 与语义校验。\n- 明确限制：未绑定字典的下拉/单选/多选仍为文本输入占位；唯一性规则、复杂联动、字段级权限、真实 API 提交、服务端校验及生产审计未实现；多语言内容部分硬编码，AI 翻译仅模拟；跨模型同名字段的自动消歧、完整类型映射、通用 AppSpec 1.0.0→1.1.0 迁移器、字典版本编辑/发布/回滚及服务端引用完整性校验仍未完成。
+- 验收状态：D1；P1 本地规则与提交交互增强；新增 Node 测试覆盖规则边界、条件表达式安全拒绝和资源加载顺序；I1/V1/S1 未证明。
 

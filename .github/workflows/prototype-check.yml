@@ -1,0 +1,26 @@
+name: OpenAILCAP prototype checks
+
+on:
+  push:
+    paths:
+      - "openailcap-prototype/**"
+      - "doc/整改/**"
+  pull_request:
+    paths:
+      - "openailcap-prototype/**"
+      - "doc/整改/**"
+
+jobs:
+  prototype-static-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install prototype dependencies
+        working-directory: openailcap-prototype
+        run: npm install
+      - name: Run static, schema and feature-preservation tests
+        working-directory: openailcap-prototype
+        run: npm test

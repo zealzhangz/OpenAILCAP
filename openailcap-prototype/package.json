@@ -1,15 +1,17 @@
 {
   "name": "openailcap-prototype",
-  "version": "2.0.0-prototype",
-  "description": "OpenAILCAP MVP 2.0 Interactive Prototype",
+  "version": "2.1.0-prototype",
+  "description": "OpenAILCAP interactive UI prototype (not production backend)",
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test",
+    "check": "npm test",
+    "test:schemas": "node --test test/app-spec-schema.test.js"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2"
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   }
 }

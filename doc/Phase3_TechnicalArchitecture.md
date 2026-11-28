@@ -1,77 +1,66 @@
+> **2026-11-28 L3 整改架构补充（优先级高于本文历史描述）**
+>
+> 本项目目标调整为 GB/T 46900—2025 第 7 章**引领级**，即九个能力域全部适用 L1/L2/L3 要求。以下约束作为本阶段架构基线；旧文档中与其冲突的“可选/或”描述在 ADR 更新后必须清理。
+>
+> 1. **统一事实源：** 新增版本化 AppSpec/IR，覆盖 meta、dataModels、ui、forms、logic、workflows、security、integrations、i18n、deployment、extensions。设计器、Agent、编译器、运行时只能通过有版本的命令/事务修改它；Prisma/SQL、前端、BPMN、权限策略和制品由确定性编译器生成。
+> 2. **前端基线：** 产品主工作台采用 React 18 + TypeScript；现有 Vanilla JS 原型仅作为可视化/交互兼容基线，完成逐页功能映射后再迁移，不得以迁移为由删减功能。
+> 3. **后端基线：** NestJS + TypeScript 作为唯一平台 API 框架；不得同时维护 Express/NestJS 两套业务后端。静态原型服务器不再描述为业务 API。
+> 4. **数据基线：** PostgreSQL + Prisma；统一 UUID 主键策略、关系/索引/约束生成。SaaS 共享库采用 tenant_id + PostgreSQL RLS；独立私有化部署允许独立数据库/Schema 配置。禁止动态租户表与 RLS/Schema-per-tenant 混搭形成多套事实源。
+> 5. **执行边界：** LogicFlow 是短时、确定性 DAG/逻辑执行器；BPMN 由符合 BPMN 2.0 语义的流程引擎执行长周期人工流程；Temporal 用于可恢复的 Agent/后台长任务，不替代 BPMN 引擎。平台异步短任务由 Redis/BullMQ 承载，避免重复承担长流程语义。
+> 6. **Agent：** AI Orchestrator 管理任务状态机、计划、工具注册、模型路由、权限、人工审批、检查点、重试/恢复、差异预览、测试验证和审计；模型不得直接持有数据库/部署凭据。
+> 7. **安全：** PDP/PEP 默认拒绝、显式 deny 优先；租户、资源、行列字段和 API 权限统一策略；自定义代码/插件必须在非特权隔离沙箱运行，默认无网络，资源/时限配额与秘密代理受控。
+> 8. **密码：** 删除固定 IV、进程内临时密钥和普通哈希充当完整性认证的示例。密钥由 KMS/HSM/Vault 生命周期管理；加密封装、算法模式、IV/nonce、认证标签、keyId、轮换和恢复需经密码专家评审。
+> 9. **制品：** Artifact 不可变，必须含 AppSpec/schemaVersion、编译器/运行时版本、依赖锁、迁移、资源、权限、环境约束、SBOM、校验/签名和源版本；同一制品晋级各环境。
+> 10. **扩展与 L3：** 架构必须支持平台级定制扩展、设备接入管理、国际化/多时区、应用市场、跨语言/跨平台开发、SDK/源码二次开发，并通过隔离、版本兼容和自动化测试验收。
+>
+> 具体字段、API、状态机和测试见 `doc/整改/2026-11-28_L3全量交付实施基线.md`。未完成 ADR/POC 的组件选型不得标注为生产已实现。
+>
+> ---
+>
 # OpenAILCAP 第 3 步：技术架构设计
 
-## 3.1 技术栈最终确定
+## 3.1 技术栈最终确定（唯一基线）
 
-### 核心技术栈
+> 本节取代历史版本中“Express/NestJS 可选”“Temporal 作为通用流程引擎”等互相冲突的描述。当前原型与目标生产架构分层：原型为原生 HTML/CSS/ES Modules + Node.js 内置 HTTP 静态服务器 + localStorage；生产平台目标为 React 18 + TypeScript + NestJS + PostgreSQL/Prisma。原型不是生产栈实现，不得据此推断生产后端已交付。
 
-```
-层级           | 技术选择                    | 版本   | 理由
----|---|---|---
-前端框架       | React                       | 18.x  | 现代、生态强、团队熟悉
-前端语言       | TypeScript                  | 5.x   | 类型安全、可维护性高
-UI 库          | Ant Design Pro              | 5.x   | 企业级、组件完整、中文支持好
-状态管理       | Redux Toolkit               | 1.9+  | 生态成熟、DevTools 完善
-HTTP 客户端    | axios + React Query         | 最新  | 缓存管理、自动重试
-编辑器相关     | react-dnd（拖拽）           | 16.x  | 表单/流程设计器基础
-代码编辑       | Monaco Editor               | 最新  | VS Code 同款、功能完整
+### 生产平台基线
 
-后端框架       | Express                     | 4.x   | 轻量、高效、中间件丰富
-后端语言       | TypeScript                  | 5.x   | 类型安全、现代开发体验
-API 框架       | NestJS (可选)               | 10.x  | 微服务友好、企业级
-数据库 ORM     | Prisma                      | 5.x   | 类型安全、迁移系统完善
-验证库         | Joi / Zod                   | 最新  | 运行时类型检查
-日志库         | Winston                     | 3.x   | 结构化日志、多输出
-任务队列       | Bull (Redis-based)          | 4.x   | 轻量、可靠、易于扩展
+| 层次 | 唯一主选型 | 职责与边界 |
+|---|---|---|
+| Web 工作台 | React 18 + TypeScript 5 + Vite | 生产前端；按页面功能映射逐步迁移现有原型，不允许删减入口和交互 |
+| UI 组件 | Ant Design 5 + 自研设计系统 | 通用表格、表单、弹窗、反馈；设计器画布使用专用组件 |
+| 路由/状态 | React Router 6 + Redux Toolkit | 路由权限、共享 AppSpec 状态、异步状态 |
+| API | NestJS 10 + TypeScript | 唯一平台业务 API；静态原型服务器不承载业务 API |
+| API 契约 | REST + OpenAPI 3.1 + Zod/DTO | 统一请求、响应、错误码、版本和兼容策略 |
+| 数据库/ORM | PostgreSQL 15+ + Prisma 5 | 统一 UUID 主键；迁移纳入版本控制 |
+| 缓存/短任务 | Redis 7 + BullMQ | 缓存、短时异步任务和重试；不承载长周期业务流程语义 |
+| Agent 长任务 | Temporal | Agent 规划、检查点、恢复和长任务编排；不替代 BPMN 引擎 |
+| BPMN | BPMN 2.0 兼容流程引擎（独立 ADR/POC 选型门） | 长周期人工审批、定时器、事件、补偿和流程实例 |
+| LogicFlow | 自研确定性 DAG 执行器 | 短时、无持久人工等待的逻辑计算；有界执行、幂等和确定性 |
+| 文件/制品 | S3 兼容对象存储 + 不可变 Artifact Registry | 上传、版本、SBOM、签名、晋级和回滚 |
+| 可观测性 | OpenTelemetry + Prometheus/Grafana + 集中日志 | Trace/Metric/Log 关联、告警与审计分离 |
+| 测试 | Vitest/Jest + Playwright + API/DB 集成测试 | 单元、契约、集成、浏览器 E2E、安全和恢复测试 |
 
-数据库         | PostgreSQL                  | 15.x  | 功能完整、可靠、开源
-缓存           | Redis                       | 7.x   | 高性能、持久化、支持多数据结构
-消息队列       | Redis (简化版) / RabbitMQ   | -     | MVP 用 Redis，扩展用 RabbitMQ
-文件存储       | Minio (S3 兼容)             | 最新  | 开源、自建、完全控制
-搜索引擎       | Elasticsearch (可选)        | 8.x   | 审计日志搜索优化
+### 明确禁止的混用
 
-流程引擎       | Temporal                    | 1.x   | 企业级、分布式、容错强
-代码生成       | @babel/parser + codegen    | 最新  | AST 解析、类型安全的代码生成
-AI 集成        | LangChain                   | 0.1+  | 模型无关、链式操作、RAG 支持
-安全/加密      | bcryptjs, jsonwebtoken      | 最新  | 密码、token、加密
-权限库         | Casbin (或 @casl/ability)   | 最新  | 灵活的权限模型、易于扩展
+1. 不得同时把 Express 和 NestJS 描述为平台业务 API 主框架。
+2. 不得把 Temporal、BullMQ 和 BPMN 引擎当作可互换的流程引擎。
+3. SaaS 共享库统一采用 `tenant_id + PostgreSQL RLS`；私有化独立部署可配置独立数据库。禁止动态租户表与上述方案并存。
+4. 所有业务模型、表单、逻辑、BPMN、权限、集成和部署描述均以版本化 AppSpec 为源；SQL/Prisma、BPMN XML、前端和权限策略是可追溯生成物。
+5. 组件版本在实施仓库锁文件与 SBOM 中固定；本文版本范围是架构基线，不代表当前原型已安装或生产已验证。
 
-DevOps         | Docker                      | 最新  | 容器化、隔离、易于部署
-编排           | docker-compose              | 最新  | MVP 本地部署、一键启动
-CI/CD          | GitHub Actions (后期)       | -     | 集成 GitHub、免费额度足
-监控           | Prometheus + Grafana        | 最新  | 开源、可观测、告警完善
-日志中心       | ELK Stack (Loki 更轻量)     | 最新  | 日志聚合、全文搜索
-```
+### 原型与生产实现的分层
 
----
+| 项目 | 当前可运行原型 | 目标生产平台 |
+|---|---|---|
+| 前端 | Vanilla JS ES Modules、HTML、CSS | React + TypeScript |
+| 服务端 | Node.js 内置 HTTP，仅静态资源 | NestJS 业务 API |
+| 状态 | 浏览器 localStorage | PostgreSQL 持久化 + Redis 缓存 |
+| AI | 本地规则/模板模拟，显式 LOCAL DEMO | 受控 Agent Orchestrator + Tool Registry |
+| Logic/BPM | 图结构编辑/仿真，不产生真实业务副作用 | Logic DAG 执行器 / BPMN 2.0 引擎 |
+| 交付物 | 原型 JSON 配置导出 | 不可变、可签名、可晋级 Artifact |
 
-### 技术选型理由总结
-
-**为什么选择 TypeScript + Express + React？**
-
-```
-优势：
-✓ 全栈 TypeScript - 团队统一语言，知识迁移低
-✓ 类型安全 - 减少运行时错误 30-50%
-✓ 现代工具链 - esbuild/vite/webpack 编译快
-✓ 社区生态 - npm 包最多、第三方库完善
-✓ 可维护性 - 代码自文档化、IDE 支持强
-
-劣势及解决方案：
-✗ 单线程 - 用 Bull 任务队列做异步处理
-✗ 内存占用 - Kubernetes 自动扩展
-✗ 冷启动 - Lambda/Vercel 不考虑，自建服务器启动快
-
-vs JeecgBoot (Java)：
-  Java 优势：性能、企业成熟度
-  我们劣势：性能稍弱，但对中小企业足够
-  我们优势：开发速度快 50%、前后端统一语言
-  
-vs lowcode-engine (前端中心)：
-  我们优势：有完整后端、工作流、权限系统
-  
-vs AppSmith (混合栈)：
-  我们优势：技术栈统一、易于团队协作、二开成本低
-```
+原型代码路径与设计映射以 `doc/整改/2026-11-28_设计-原型一致性契约.md` 为准。只有生产实现及其测试证据通过后，才能将相应设计能力标记为“已实现”。
 
 ---
 
@@ -181,15 +170,15 @@ vs AppSmith (混合栈)：
 ```
 API 网关层：
 ┌─────────────────────────────────────────────────┐
-│ Express 应用                                     │
-│  ├─ 路由定义 (/api/*)                          │
-│  ├─ 中间件栈                                     │
-│  │  ├─ 日志中间件 (morgan/winston)              │
-│  │  ├─ 认证中间件 (JWT)                         │
-│  │  ├─ 权限验证中间件 (RBAC/ABAC)              │
-│  │  ├─ 速率限制 (express-rate-limit)           │
-│  │  └─ 错误处理中间件                           │
-│  └─ 请求处理                                     │
+│ NestJS Application (唯一平台 API)                │
+│  ├─ Controller / REST API (/api/v1/*)            │
+│  ├─ Guard / Interceptor / Pipe                   │
+│  │  ├─ 结构化日志 / Trace Context               │
+│  │  ├─ Authentication Guard                     │
+│  │  ├─ PDP/PEP Authorization Guard               │
+│  │  ├─ Rate Limit Guard                          │
+│  │  └─ Exception Filter                         │
+│  └─ DTO Validation / Request Handling           │
 └─────────────────────────────────────────────────┘
 
 业务逻辑层：
@@ -214,7 +203,7 @@ API 网关层：
 └─────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────┐
 │ 工作流引擎模块                                    │
-│  ├─ WorkflowService (Temporal client)          │
+│  ├─ AgentTaskService (Temporal client)          │
 │  ├─ BPMNParser                                  │
 │  ├─ TaskService                                 │
 │  └─ WorkflowMonitor                            │
