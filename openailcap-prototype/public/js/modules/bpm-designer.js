@@ -31,7 +31,7 @@ App.mods.bpm = {
       <div class="dz-right" id="bpmProps"><div class="muted">点击节点配置</div></div>
     </div>
     <div class="card mt14"><div class="card-h">节点库 <span class="spacer"></span>
-      <button class="btn btn-sm" onclick="UI.toast('🤖 AI 已生成「请假三级审批」流程：主管→总监→HR，含金额网关与 SLA')">🤖 AI 生成流程</button></div>
+      <button class="btn btn-sm" onclick="BpmM.aiGen()">🤖 AI 生成流程</button></div>
       <div class="card-b"><div class="flex wrap" style="gap:6px">
       ${BpmM.NODES.map(([c,t,l])=>`<span class="dz-item" draggable="true" style="margin:0" ondragstart="BpmM.drag='${t}'"
         onclick="BpmM.drop(null,'${t}')">${l}</span>`).join('')}</div></div></div>`;
