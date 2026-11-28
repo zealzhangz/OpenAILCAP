@@ -30,12 +30,17 @@ const AppSpec = {
         need(typeof d.id==='string'&&!!d.id,path+'.id','must be a non-empty string');
         need(!dictionaryIds.has(d.id),path+'.id','duplicate dictionary id');dictionaryIds.add(d.id);
         need(typeof d.code==='string'&&!!d.code,path+'.code','must be a non-empty string');
+        need(typeof d.name==='string'&&!!d.name,path+'.name','must be a non-empty string');
+        need(Object.keys(d).every(k=>['id','code','name','version','type','items'].includes(k)),path,'contains unsupported dictionary properties');
         need(!dictionaryCodes.has(d.code),path+'.code','duplicate dictionary code');dictionaryCodes.add(d.code);
         need(Number.isInteger(d.version)&&d.version>0,path+'.version','must be a positive integer');
         need(['list','tree'].includes(d.type),path+'.type','must be list or tree');
         need(Array.isArray(d.items),path+'.items','must be an array');
         const visit=(items,itemPath)=>{const values=new Set();(items||[]).forEach((item,j)=>{
-          const p=itemPath+'['+j+']';need(item&&['string','number'].includes(typeof item.value),p+'.value','must be a string or number');
+          const p=itemPath+'['+j+']';
+          need(item&&typeof item==='object'&&!Array.isArray(item),p,'must be an object');
+          if(item)need(Object.keys(item).every(k=>['value','labels','children'].includes(k)),p,'contains unsupported dictionary item properties');
+          need(item&&['string','number'].includes(typeof item.value),p+'.value','must be a string or number');
           need(item&&item.labels&&typeof item.labels==='object'&&!Array.isArray(item.labels)&&Object.keys(item.labels).length>0,p+'.labels','must contain locale labels');
           if(item&&item.labels)Object.entries(item.labels).forEach(([locale,label])=>need(typeof label==='string',p+'.labels.'+locale,'must be a string'));
           if(item){need(!values.has(String(item.value)),p+'.value','duplicate sibling value');values.add(String(item.value));if(item.children!==undefined){need(d.type==='tree',p+'.children','children are only allowed in tree dictionaries');need(Array.isArray(item.children),p+'.children','must be an array');visit(item.children,p+'.children');}}
@@ -68,6 +73,10 @@ const AppSpec = {
         const exists=models.some(m=>(m.fields||[]).some(x=>x.name===field.field));
         need(exists,'forms['+i+'].fields['+j+'].field','field must exist in an AppSpec data model');
         if(field.dictionaryRef){
+          need(field.dictionaryRef&&typeof field.dictionaryRef==='object'&&!Array.isArray(field.dictionaryRef),'forms['+i+'].fields['+j+'].dictionaryRef','must be an object');
+          need(Object.keys(field.dictionaryRef).every(k=>['dictionaryId','version'].includes(k)),'forms['+i+'].fields['+j+'].dictionaryRef','contains unsupported properties');
+          need(typeof field.dictionaryRef.dictionaryId==='string'&&!!field.dictionaryRef.dictionaryId,'forms['+i+'].fields['+j+'].dictionaryRef.dictionaryId','must be a non-empty string');
+          need(Number.isInteger(field.dictionaryRef.version)&&field.dictionaryRef.version>0,'forms['+i+'].fields['+j+'].dictionaryRef.version','must be a positive integer');
           need(spec.schemaVersion==='1.1.0','forms['+i+'].fields['+j+'].dictionaryRef','dictionary references require AppSpec 1.1.0');
           const dictionary=dictionaries.find(d=>d.id===field.dictionaryRef.dictionaryId);
           need(!!dictionary,'forms['+i+'].fields['+j+'].dictionaryRef.dictionaryId','references an unknown dictionary');
