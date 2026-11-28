@@ -6,6 +6,7 @@ App.mods.apps = {
     <div class="page-head">
       <h1>📱 应用管理</h1><span class="sub">覆盖 GB 6.1.2-6.1.6：信息/发布/版本/制品/开发权限</span>
       <span class="spacer"></span>
+      <button class="btn" onclick="AppsM.recycleBin()">🗑️ 回收站</button>
       <button class="btn" onclick="AppsM.exportAll()">⬇️ 导出全部</button>
       <button class="btn btn-p" onclick="AppsM.openCreate()">＋ 创建应用</button>
     </div>
@@ -224,7 +225,7 @@ App.mods.apps = {
         Store.push('relations',{id:relationId,from:mainModelId,f:'party_id',to:partyModelId,t:'id',type:'N:1'});
         Store.push('forms',form); Store.push('logicFlows',logic);
         if(useWorkflow) Store.push('bpmDefs',{id:bpmId,name:appName+' · 审批流程',appId,version:'v1',status:'draft',sla:'按应用配置',nodes:appSpec.workflows[0].nodes,edges:appSpec.workflows[0].edges});
-        Store.push('appVersions',{appId,list:[{v:'v0.1.0',time:new Date().toLocaleString(),by:'AI 助手',note:'基于需求描述生成 AppSpec 与设计草稿',type:'AI'}]});
+        Store.push('appVersions',{appId,list:[{v:'v0.1.0',time:new Date().toLocaleString(),by:'AI 助手',note:'基于需求描述生成 AppSpec 与设计草稿',type:'AI',snapshot:snapshotApp(appId)}]});
         Store.save();
         UI.closeModal(); this._aiWizard=null; AppsM.draw();
         UI.toast('应用草稿已创建：AppSpec、数据模型、表单、逻辑'+(useWorkflow?'、审批流程':'')+'已写入原型状态');
