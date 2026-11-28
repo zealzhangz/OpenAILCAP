@@ -52,7 +52,8 @@ Object.assign(AppsBase,{
     const snap=entry.snapshot,app=snap?.app;if(!app)return UI.toast('缺少应用快照，不能恢复','err');
     ensureCollection('apps').push(structuredClone(app));
     const replace=(key,items)=>{Store.data[key]=(Store.data[key]||[]).filter(x=>x.appId!==entry.appId).concat(structuredClone(items||[]));};
-    replace('appSpecs',snap.appSpec||[]);replace('models',snap.models);replace('forms',snap.forms);replace('logicFlows',snap.logicFlows);replace('bpmDefs',snap.bpmDefs);
+    Store.data.appSpecs=(Store.data.appSpecs||[]).filter(x=>x.meta?.appId!==entry.appId).concat(structuredClone(snap.appSpec||[]));
+    replace('models',snap.models);replace('forms',snap.forms);replace('logicFlows',snap.logicFlows);replace('bpmDefs',snap.bpmDefs);
     Store.data.appRecycleBin=rows.filter(x=>x.id!==recycleId);Store.save();UI.closeModal();this.draw();UI.toast('应用及其设计数据已恢复');
   },
   fromTemplate(key) {
@@ -107,8 +108,9 @@ Object.assign(AppsBase,{
     if(!v?.snapshot)return UI.toast('该历史版本没有完整快照，不能执行恢复','warn');
     const snap=v.snapshot;
     const replace=(key,items)=>{Store.data[key]=(Store.data[key]||[]).filter(x=>x.appId!==id).concat(structuredClone(items||[]));};
+    const replaceSpecs=items=>{Store.data.appSpecs=(Store.data.appSpecs||[]).filter(x=>x.meta?.appId!==id).concat(structuredClone(items||[]));};
     const apps=Store.data.apps||[],pos=apps.findIndex(x=>x.id===id);if(pos<0)return UI.toast('应用不存在','err');
-    apps[pos]=structuredClone(snap.app);replace('appSpecs',snap.appSpec?[snap.appSpec]:[]);
+    apps[pos]=structuredClone(snap.app);replaceSpecs(snap.appSpec?[snap.appSpec]:[]);
     ['models','forms','logicFlows','bpmDefs'].forEach(k=>replace(k,snap[k]));
     const next='v'+(Number(String(apps[pos].version||'v0').replace(/\D/g,''))+1);
     apps[pos].version=next;apps[pos].status='draft';apps[pos].updated=new Date().toISOString();
