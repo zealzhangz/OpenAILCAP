@@ -10,7 +10,15 @@
     length:{label:'长度范围',needsValue:true},
     regex:{label:'正则表达式',needsValue:true}
   };
-  const allRules=f=>Array.isArray(f.rules)?f.rules:(f.rules=[]);
+  const allRules=f=>{
+    if(!Array.isArray(f.rules))f.rules=[];
+    f.rules=f.rules.map(rule=>{
+      if(typeof rule!=='string')return rule;
+      const m=rule.match(/^([a-z]+)(?::(.*))?$/);
+      return m?{id:'legacy_'+m[1]+'_'+(m[2]||''),type:m[1],value:m[2]||'',message:''}:{id:'legacy_unknown',type:'unsupported',value:rule,message:'未知的旧版规则'};
+    });
+    return f.rules;
+  };
   const ruleLabel=r=>RULES[r.type]?.label||r.type;
   Form.addRule=function(){
     const field=Store.get('forms')[0].fields.find(x=>x.id===this.selField);
@@ -28,12 +36,12 @@
       if(v.type==='regex'){try{new RegExp(v.value);}catch(e){return UI.toast('正则表达式无效','err');}}
       if(['min','max'].includes(v.type)&&!Number.isFinite(Number(v.value)))return UI.toast('请输入有效数字','err');
       allRules(field).push({id:'rule_'+Date.now(),type:v.type,value:v.value||'',message:v.message||def.label+'校验未通过'});
-      Store.save();UI.closeModal();this.drawCanvas();UI.toast('校验规则已保存到本地表单');
+      Store.save();if(this.capture)this.capture();UI.closeModal();this.drawCanvas();UI.toast('校验规则已保存到本地表单');
     }});
   };
   Form.removeRule=function(ruleId){
     const field=Store.get('forms')[0].fields.find(x=>x.id===this.selField);if(!field)return;
-    field.rules=allRules(field).filter(r=>r.id!==ruleId);Store.save();this.drawCanvas();
+    field.rules=allRules(field).filter(r=>r.id!==ruleId);Store.save();if(this.capture)this.capture();this.drawCanvas();
   };
   const baseProps=Form.renderProps;
   Form.renderProps=function(){
