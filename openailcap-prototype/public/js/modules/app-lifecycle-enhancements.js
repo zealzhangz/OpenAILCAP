@@ -90,8 +90,8 @@ Object.assign(AppsBase,{
           app:snapshot.app,appSpecs:snapshot.appSpec,models:document.getElementById('artSchema').checked?snapshot.models:[],
           relations:snapshot.relations,forms:snapshot.forms,logicFlows:snapshot.logicFlows,bpmDefs:snapshot.bpmDefs,
           assets:document.getElementById('artAssets').checked?[]:undefined,seedData:includeSeed?{}:undefined};
-        const bytes=JSON.stringify(artifact),checksum='sha256:'+Array.from(new Uint8Array(crypto.subtle?new Uint8Array():[])).join('');
-        const record={id:'art_'+Date.now(),appId:id,version:snapshot.app.version,format:artifact.format,generatedAt:artifact.generatedAt,checksumAlgorithm:'SHA-256',checksum:'pending-client-digest',sizeBytes:new Blob([bytes]).size,status:'downloaded'};
+        const bytes=JSON.stringify(artifact);
+        const record={id:'art_'+Date.now(),appId:id,version:snapshot.app.version,format:artifact.format,generatedAt:artifact.generatedAt,sizeBytes:new Blob([bytes]).size,status:'downloaded'};
         ensureCollection('artifacts').push(record);Store.save();downloadJson((snapshot.app.name||id).replace(/[^\p{L}\p{N}_-]+/gu,'_')+'_'+snapshot.app.version+'.json',artifact);
         UI.closeModal();UI.toast('配置 JSON 包已生成并下载；未执行生产签名或部署');
       }});
