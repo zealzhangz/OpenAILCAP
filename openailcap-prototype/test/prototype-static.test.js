@@ -178,6 +178,9 @@ test('M04 form runtime exposes executable validation, visibility and local submi
   for(const token of ['evaluateRule','validateValues','evaluateVisibility','formSubmissions','formRevision','LOCAL DEMO'])
     assert.ok(source.includes(token),'missing M04 runtime behavior: '+token);
   assert.ok(source.includes("case 'required'")&&source.includes("case 'positive'")&&source.includes("case 'regex'"));
+  assert.ok(source.includes('Form.previewRuntime=function()'), 'runtime preview must not replace the original design preview');
+  const designer=await read('public/js/modules/form-designer.js');
+  assert.ok(designer.includes('FormM.preview()')&&designer.includes('FormM.previewRuntime()'), 'both design and runtime preview actions must remain available');
   const html=await read('public/index.html');
   assert.ok(html.indexOf('js/modules/form-runtime-enhancements.js')>html.indexOf('js/modules/form-designer-enhancements.js'));
 });
