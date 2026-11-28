@@ -16,13 +16,13 @@ App.mods.form = {
     return `
     <div class="page-head"><h1>🧩 表单设计器</h1><span class="sub">${f.name} · GB 6.2.2 组件/样式/数据/交互 + 多端适配</span>
       <span class="spacer"></span>
-      <button class="btn btn-sm" onclick="UI.toast('撤销')" title="撤销">↩️</button>
-      <button class="btn btn-sm" onclick="UI.toast('重做')" title="重做">↪️</button>
-      <select class="input" style="width:auto" onchange="FormM.layout=this.value;UI.toast('布局切换为：'+this.value)">
+      <button class="btn btn-sm" onclick="FormM.undo()" title="撤销">↩️</button>
+      <button class="btn btn-sm" onclick="FormM.redo()" title="重做">↪️</button>
+      <select class="input" style="width:auto" onchange="FormM.setLayout(this.value)">
         ${FormM.LAYOUTS.map(l=>`<option>${l}</option>`).join('')}</select>
       <button class="btn" onclick="FormM.preview()">👁️ 预览</button>
       <button class="btn" onclick="FormM.multiLang()">🌐 多语言</button>
-      <button class="btn btn-p" onclick="UI.toast('表单已保存 v1.2')">💾 保存</button>
+      <button class="btn btn-p" onclick="FormM.save()">💾 保存</button>
     </div>
     <div class="designer">
       <div class="dz-left">
