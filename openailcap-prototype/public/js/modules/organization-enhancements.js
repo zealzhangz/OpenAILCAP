@@ -5,7 +5,7 @@
     {key:'orders',label:'订单'},{key:'customers',label:'客户'},
     {key:'reports',label:'报表'},{key:'approvals',label:'审批'},{key:'exports',label:'数据导出'}
   ];
-  const actions=[{key:'read',label:'查'},{key:'create',label:'增'},{key:'update',label:'改'},{key:'delete',label:'删'},{key:'approve',label:'审'}];
+  const actions=[{key:'read',label:'查'},{key:'create',label:'增'},{key:'update',label:'改'},{key:'delete',label:'删'},{key:'export',label:'导出'},{key:'approve',label:'审'}];
   const defaults={
     tpl_ceo:['orders','customers','reports','approvals','exports'],
     tpl_dir:['orders','customers','reports','approvals'],
@@ -24,7 +24,7 @@
     const saved=all[position.template]||{};
     const allowed=defaults[position.template]||['reports'];
     const body='<p class="muted">权限模板保存到本地演示数据。此配置不会下发生产 RBAC/PDP。</p>'+
-      '<div class="perm-matrix" style="--pmc:5"><div class="pm-row"><div class="pm-cell head">资源</div>'+
+      '<div class="perm-matrix" style="--pmc:6"><div class="pm-row"><div class="pm-cell head">资源</div>'+
       actions.map(a=>'<div class="pm-cell head">'+a.label+'</div>').join('')+'</div>'+
       resources.map(res=>'<div class="pm-row"><div class="pm-cell res">'+res.label+'</div>'+
         actions.map(action=>{
@@ -44,7 +44,7 @@
     }});
   };
   Org.drawChg=function(){
-    const pending=ensure('orgChangeRequests',[]).filter(x=>x.status==='pending');
+    const requests=ensure('orgChangeRequests',[]);\n    const pending=requests.filter(x=>x.status==='pending');\n    const resolved=requests.filter(x=>x.status!=='pending');
     const history=Store.get('empChanges')||[];
     const requestHtml=pending.map(r=>{
       const employee=Store.find('employees',r.employeeId);
@@ -57,7 +57,7 @@
     const historyHtml=history.map(c=>'<div class="tl-item"><div class="tl-t">'+(c.type==='transfer'?'🔄 调岗':'📈 晋升')+' · '+esc(c.note||'')+
       '</div><div class="tl-d">'+esc(c.time||'')+' · '+esc(c.by||'')+'</div></div>').join('');
     const el=document.getElementById('chgList');if(el)el.innerHTML='<p class="muted">申请审批仅在本地演示状态流转，不代表真实 HR 审批。</p>'+
-      (requestHtml||'<div class="muted">暂无待处理申请</div>')+'<hr>'+(historyHtml||'<div class="muted">暂无历史记录</div>');
+      (requestHtml||'<div class="muted">暂无待处理申请</div>')+'<div class="muted mt10">已处理申请：'+resolved.length+' 条</div>'+resolved.map(r=>'<div class="item">'+esc(Store.find('employees',r.employeeId)?.name||'员工')+' · '+(r.type==='transfer'?'调岗':'晋升')+' · '+(r.status==='approved'?'已通过':'已驳回')+' · '+esc(r.decidedAt||'')+'</div>').join('')+'<hr>'+(historyHtml||'<div class="muted">暂无历史记录</div>');
   };
   Org.transfer=function(id){
     const employee=Store.find('employees',id);if(!employee)return UI.toast('员工不存在','err');
