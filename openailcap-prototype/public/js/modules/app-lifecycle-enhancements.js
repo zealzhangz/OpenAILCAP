@@ -13,7 +13,7 @@ const snapshotApp = id => {
   const app=Store.find('apps',id);if(!app)return null;
   const pick=(key)=>((Store.get(key)||[]).filter(x=>x.appId===id));
   return {app:structuredClone(app),appSpec:structuredClone((Store.get('appSpecs')||[]).filter(x=>x.meta?.appId===id)),
-    models:structuredClone(pick('models')),relations:structuredClone((Store.get('relations')||[])),
+    models:structuredClone(pick('models')),relations:structuredClone((Store.get('relations')||[]).filter(r=>models.some(m=>m.id===r.from)&&models.some(m=>m.id===r.to))),
     forms:structuredClone(pick('forms')),logicFlows:structuredClone(pick('logicFlows')),
     bpmDefs:structuredClone(pick('bpmDefs'))};
 };
@@ -31,9 +31,10 @@ Object.assign(AppsBase,{
     ]}));
     const form={id:'form_'+id,appId:id,name:t.name+' · 主表单',fields:models[0].fields.filter(f=>!f.pk).map((f,i)=>({id:'field_'+id+'_'+i,label:f.name,field:f.name,type:f.type==='decimal'?'number':'text',req:!!f.req,span:12}))};
     const spec={schemaVersion:'1.0.0',meta:{appId:id,name:t.name,description:t.desc,version:'0.1.0',status:'draft',createdAt:now,source:'template:'+key},
-      dataModels:models,ui:{pages:[{id:'page_'+id,name:'业务管理',formId:form.id}]},forms:[form],logic:[],workflows:[],
+      dataModels:models,relations:[],ui:{pages:[{id:'page_'+id,name:'业务管理',formId:form.id}]},forms:[form],logic:[],workflows:[],
       security:{roles:['应用管理员','业务经办人'],auditRequired:true},i18n:{locales:['zh-CN']},
       deployment:{status:'not-deployed',environments:['dev','test','prod']}};
+    const check=AppSpec.validate(spec);if(!check.valid)return UI.toast('模板 AppSpec 校验失败：'+check.errors.map(e=>e.path).join('、'),'err');
     ensureCollection('appSpecs').push(spec);ensureCollection('apps').push({id,name:t.name,desc:t.desc,type:'form',icon:t.icon,status:'draft',version:'v0.1.0',owner:'当前用户',updated:now,tags:['模板',key],env:{dev:'v0.1.0',test:'—',prod:'—'}});
     ensureCollection('models').push(...models);ensureCollection('forms').push(form);
     ensureCollection('appVersions').push({appId:id,list:[{v:'v0.1.0',time:now,by:'当前用户',note:'从模板 '+key+' 创建',type:'template',snapshot:{app:structuredClone(Store.find('apps',id)),appSpec:structuredClone(spec),models:structuredClone(models),forms:structuredClone([form]),logicFlows:[],bpmDefs:[]}}]});
@@ -51,8 +52,9 @@ Object.assign(AppsBase,{
       const id='app_'+Date.now(),now=new Date().toISOString();
       const app={id,name:f.name.trim(),desc:f.desc||'',type:f.type||'form',icon:f.icon||'🧩',status:'draft',version:'v0.1.0',owner:'当前用户',updated:now,tags:[],acl:f.acl||'private',env:{dev:'v0.1.0',test:'—',prod:'—'}};
       const spec={schemaVersion:'1.0.0',meta:{appId:id,name:app.name,description:app.desc,version:'0.1.0',status:'draft',createdAt:now,source:'manual'},
-        dataModels:[],ui:{pages:[]},forms:[],logic:[],workflows:[],security:{roles:['应用管理员'],auditRequired:true},
+        dataModels:[],relations:[],ui:{pages:[]},forms:[],logic:[],workflows:[],security:{roles:['应用管理员'],auditRequired:true},
         i18n:{locales:['zh-CN']},deployment:{status:'not-deployed',environments:['dev','test','prod']}};
+      const check=AppSpec.validate(spec);if(!check.valid)return UI.toast('AppSpec 校验失败：'+check.errors.map(e=>e.path).join('、'),'err');
       ensureCollection('apps').push(app);ensureCollection('appSpecs').push(spec);
       ensureCollection('appVersions').push({appId:id,list:[{v:'v0.1.0',time:now,by:'当前用户',note:'手工创建应用',type:'manual',snapshot:{app:structuredClone(app),appSpec:structuredClone(spec),models:[],forms:[],logicFlows:[],bpmDefs:[]}}]});
       Store.save();UI.closeModal();this.draw();UI.toast('应用及初始 AppSpec 草稿已创建');
