@@ -13,11 +13,13 @@ App.mods.flow = {
     return `
     <div class="page-head"><h1>🔀 逻辑编排</h1><span class="sub">${f.name} · GB 6.2.4 执行控制/事件/数据操作/编排调试</span>
       <span class="spacer"></span>
-      <button class="btn" onclick="LogicM.test()">▶️ 模拟测试</button>
+      <button class="btn" onclick="LogicM.testGraph()">▶️ 模拟测试</button>
       <button class="btn" onclick="LogicM.debug()">🐞 断点调试</button>
-      <button class="btn" onclick="LogicM.genCode()">⚡ 生成代码</button>
+      <button class="btn" onclick="LogicM.connect()">↗ 连线</button>
+      <button class="btn" onclick="LogicM.removeEdge()">删除连线</button>
+      <button class="btn" onclick="LogicM.graphCode()">⚡ 生成代码</button>
       <button class="btn" onclick="LogicM.logs()">📜 执行日志</button>
-      <button class="btn btn-p" onclick="UI.toast('流程已保存')">💾 保存</button>
+      <button class="btn btn-p" onclick="LogicM.save()">💾 保存</button>
     </div>
     <div class="designer designer-no-left">
       <div class="dz-center" style="padding:0"><div class="flow-wrap" id="flowWrap"
