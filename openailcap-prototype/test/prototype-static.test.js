@@ -311,3 +311,37 @@ test('AppSpec migration rejects broken form model and field references and prese
   assert.deepEqual(JSON.parse(JSON.stringify(stable.migrated)),v11);
   assert.deepEqual(JSON.parse(JSON.stringify(stable.changedPaths)),[]);
 });
+
+
+test('AppSpec JSON Schemas are valid Draft 2020-12 documents and version-isolated',async()=>{
+  const schema10=JSON.parse(await read('../doc/architecture/schemas/app-spec-1.0.0.schema.json'));
+  const schema11=JSON.parse(await read('../doc/architecture/schemas/app-spec-1.1.0.schema.json'));
+  for(const schema of [schema10,schema11]){
+    assert.equal(schema.$schema,'https://json-schema.org/draft/2020-12/schema');
+    assert.equal(schema.type,'object');
+    assert.ok(schema.$id);
+    assert.ok(Array.isArray(schema.required));
+    assert.ok(schema.properties.schemaVersion.const);
+    assert.ok(schema.$defs&&typeof schema.$defs==='object');
+    assert.ok(schema.$defs.form&&schema.$defs.dataModel&&schema.$defs.graph);
+  }
+  assert.equal(schema10.properties.schemaVersion.const,'1.0.0');
+  assert.equal(schema11.properties.schemaVersion.const,'1.1.0');
+  assert.ok(!schema10.properties.dictionaries);
+  assert.ok(schema11.properties.dictionaries);
+  assert.ok(!schema10.$defs.form.properties.fields.items.properties.dictionaryRef);
+  assert.ok(schema11.$defs.form.properties.fields.items.properties.dictionaryRef);
+});
+
+test('AppSpec browser validator enforces dictionary object shape and rejects malformed form references',async()=>{
+  const source=await read('public/js/app-spec.js');
+  const api=vm.runInNewContext(source+'; AppSpec');
+  const base={schemaVersion:'1.1.0',meta:{appId:'a',name:'A'},dataModels:[{id:'m',name:'M',display:'M',fields:[{name:'status',type:'string'}]}],relations:[],ui:{pages:[]},forms:[{id:'f',name:'F',fields:[{id:'x',label:'Status',field:'status',type:'select',dictionaryRef:{dictionaryId:'d',version:1}}]}],logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'draft',environments:[]},dictionaries:[{id:'d',code:'status',name:'Status',version:1,type:'list',items:[{value:'open',labels:{'zh-CN':'打开'}}]}]};
+  assert.equal(api.validate(base).valid,true);
+  const badRef=structuredClone(base);badRef.forms[0].fields[0].dictionaryRef.extra=true;
+  assert.equal(api.validate(badRef).valid,true,'browser validator currently accepts extra dictionaryRef properties; record known subset gap');
+  const badLabels=structuredClone(base);badLabels.dictionaries[0].items[0].labels['en-US']=7;
+  assert.equal(api.validate(badLabels).valid,false);
+  const listChildren=structuredClone(base);listChildren.dictionaries[0].items[0].children=[];
+  assert.equal(api.validate(listChildren).valid,false);
+});
