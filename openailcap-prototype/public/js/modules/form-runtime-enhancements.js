@@ -54,6 +54,13 @@
       (rules.length?rules.map(r=>'<div class="item flex"><span class="tag tag-blue">'+esc(ruleLabel(r))+'</span><span class="muted">'+esc(r.value||r.message||'')+'</span><button class="btn btn-sm btn-danger" data-remove-rule="'+esc(r.id||'')+'">移除</button></div>').join(''):'<div class="muted">暂无规则</div>')+
       '</div><button type="button" class="btn btn-sm mt10" id="addFormRule">＋ 添加校验规则</button>';
     panel.appendChild(section);
+    const dictionaries=Store.get('dicts')||[];
+    const dictSection=document.createElement('section');dictSection.className='form-item';
+    dictSection.innerHTML='<label>选项数据字典（本地）</label><select class="input" id="formDictionaryRef"><option value="">不绑定字典</option>'+dictionaries.map(d=>'<option value="'+esc(d.code)+'" '+(field.dictCode===d.code?'selected':'')+'>'+esc(d.name)+' · '+esc(d.code)+'</option>').join('')+'</select><div class="help">仅对下拉、单选、复选组件生效；引用当前浏览器字典数据。</div>';
+    panel.appendChild(dictSection);
+    dictSection.querySelector('#formDictionaryRef').addEventListener('change',event=>{
+      field.dictCode=event.target.value||undefined;Store.save();if(this.capture)this.capture();UI.toast('字典引用已保存到本地表单');
+    });
     section.querySelector('#addFormRule').addEventListener('click',()=>this.addRule());
     section.querySelectorAll('[data-remove-rule]').forEach(b=>b.addEventListener('click',()=>this.removeRule(b.dataset.removeRule)));
   };
@@ -96,10 +103,17 @@
     const controls=fields.map(f=>{
       const required=f.req?' <span class="req">*</span>':'';
       let input='';
+      const dict=(Store.get('dicts')||[]).find(d=>d.code===f.dictCode);
+      const flatten=(items,prefix='')=>(items||[]).flatMap(item=>{
+        const label=prefix+item.zh;
+        return [{v:item.v,label}].concat(flatten(item.children||[],label+' / '));
+      });
+      const options=dict?flatten(dict.items):[];
       if(f.type==='textarea')input='<textarea class="input" data-submit-field="'+esc(f.field)+'"></textarea>';
-      else if(f.type==='select'||f.type==='radio'||f.type==='checkbox'){
-        input='<input class="input" data-submit-field="'+esc(f.field)+'" placeholder="请输入选项值">';
-      }else if(f.type==='switch')input='<select class="input" data-submit-field="'+esc(f.field)+'"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
+      else if(f.type==='select')input=options.length?'<select class="input" data-submit-field="'+esc(f.field)+'"><option value="">请选择</option>'+options.map(o=>'<option value="'+esc(o.v)+'">'+esc(o.label)+'</option>').join('')+'</select>':'<input class="input" data-submit-field="'+esc(f.field)+'" placeholder="未绑定字典，请输入选项值">';
+      else if(f.type==='radio')input=options.length?'<div class="btn-row wrap">'+options.map(o=>'<label class="item"><input type="radio" name="radio_'+esc(f.field)+'" data-submit-field="'+esc(f.field)+'" value="'+esc(o.v)+'"> '+esc(o.label)+'</label>').join('')+'</div>':'<input class="input" data-submit-field="'+esc(f.field)+'" placeholder="未绑定字典，请输入选项值">';
+      else if(f.type==='checkbox')input=options.length?'<div class="btn-row wrap">'+options.map(o=>'<label class="item"><input type="checkbox" data-submit-field="'+esc(f.field)+'" value="'+esc(o.v)+'"> '+esc(o.label)+'</label>').join('')+'</div>':'<input class="input" data-submit-field="'+esc(f.field)+'" placeholder="未绑定字典，请输入选项值">';
+      else if(f.type==='switch')input='<select class="input" data-submit-field="'+esc(f.field)+'"><option value="">请选择</option><option value="true">是</option><option value="false">否</option></select>';
       else input='<input class="input" type="'+(f.type==='number'?'number':f.type==='date'?'date':f.type==='datetime'?'datetime-local':'text')+'" data-submit-field="'+esc(f.field)+'">';
       return '<div class="form-item" data-preview-row="'+esc(f.field)+'"><label>'+esc(f.label)+required+'</label>'+input+'</div>';
     }).join('');
@@ -107,7 +121,13 @@
       '<div id="formValidationErrors" class="alert alert-error" hidden></div><div class="btn-row"><button class="btn btn-p" id="submitLocalForm">本地模拟提交</button><button class="btn" id="saveDraftForm">暂存草稿</button></div></div></div>';
     UI.modal({title:'表单预览与提交',size:'lg',footer:false,body});
     const submit=async status=>{
-      const values={};document.querySelectorAll('[data-submit-field]').forEach(el=>values[el.dataset.submitField]=el.value);
+      const values={};
+      fields.forEach(f=>{
+        const controls=[...document.querySelectorAll('[data-submit-field="'+CSS.escape(f.field)+'"]')];
+        if(f.type==='checkbox')values[f.field]=controls.filter(el=>el.checked).map(el=>el.value);
+        else if(f.type==='radio')values[f.field]=controls.find(el=>el.checked)?.value||'';
+        else values[f.field]=controls[0]?.value??'';
+      });
       const visible={};fields.forEach(f=>visible[f.field]=!f.showIf||this.evaluateVisibility(f.showIf,values));
       const errors=this.validateValues(form,values).filter(e=>visible[e.field]!==false);
       const box=document.getElementById('formValidationErrors');
