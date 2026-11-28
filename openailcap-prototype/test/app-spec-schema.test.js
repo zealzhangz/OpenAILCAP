@@ -8,7 +8,7 @@ const ajv=new Ajv2020({allErrors:true,strict:false});
 addFormats(ajv);
 const load=path=>JSON.parse(fs.readFileSync(new URL(path,import.meta.url),'utf8'));
 const schema10=load('../../doc/architecture/schemas/app-spec-1.0.0.schema.json');
-const schema11=load('../../../doc/architecture/schemas/app-spec-1.1.0.schema.json');
+const schema11=load('../../doc/architecture/schemas/app-spec-1.1.0.schema.json');
 const validate10=ajv.compile(schema10);
 const validate11=ajv.compile(schema11);
 const base=()=>({schemaVersion:'1.0.0',meta:{appId:'a',name:'A',description:'',version:'1.0',status:'draft'},dataModels:[{id:'m',name:'M',display:'M',fields:[{name:'status',type:'string'}]}],relations:[],ui:{pages:[]},forms:[{id:'f',name:'F',fields:[{id:'x',label:'Status',field:'status',type:'select'}]}],logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'draft',environments:[]}});
