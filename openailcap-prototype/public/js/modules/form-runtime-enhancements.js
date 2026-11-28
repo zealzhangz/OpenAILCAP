@@ -143,5 +143,48 @@
     document.getElementById('saveDraftForm').addEventListener('click',()=>submit('draft'));
   };
   // Keep the original design preview intact; expose executable local preview separately.
+
+  Form.validateModelReferences=function(form,spec){
+    const errors=[],models=spec?.dataModels||[];
+    const model=form.modelRef?models.find(m=>m.id===form.modelRef||m.name===form.modelRef):null;
+    if(form.modelRef&&!model)errors.push({path:'modelRef',message:'引用的数据模型不存在'});
+    const keys=new Set();
+    (form.fields||[]).forEach((field,index)=>{
+      const path='fields['+index+']';
+      if(!field.field||typeof field.field!=='string'){errors.push({path:path+'.field',message:'字段 key 不能为空'});return;}
+      if(keys.has(field.field))errors.push({path:path+'.field',message:'表单字段 key 重复'});
+      keys.add(field.field);
+      const candidates=model?[model]:models;
+      const matches=candidates.flatMap(m=>(m.fields||[]).filter(f=>f.name===field.field).map(f=>({model:m,field:f})));
+      if(!matches.length)errors.push({path:path+'.field',message:'找不到匹配的数据模型字段：'+field.field});
+      if(matches.length>1)errors.push({path:path+'.field',message:'字段名在多个数据模型中重复，必须指定唯一模型引用'});
+      if(matches.length===1){
+        const type=String(matches[0].field.type||'').toLowerCase();
+        const component=String(field.type||'text').toLowerCase();
+        const numeric=['int','integer','decimal','float'].includes(type);
+        if(component==='number'&&!numeric)errors.push({path:path+'.type',message:'数字控件与模型字段类型不兼容'});
+        if(['date','datetime'].includes(component)&&!['date','datetime','time','string'].includes(type))errors.push({path:path+'.type',message:'日期控件与模型字段类型不兼容'});
+        if(['select','radio','checkbox'].includes(component)&&!['string','text','int','integer','enum'].includes(type))errors.push({path:path+'.type',message:'选项控件与模型字段类型不兼容'});
+      }
+    });
+    return errors;
+  };
+  Form.validateAndSave=function(){
+    const form=Store.get('forms')[0];if(!form)return UI.toast('没有可保存的表单','err');
+    const specs=Store.get('appSpecs')||[];
+    const spec=specs.find(s=>s.meta?.appId===form.appId);
+    if(!spec)return UI.toast('未找到该应用的 AppSpec；为避免旁路保存，已阻止提交','warn');
+    const errors=this.validateModelReferences(form,spec);
+    if(errors.length)return UI.modal({title:'表单模型引用校验失败',footer:false,body:'<div class="alert alert-error"><ul>'+errors.map(e=>'<li>'+esc(e.path)+': '+esc(e.message)+'</li>').join('')+'</ul></div>'});
+    const specForm={id:form.id,appId:form.appId,name:form.name,modelRef:form.modelRef,fields:form.fields.map(f=>({id:f.id,label:f.label,field:f.field,type:f.type,req:!!f.req,span:f.span,rules:f.rules||[],dictCode:f.dictCode}))};
+    const next=JSON.parse(JSON.stringify(spec));
+    next.forms=next.forms||[];
+    const index=next.forms.findIndex(f=>f.id===form.id);
+    if(index>=0)next.forms[index]=specForm;else next.forms.push(specForm);
+    const result=AppSpec.validate(next);
+    if(!result.valid)return UI.modal({title:'AppSpec 校验失败',footer:false,body:'<div class="alert alert-error"><ul>'+result.errors.map(e=>'<li>'+esc(e.path)+': '+esc(e.message)+'</li>').join('')+'</ul></div>'});
+    const stored=specs.findIndex(s=>s.meta?.appId===next.meta.appId);
+    specs[stored]=next;Store.save();UI.toast('表单已通过本地 AppSpec 引用校验并写入 AppSpec');
+  };
   Form.previewRuntime=function(){this.openSubmissionPreview();};
 })();
