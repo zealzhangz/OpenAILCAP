@@ -47,3 +47,11 @@
 - G1：补齐 AppSpec API、命令模型、版本/迁移策略和领域约束。
 - G2：实现 TypeScript/Prisma/DDL/BPMN/权限策略生成器，并用真实 PostgreSQL、Prisma CLI 和 BPMN 引擎验证。
 - G3：以服务端 AppSpec 作为唯一持久化源，替换生产场景下的 localStorage。
+
+
+## AppSpec 1.1.0 向后兼容补充（2026-11-28）
+
+- 1.0.0 Schema 保持不可变，字典规范通过 1.1.0 新 Schema 增量引入。
+- 1.1.0 将字典作为规范 IR 的一等对象；表单字段以 dictionaryId + version 精确引用，避免只依赖可变 code。
+- 浏览器校验器兼容 1.0.0 与 1.1.0；生产服务端必须按 schemaVersion 选择对应完整 JSON Schema，并执行引用、租户、权限与并发校验。
+- 本地原型字典 version=1 仅是演示映射，不构成不可变版本仓库或发布能力。
