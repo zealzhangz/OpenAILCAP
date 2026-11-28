@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run static and feature-preservation tests
+      - name: Install prototype dependencies
+        working-directory: openailcap-prototype
+        run: npm install
+      - name: Run static, schema and feature-preservation tests
         working-directory: openailcap-prototype
         run: npm test
