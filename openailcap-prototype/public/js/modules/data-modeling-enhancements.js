@@ -79,3 +79,25 @@ Object.assign(App.mods.model, {
       '<p class="help">生成结果来自当前模型字段；正式迁移前还需执行外键、索引、租户策略和 PostgreSQL 迁移验证。</p>'});
   }
 });
+
+
+/* Replace the former lossy text formatter with a deterministic, validated generator. */
+App.mods.model.genSchema=function(id){
+  try{
+    const schema=PrismaSchema.generate(Store.get('models'),Store.get('relations'),id);
+    UI.modal({title:'Prisma Schema · 结构预览',size:'lg',footer:false,body:
+      '<p class="muted">由当前模型与关系确定性生成；仅为本地预览，不会连接数据库或执行迁移。</p>'+
+      '<div class="code-tabs"><button class="btn btn-sm btn-p">prisma/schema.prisma</button>'+
+      '<button class="btn btn-sm" onclick="ModelM.copySchema()">📋 复制</button></div>'+
+      '<div class="code-view"><pre id="generatedPrismaSchema">'+UI.esc(schema)+'</pre></div>'+
+      '<p class="help">执行前请在目标项目中运行 Prisma validate，并审查数据库迁移差异。</p>'});
+    this._lastGeneratedSchema=schema;
+  }catch(error){UI.modal({title:'Prisma Schema 校验失败',footer:false,body:
+    '<div class="alert alert-error"><b>无法生成 Schema</b><pre>'+UI.esc(error.message)+'</pre></div>'+
+    '<p class="help">修正模型标识符、字段类型、主键或关系引用后重试。</p>'});}
+};
+App.mods.model.copySchema=async function(){
+  if(!this._lastGeneratedSchema)return UI.toast('请先生成 Schema','warn');
+  try{await navigator.clipboard.writeText(this._lastGeneratedSchema);UI.toast('Prisma Schema 已复制');}
+  catch(e){UI.toast('浏览器未授予剪贴板权限，请手动选择代码复制','warn');}
+};
