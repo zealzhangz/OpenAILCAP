@@ -122,5 +122,6 @@
     document.getElementById('submitLocalForm').addEventListener('click',()=>submit('submitted'));
     document.getElementById('saveDraftForm').addEventListener('click',()=>submit('draft'));
   };
-  Form.preview=function(){this.openSubmissionPreview();};
+  // Keep the original design preview intact; expose executable local preview separately.
+  Form.previewRuntime=function(){this.openSubmissionPreview();};
 })();
