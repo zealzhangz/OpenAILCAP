@@ -204,6 +204,17 @@ test('M04 validation rule evaluation rejects invalid inputs and safely evaluates
 });
 
 
+test('M04 AppSpec save validates form-to-model references and component compatibility',async()=>{
+  const source=await read('public/js/modules/form-runtime-enhancements.js');
+  const sandbox={App:{mods:{form:{} }},Store:{data:{forms:[],appSpecs:[]},get(k){return this.data[k];},save(){}},AppSpec:{validate(spec){return {valid:spec.forms.every(f=>f.fields.every(x=>spec.dataModels.some(m=>m.fields.some(y=>y.name===x.field)))) ,errors:[]};}},UI:{esc:x=>String(x),toast:()=>{},modal:()=>{}},document:{},Date,Number,RegExp,Set,JSON};
+  vm.runInNewContext(source,sandbox);
+  const form=sandbox.App.mods.form;
+  const spec={schemaVersion:'1.0.0',meta:{appId:'a1'},dataModels:[{id:'m1',name:'Order',fields:[{name:'amount',type:'decimal'},{name:'status',type:'enum'}]}],forms:[],ui:{pages:[]},relations:[],logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{environments:[]}};
+  const candidate={id:'f1',appId:'a1',modelRef:'m1',fields:[{field:'amount',type:'number'},{field:'status',type:'select'}]};
+  assert.equal(form.validateModelReferences(candidate,spec).length,0);
+  assert.ok(form.validateModelReferences({...candidate,fields:[{field:'missing',type:'number'}]},spec).length>0);
+  assert.ok(form.validateModelReferences({...candidate,fields:[{field:'status',type:'number'}]},spec).length>0);
+});
 test('M04 legacy string rules remain executable after rule normalization',async()=>{
   const source=await read('public/js/modules/form-runtime-enhancements.js');
   const store={data:{forms:[{id:'f1',fields:[{id:'a',field:'amount',label:'金额',req:true,rules:['positive','max:9999999']}]}]},get(key){return this.data[key];},save(){}};
