@@ -14,12 +14,14 @@ const AppSpec = {
       need(Object.prototype.hasOwnProperty.call(spec,key),'$.'+key,'required property is missing');
     need(typeof spec.meta?.appId==='string'&&!!spec.meta.appId,'meta.appId','must be a non-empty string');
     need(typeof spec.meta?.name==='string'&&!!spec.meta.name,'meta.name','must be a non-empty string');
+    for(const key of ['ui','security','i18n','deployment'])need(!!spec[key]&&typeof spec[key]==='object'&&!Array.isArray(spec[key]),key,'must be an object');
     for(const key of ['dataModels','relations','forms','logic','workflows'])
       need(Array.isArray(spec[key]),key,'must be an array');
     if(errors.length)return {valid:false,errors};
     const models=spec.dataModels,forms=spec.forms;
     const modelIds=new Set(),formIds=new Set();
     models.forEach((m,i)=>{
+      if(!m||typeof m!=='object'||Array.isArray(m)){need(false,'dataModels['+i+']','must be an object');return;}
       need(typeof m.id==='string'&&!!m.id,'dataModels['+i+'].id','must be a non-empty string');
       need(!modelIds.has(m.id),'dataModels['+i+'].id','duplicate model id');
       modelIds.add(m.id);
@@ -34,6 +36,7 @@ const AppSpec = {
       need((m.fields||[]).filter(f=>f.pk).length<=1,'dataModels['+i+'].fields','at most one primary key is supported by this model version');
     });
     forms.forEach((f,i)=>{
+      if(!f||typeof f!=='object'||Array.isArray(f)){need(false,'forms['+i+']','must be an object');return;}
       need(typeof f.id==='string'&&!!f.id,'forms['+i+'].id','must be a non-empty string');
       need(!formIds.has(f.id),'forms['+i+'].id','duplicate form id');
       formIds.add(f.id);
@@ -48,6 +51,7 @@ const AppSpec = {
       if(p.formId)need(formIds.has(p.formId),'ui.pages['+i+'].formId','references an unknown form');
     });
     spec.relations.forEach((r,i)=>{
+      if(!r||typeof r!=='object'||Array.isArray(r)){need(false,'relations['+i+']','must be an object');return;}
       const from=models.find(m=>m.id===r.from),to=models.find(m=>m.id===r.to);
       need(!!from,'relations['+i+'].from','references an unknown model');
       need(!!to,'relations['+i+'].to','references an unknown model');
@@ -55,6 +59,7 @@ const AppSpec = {
       if(to)need((to.fields||[]).some(f=>f.name===r.t),'relations['+i+'].t','references an unknown target field');
     });
     for(const group of ['logic','workflows'])spec[group].forEach((graph,i)=>{
+      if(!graph||typeof graph!=='object'||Array.isArray(graph)){need(false,group+'['+i+']','must be an object');return;}
       const ids=new Set((graph.nodes||[]).map(n=>n.id));
       need(Array.isArray(graph.nodes),group+'['+i+'].nodes','must be an array');
       need(Array.isArray(graph.edges),group+'['+i+'].edges','must be an array');
