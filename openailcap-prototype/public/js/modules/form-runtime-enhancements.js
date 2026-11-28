@@ -175,9 +175,19 @@
     const spec=specs.find(s=>s.meta?.appId===form.appId);
     if(!spec)return UI.toast('未找到该应用的 AppSpec；为避免旁路保存，已阻止提交','warn');
     const errors=this.validateModelReferences(form,spec);
+    const hasDictionaryRef=(form.fields||[]).some(field=>field.dictCode);
+    if(hasDictionaryRef&&spec.schemaVersion!=='1.1.0')errors.push({path:'schemaVersion',message:'表单绑定了数据字典，必须先将 AppSpec 迁移到 1.1.0'});
     if(errors.length)return UI.modal({title:'表单模型引用校验失败',footer:false,body:'<div class="alert alert-error"><ul>'+errors.map(e=>'<li>'+esc(e.path)+': '+esc(e.message)+'</li>').join('')+'</ul></div>'});
-    const specForm={id:form.id,appId:form.appId,name:form.name,modelRef:form.modelRef,fields:form.fields.map(f=>({id:f.id,label:f.label,field:f.field,type:f.type,req:!!f.req,span:f.span,rules:f.rules||[],dictCode:f.dictCode}))};
+    const specForm={id:form.id,appId:form.appId,name:form.name,fields:form.fields.map(f=>{
+      const dictionary=f.dictCode?(Store.get('dicts')||[]).find(d=>d.code===f.dictCode):null;
+      return {id:f.id,label:f.label,field:f.field,type:f.type,req:!!f.req,span:f.span,rules:f.rules||[],
+        ...(dictionary?{dictionaryRef:{dictionaryId:dictionary.id,version:1}}:{})};
+    })};
     const next=JSON.parse(JSON.stringify(spec));
+    if(next.schemaVersion==='1.1.0'){
+      const normalizeItems=items=>(items||[]).map(item=>({value:item.v,labels:{'zh-CN':item.zh||item.en||String(item.v),'en-US':item.en||item.zh||String(item.v)},...(item.children?{children:normalizeItems(item.children)}:{})}));
+      next.dictionaries=(Store.get('dicts')||[]).map(d=>({id:d.id,code:d.code,name:d.name,version:1,type:d.type==='tree'?'tree':'list',items:normalizeItems(d.items)}));
+    }
     next.forms=next.forms||[];
     const index=next.forms.findIndex(f=>f.id===form.id);
     if(index>=0)next.forms[index]=specForm;else next.forms.push(specForm);
