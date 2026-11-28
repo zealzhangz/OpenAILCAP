@@ -164,10 +164,10 @@ App.mods.sec = {
       <div class="tl-t">${l.action} · ${UI.esc(l.res)} ${l.level==='warn'?'<span class="tag tag-red">已告警</span>':''}</div>
       <div class="tl-d">${l.time} · ${l.user} · ${l.ip} · <span class="mono">${l.hash}</span></div></div>`).join('')}</div>`;
     return `<div class="grid cols-2">
-      <div class="card"><div class="card-h">GB/T 46900-2025 达标状态</div><div class="card-b">
-      ${[['基础级 L1','✅ 139/139'],['进阶级 L2','⚠️ 82/95（多端/大屏进行中）'],['引领级 L3','⏳ 规划']]
+      <div class="card"><div class="card-h">GB/T 46900-2025 引领级目标与证据状态</div><div class="card-b">
+      ${[['L1 初阶能力','待逐条复核'],['L2 中阶能力','待逐条复核'],['L3 高阶能力','目标：引领级；待逐条复核']]
       .map(([k,v])=>`<div class="desc-list dl"><span class="dt">${k}</span><span class="dd"><b>${v}</b></span></div>`).join('')}
-      <button class="btn btn-p mt10" onclick="UI.toast('合规自检报告已生成（含证据链）')">生成合规自检报告</button></div></div>
+      <button class="btn btn-p mt10" onclick="UI.toast('当前仅可导出整改台账；正式符合性结论须在全部测试和独立复核后生成','warn')">生成合规自检报告</button></div></div>
       <div class="card"><div class="card-h">定期审计报告（GB 6.7.6.2.3）</div><div class="card-b">
       ${[['2026-11 安全审计','4 发现(0 高危)','已整改'],['2026-10 操作审计','2 异常操作','已确认'],['2026-Q3 合规审计','1 项待办：密钥到期提醒策略','整改中']]
       .map(([n,f,s])=>`<div class="item"><div class="flex"><b>${n}</b><span class="tag ${s.includes('整改中')?'tag-orange':'tag-green'}" style="margin-left:auto">${s}</span></div>
