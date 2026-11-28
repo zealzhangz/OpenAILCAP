@@ -251,3 +251,63 @@ test('M04 legacy string rules remain executable after rule normalization',async(
   assert.ok(form.validateValues(store.data.forms[0],{amount:'-1'}).length>0);
   assert.equal(typeof store.data.forms[0].fields[0].rules[0],'object');
 });
+
+
+test('AppSpec 1.0 to 1.1 migration preview is non-destructive, explicit and repeatable',async()=>{
+  const appSource=await read('public/js/app-spec.js');
+  const migrationSource=await read('public/js/app-spec-migrations.js');
+  const sandbox={};
+  vm.runInNewContext(appSource+'; this.AppSpec=AppSpec;',sandbox);
+  vm.runInNewContext(migrationSource,sandbox);
+  const original={
+    schemaVersion:'1.0.0',meta:{appId:'app_migrate',name:'Migration test',description:'',version:'1.0',status:'draft'},
+    dataModels:[{id:'m1',appId:'app_migrate',name:'Record',display:'Record',fields:[{name:'status',type:'string'}]}],
+    relations:[],ui:{pages:[]},forms:[{id:'f1',appId:'app_migrate',name:'Form',modelRef:'m1',fields:[{id:'ff1',label:'Status',field:'status',type:'select',dictCode:'status'}]}],
+    logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'not-deployed',environments:['dev']}
+  };
+  const dictionaries=[{id:'dict_status',code:'status',name:'Status',version:3,type:'list',items:[{v:'open',zh:'打开',en:'Open'}]}];
+  const before=JSON.stringify(original);
+  const result=sandbox.AppSpecMigrations.preview(original,{dictionaries,validate:sandbox.AppSpec.validate.bind(sandbox.AppSpec)});
+  assert.equal(result.ok,true,JSON.stringify(result.errors));
+  assert.equal(result.migrated.schemaVersion,'1.1.0');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.migrated.forms[0].fields[0].dictionaryRef)),{dictionaryId:'dict_status',version:3});
+  assert.equal(result.migrated.dictionaries[0].items[0].labels['en-US'],'Open');
+  assert.equal(JSON.stringify(original),before,'preview must not mutate its source');
+  const again=sandbox.AppSpecMigrations.preview(result.migrated,{dictionaries,validate:sandbox.AppSpec.validate.bind(sandbox.AppSpec)});
+  assert.equal(again.ok,true);
+  assert.deepEqual(JSON.parse(JSON.stringify(again.migrated)),JSON.parse(JSON.stringify(result.migrated)));
+  assert.deepEqual(JSON.parse(JSON.stringify(again.changedPaths)),[]);
+});
+
+test('AppSpec migration fails closed for unknown or ambiguous dictionaries and external sources',async()=>{
+  const sandbox={};
+  vm.runInNewContext(await read('public/js/app-spec.js')+'; this.AppSpec=AppSpec;',sandbox);
+  vm.runInNewContext(await read('public/js/app-spec-migrations.js'),sandbox);
+  const spec={schemaVersion:'1.0.0',meta:{appId:'a',name:'A'},dataModels:[{id:'m',fields:[{name:'status',type:'string'}]}],relations:[],ui:{pages:[]},forms:[{id:'f',name:'F',modelRef:'m',fields:[{id:'x',label:'Status',field:'status',type:'select',dictCode:'missing'}]}],logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'not-deployed',environments:[]}};
+  const validate=sandbox.AppSpec.validate.bind(sandbox.AppSpec);
+  const unknown=sandbox.AppSpecMigrations.preview(spec,{dictionaries:[],validate});
+  assert.equal(unknown.ok,false);
+  assert.ok(unknown.errors.some(e=>e.path.endsWith('.dictCode')));
+  const duplicate=sandbox.AppSpecMigrations.preview(spec,{dictionaries:[{id:'d1',code:'missing',type:'list',items:[]},{id:'d2',code:'missing',type:'list',items:[]}],validate});
+  assert.equal(duplicate.ok,false);
+  assert.ok(duplicate.errors.some(e=>e.message.includes('duplicate dictionary code')));
+  const external=structuredClone(spec);external.forms[0].fields[0].dictFrom='remote-service';
+  const rejected=sandbox.AppSpecMigrations.preview(external,{dictionaries:[],validate});
+  assert.equal(rejected.ok,false);
+  assert.ok(rejected.errors.some(e=>e.message.includes('external dictionary source')));
+});
+
+test('AppSpec migration rejects broken form model and field references and preserves 1.1 input',async()=>{
+  const sandbox={};
+  vm.runInNewContext(await read('public/js/app-spec.js')+'; this.AppSpec=AppSpec;',sandbox);
+  vm.runInNewContext(await read('public/js/app-spec-migrations.js'),sandbox);
+  const spec={schemaVersion:'1.0.0',meta:{appId:'a',name:'A'},dataModels:[{id:'m',fields:[{name:'status',type:'string'}]}],relations:[],ui:{pages:[]},forms:[{id:'f',name:'F',modelRef:'missing',fields:[{id:'x',label:'Status',field:'absent',type:'text'}]}],logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'not-deployed',environments:[]}};
+  const result=sandbox.AppSpecMigrations.preview(spec,{dictionaries:[],validate:sandbox.AppSpec.validate.bind(sandbox.AppSpec)});
+  assert.equal(result.ok,false);
+  assert.ok(result.errors.some(e=>e.path.endsWith('.modelRef')));
+  const v11={...spec,schemaVersion:'1.1.0',dictionaries:[]};
+  const stable=sandbox.AppSpecMigrations.preview(v11);
+  assert.equal(stable.ok,true);
+  assert.deepEqual(JSON.parse(JSON.stringify(stable.migrated)),v11);
+  assert.deepEqual(JSON.parse(JSON.stringify(stable.changedPaths)),[]);
+});
