@@ -7,7 +7,7 @@ import addFormats from 'ajv-formats';
 const ajv=new Ajv2020({allErrors:true,strict:false});
 addFormats(ajv);
 const load=path=>JSON.parse(fs.readFileSync(new URL(path,import.meta.url),'utf8'));
-const schema10=load('../../../doc/architecture/schemas/app-spec-1.0.0.schema.json');
+const schema10=load('../../doc/architecture/schemas/app-spec-1.0.0.schema.json');
 const schema11=load('../../../doc/architecture/schemas/app-spec-1.1.0.schema.json');
 const validate10=ajv.compile(schema10);
 const validate11=ajv.compile(schema11);
