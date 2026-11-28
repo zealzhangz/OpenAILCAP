@@ -12,7 +12,7 @@
 ## 决策
 
 1. AppSpec 是应用定义的唯一规范化事实源（Single Source of Truth）。
-2. AppSpec 使用显式 `schemaVersion`，当前版本为 `1.0.0`；JSON Schema 文件是结构契约的机器可读定义。
+2. AppSpec 使用显式 `schemaVersion`，当前已定义版本为 `1.0.0` 与 `1.1.0`（1.1.0 增加版本化字典引用）；JSON Schema 文件是结构契约的机器可读定义。
 3. AppSpec 顶层至少包含 `meta`、`dataModels`、`relations`、`ui`、`forms`、`logic`、`workflows`、`security`、`i18n`、`deployment`，并为 `reports`、`integrations`、`extensions` 等扩展域保留显式位置。
 4. 所有实体、表单、页面、关系、流程和节点使用稳定 ID；跨对象引用必须在保存、导入、编译和发布前校验。
 5. 设计器与 Agent 只能通过有版本的 AppSpec 命令/补丁修改规格；AI 生成先形成候选差异，必须校验并由用户确认后写入。
@@ -30,6 +30,7 @@
 
 - Schema：`doc/architecture/schemas/app-spec-1.0.0.schema.json`
 - 浏览器原型校验器：`openailcap-prototype/public/js/app-spec.js`
+- 显式迁移预览：`openailcap-prototype/public/js/app-spec-migrations.js`
 - 原型测试：`openailcap-prototype/test/prototype-static.test.js`
 
 ## 验收标准
@@ -55,3 +56,4 @@
 - 1.1.0 将字典作为规范 IR 的一等对象；表单字段以 dictionaryId + version 精确引用，避免只依赖可变 code。
 - 浏览器校验器兼容 1.0.0 与 1.1.0；生产服务端必须按 schemaVersion 选择对应完整 JSON Schema，并执行引用、租户、权限与并发校验。
 - 本地原型字典 version=1 仅是演示映射，不构成不可变版本仓库或发布能力。
+- `openailcap-prototype/public/js/app-spec-migrations.js` 提供 1.0.0→1.1.0 的非破坏性迁移预览：只返回副本和差异，不写入 Store；字典必须由调用方显式提供并按 code 唯一匹配。未知/重复引用、外部字典源和模型字段引用错误均失败关闭。预览通过不等于用户批准或已持久化；生产迁移仍需服务端事务、审计、完整 Schema 校验和版本策略。
