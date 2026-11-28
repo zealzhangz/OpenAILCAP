@@ -129,3 +129,35 @@ test('global assistant does not fabricate LLM, test coverage, deployment or comp
   assert.ok(!source.includes('覆盖率 96%'));
   assert.ok(!source.includes('SM2/3/4'));
 });
+
+
+test('Prisma generator emits valid scalar mappings, constraints and bidirectional relations',async()=>{
+  const source=await read('public/js/prisma-schema.js');
+  const api=vm.runInNewContext(source+'; PrismaSchema');
+  const models=[
+    {id:'customer',name:'Customer',fields:[{name:'id',type:'string',pk:true,req:true},{name:'email',type:'string',req:true,unique:true,len:128}]},
+    {id:'order',name:'Order',fields:[{name:'id',type:'string',pk:true,req:true},{name:'customer_id',type:'string',req:true},{name:'amount',type:'decimal',req:true,len:'10,2'},{name:'note',type:'text',req:false}]}
+  ];
+  const schema=api.generate(models,[{id:'r1',from:'order',f:'customer_id',to:'customer',t:'id',type:'N:1'}]);
+  assert.match(schema,/email\\s+String\\s+@unique\\s+@db\\.VarChar\\(128\\)/);
+  assert.match(schema,/amount\\s+Decimal\\s+@db\\.Decimal\\(10,2\\)/);
+  assert.match(schema,/note\\s+String\\?\\s+@db\\.Text/);
+  assert.match(schema,/customer\\s+Customer\\s+@relation\\("Rel_Order_customer_id_Customer", fields: \\[customer_id\\], references: \\[id\\]\\)/);
+  assert.match(schema,/orderRecords\\s+Order\\[\\]\\s+@relation\\("Rel_Order_customer_id_Customer"\\)/);
+});
+
+test('Prisma generator rejects unsupported types and broken or incompatible relation references',async()=>{
+  const source=await read('public/js/prisma-schema.js');
+  const api=vm.runInNewContext(source+'; PrismaSchema');
+  const models=[
+    {id:'a',name:'A',fields:[{name:'id',type:'string',pk:true},{name:'kind',type:'enum'}]},
+    {id:'b',name:'B',fields:[{name:'id',type:'string',pk:true},{name:'a_id',type:'int'}]}
+  ];
+  assert.throws(()=>api.generate(models,[{id:'r',from:'b',f:'a_id',to:'a',t:'id',type:'N:1'}]),/不支持类型 enum/);
+  assert.throws(()=>api.generate([{id:'a',name:'A',fields:[{name:'id',type:'string',pk:true},{name:'a_id',type:'string'}]}],[{from:'a',f:'missing',to:'a',t:'id'}]),/外键字段/);
+});
+
+test('Prisma generator is loaded before data modeling enhancements',async()=>{
+  const html=await read('public/index.html');
+  assert.ok(html.indexOf('js/prisma-schema.js')<html.indexOf('js/modules/data-modeling-enhancements.js'));
+});
