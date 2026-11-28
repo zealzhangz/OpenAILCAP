@@ -10,6 +10,8 @@ The project spans **strategic planning (Phase 0) through detailed design & worki
 
 ---
 
+> **2026-11-28 delivery status notice:** The repository is under a full-scope redesign and GB/T 46900-2025 Leading-level (引领级) delivery remediation. Earlier statements such as “139/139 L1 items”, “100% compliant”, “18 fully-interactive pages”, or performance/AI accuracy figures are historical project claims, not current verified acceptance results. The authoritative target, feature-preservation rules, and evidence gates are now maintained in `doc/整改/`. No standard item is considered delivered until implementation and test evidence are reviewed.
+
 ## 📂 Repository Structure
 
 ### `/doc` — Design Knowledge Base
