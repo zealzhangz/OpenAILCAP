@@ -170,15 +170,15 @@
 ```
 API 网关层：
 ┌─────────────────────────────────────────────────┐
-│ Express 应用                                     │
-│  ├─ 路由定义 (/api/*)                          │
-│  ├─ 中间件栈                                     │
-│  │  ├─ 日志中间件 (morgan/winston)              │
-│  │  ├─ 认证中间件 (JWT)                         │
-│  │  ├─ 权限验证中间件 (RBAC/ABAC)              │
-│  │  ├─ 速率限制 (express-rate-limit)           │
-│  │  └─ 错误处理中间件                           │
-│  └─ 请求处理                                     │
+│ NestJS Application (唯一平台 API)                │
+│  ├─ Controller / REST API (/api/v1/*)            │
+│  ├─ Guard / Interceptor / Pipe                   │
+│  │  ├─ 结构化日志 / Trace Context               │
+│  │  ├─ Authentication Guard                     │
+│  │  ├─ PDP/PEP Authorization Guard               │
+│  │  ├─ Rate Limit Guard                          │
+│  │  └─ Exception Filter                         │
+│  └─ DTO Validation / Request Handling           │
 └─────────────────────────────────────────────────┘
 
 业务逻辑层：
@@ -203,7 +203,7 @@ API 网关层：
 └─────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────┐
 │ 工作流引擎模块                                    │
-│  ├─ WorkflowService (Temporal client)          │
+│  ├─ AgentTaskService (Temporal client)          │
 │  ├─ BPMNParser                                  │
 │  ├─ TaskService                                 │
 │  └─ WorkflowMonitor                            │
