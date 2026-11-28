@@ -111,3 +111,19 @@ test('application lifecycle enhancements replace template and export placeholder
     assert.ok(source.includes(token),token);
   assert.ok(!source.includes('pending-client-digest'));
 });
+
+
+test('application lifecycle provides recoverable deletion and real local exports',async()=>{
+  const source=await read('public/js/modules/app-lifecycle-enhancements.js');
+  for(const token of ['recycleBin()','restore(recycleId)','appRecycleBin','downloadJson','exportApp(id)','exportAll()'])
+    assert.ok(source.includes(token),token);
+  assert.ok(source.includes('expiresAt'));
+});
+
+test('global assistant does not fabricate LLM, test coverage, deployment or compliance results',async()=>{
+  const source=await read('public/js/app.js');
+  for(const token of ['LOCAL DEMO','本地规则演示','不会伪称已经完成生成、测试、部署或合规检查'])
+    if(token!=='LOCAL DEMO')assert.ok(source.includes(token),token);
+  assert.ok(!source.includes('覆盖率 96%'));
+  assert.ok(!source.includes('SM2/3/4'));
+});
