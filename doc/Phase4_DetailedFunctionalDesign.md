@@ -793,3 +793,128 @@ CREATE TABLE user_roles (
   - 功能引导向导
   - 操作手册编写
 
+
+
+---
+
+# 2026-11-28 首批模块详细设计基线（M01—M04）
+
+> 本节将应用管理、组织架构、数据建模、表单设计与当前交互原型逐项对齐。这里的“原型已实现”仅指浏览器内交互和 localStorage 演示；不代表生产 API、身份权限、审计服务或外部系统集成已经交付。页面中的 Toast、固定数据、随机值和模拟响应均不作为业务闭环证据。
+
+## M01 应用管理中心（路由 apps）
+
+### 领域对象与 AppSpec 边界
+
+- Application：`id`、`tenantId`、`name`、`description`、`type`、`ownerId`、`status`、`currentVersionId`、`createdAt`、`updatedAt`。
+- AppRevision：`id`、`appId`、`revision`、`appSpec`、`schemaVersion`、`createdBy`、`createdAt`、`changeSummary`；版本不可变。
+- Artifact：`id`、`appId`、`revisionId`、`compilerVersion`、`manifest`、`digest`、`signatureRef`、`status`；内容不可变，digest 必须由真实制品字节计算。
+- ShareGrant：`id`、`appId`、`subjectId`、`permissionSet`、`expiresAt`、`revokedAt`。
+- AppSpec `meta` 是应用定义元数据；版本和制品生命周期元数据由平台服务管理，不能伪装成 AppSpec 内的可变字段。
+
+### 主流程
+
+1. 创建：用户选择 AI 辅助、模板或手工方式 → 校验名称/类型/租户配额 → 建立草稿 AppSpec → 执行 Schema + 语义校验 → 保存首个 revision。
+2. 编辑：读取指定 revision → 基于 ETag/版本号提交变更 → 服务端校验 → 写入新 revision；并发冲突返回 409/412，不覆盖他人变更。
+3. 发布：选择不可变 revision → 编译 → 单测/契约/安全扫描 → 生成制品 manifest 与 digest → 审批 → 晋级目标环境；失败时保留原环境版本并记录原因。
+4. 分享：校验调用者授权 → 选择最小权限、对象范围和有效期 → 创建可撤销 grant；链接必须是服务端生成的随机高熵令牌，数据库仅保存令牌哈希，不能在 UI 中拼接固定 token。
+5. 删除：软删除并保留恢复期限；恢复前检查唯一约束、引用和权限；期限到期后按保留策略清理，并审计。
+6. 导出/导入：导出版本化配置包和 manifest；导入先解析、校验 schemaVersion、依赖、权限和冲突，再由用户确认写入；导出包不包含密钥、会话和个人敏感信息。
+
+### 权限与审计
+
+权限动作：`app:create/read/update/delete/restore/share/export/import/version:create/compile/promote`。对象级策略至少校验 tenant、应用归属、owner/team grant 和环境范围。审计事件：`app.created`、`app.spec.updated`、`app.version.created`、`artifact.compiled`、`artifact.promoted`、`app.share.granted/revoked`、`app.deleted/restored`。记录 actor、tenant、resource、before/after 摘要、traceId、时间和结果；不写入明文 token/密钥。
+
+### 异常与验收
+
+- 名称冲突、无权限、租户配额、schema 不兼容、ETag 冲突、编译失败、制品签名失败、审批拒绝、晋级失败、分享过期/撤销均需明确错误码和可恢复状态。
+- E2E：创建三种方式；编辑并形成新 revision；回滚创建新 revision（不得改写历史）；软删除/恢复；导出后重新导入；分享过期/撤销；无权限用户不能读取/导出；制品摘要与实际字节一致。
+
+### 当前原型核对
+
+- 有：创建入口、模板/手工/规则模拟 AI 草稿、详情、版本列表、回收站/恢复、部分 JSON 导出、localStorage 状态。
+- 未形成真实闭环：详情内回退仍为 Toast；分享仍为演示申请且链接示例不可用；制品生成仍是 Toast，历史样例含伪造 checksum 风险；`versions()` 入口曾仅提示用户进入详情；批量导入/发布/制品签名与跨环境晋级无后端。
+- 验收状态：D1（本节设计基线）；P1（部分交互）；I1/V1/S1 未证明。
+
+## M02 组织架构（路由 org）
+
+### 领域对象
+
+- Department：`id`、`tenantId`、`code`、`name`、`parentId`、`managerId`、`status`、`validFrom/validTo`。
+- Position：`id`、`code`、`name`、`grade`、`permissionTemplateId`。
+- Employee：`id`、`employeeNo`、`displayName`、`departmentId`、`positionId`、`managerId`、`status`、`contactRef`。
+- OrgChange：`id`、`subjectId`、`changeType`、`before`、`after`、`reason`、`approvalId`、`effectiveAt`、`actorId`。
+
+### 主流程与约束
+
+- 组织树写入必须检查同租户、父节点存在、禁止自引用/环路、编码唯一、负责人有效且具备管理资格。
+- 员工调岗/晋升先生成变更申请，审批通过后按生效时间更新组织关系；禁止 UI 点击即修改组织事实。
+- 员工停用需检查待办、流程参与者、负责人引用和账号状态；禁止删除仍被引用的员工。
+- 权限模板采用版本化策略定义；编辑时显示继承、显式授权和拒绝项，保存前展示权限差异并要求有权限的审批/确认。
+- Excel 导入先上传到隔离区，校验模板版本、列映射、编码唯一、引用完整、组织环路和数据权限；预览成功/失败行后事务提交，支持错误行下载和幂等重试。
+- AD/LDAP 同步必须使用最小权限服务账号、增量游标、属性映射、冲突策略和 dry-run；同步结果可追溯，不允许“同步完成”固定 Toast 代替真实连接。
+
+### 权限、审计与验收
+
+权限动作：`org:read`、`department:manage`、`position:manage`、`employee:manage`、`org:import`、`directory:sync`、`permission-template:approve`。审计覆盖部门/岗位/员工变更、权限模板发布、导入批次、外部目录同步，保留前后值摘要和来源系统。
+E2E：树节点新增/编辑/删除约束；员工调岗申请审批前后状态；停用引用检查；模板权限差异；Excel 有效/无效混合批次；LDAP 断连、重复游标和冲突恢复。
+
+### 当前原型核对
+
+- 有：部门树、员工/岗位详情、部门/岗位本地新增编辑、员工启停、本地变更记录展示。
+- 未形成真实闭环：调岗/晋升按钮未提交可追踪申请；Excel 导入没有真实文件解析；AD/LDAP 同步是固定 Toast；权限矩阵使用随机勾选且无保存/版本化；部门删除未完成下属/引用完整性保护。
+- 验收状态：D1；P1 部分交互；I1/V1/S1 未证明。
+
+## M03 数据建模（路由 model）
+
+### 领域对象与模型约束
+
+- DataModel：`id`、`appId`、`name`、`displayName`、`schemaVersion`、`fields[]`、`indexes[]`、`constraints[]`。
+- Field：`name`、`type`、`nullable`、`primaryKey`、`unique`、`default`、`length/precision/scale`、`references`、`encryptionProfileRef`、`dictionaryRef`。
+- Relation：`id`、`fromModel/fromField`、`toModel/toField`、`cardinality`、`onDelete/onUpdate`。
+- Dictionary、View 必须具备独立 ID、版本、租户/应用范围和引用校验。
+
+### 主流程与生成器要求
+
+1. 模型编辑在草稿副本中进行；名称、字段名、类型、主键、外键、索引、默认值和引用在保存前统一校验。
+2. 关系必须映射到真实外键字段；删除实体/字段前显示级联影响，禁止静默破坏引用。
+3. Prisma/DDL 生成器必须由同一规范化模型 IR 确定性生成；类型映射、nullable、主键、复合唯一索引、关系反向字段、数据库映射、默认值和加密字段策略均需有测试。
+4. 迁移预览必须生成可审阅的 up/down 或明确不可逆说明；生产执行要求备份、锁、超时、审批、迁移记录和失败恢复。原型按钮不得执行真实数据库迁移。
+5. SQL 逆向导入需使用受限 SQL parser；不执行导入 SQL，不接受多语句副作用；解析结果先进入候选模型，用户确认后写入 AppSpec。
+6. 加密字段只引用密钥管理配置，不得在 Schema/模型中存储密钥或宣称勾选 SM4 即完成国密保护。
+
+### 权限、审计与验收
+
+权限动作：`model:read/create/update/delete/import/export/compile/migration:preview/migration:execute`。审计模型字段、关系、索引、字典、视图和迁移操作。E2E/单测至少覆盖合法/非法标识符、所有类型映射、nullable、Decimal 精度、复合主键/唯一索引、外键双向关系、循环引用、删除依赖、SQL parser 恶意输入、迁移失败恢复及确定性重复生成。
+
+### 当前原型核对
+
+- 有：ER 画布、实体/字段本地编辑、关系展示、候选模型确认、DDL/Prisma 预览入口。
+- 已知阻断：Prisma 生成器的字段必填映射不完整、关系模型生成不足，类型映射把部分类型折叠为 String；迁移执行入口是演示 Toast；SQL 导入没有真实解析；字典编辑项为 Toast；视图定义器为 Toast；国密字段开关只是模型标记。
+- 验收状态：D1；P1 部分交互；I1/V1/S1 未证明。生成器在修复并通过 schema/parser 单测前不得作为可交付能力。
+
+## M04 表单设计（路由 form）
+
+### 领域对象
+
+- FormDefinition：`id`、`appId`、`modelRef`、`version`、`layout`、`fieldRefs[]`、`rules[]`、`i18n`、`submitPolicy`。
+- FormField：`id`、`modelFieldRef`、`key`、`label`、`componentType`、`required`、`defaultValue`、`visibilityRule`、`validationRules[]`、`span`、`translations`。
+- FormSubmission：`id`、`formVersion`、`payload`、`status`、`submittedBy`、`submittedAt`；运行时提交必须绑定具体表单版本。
+
+### 主流程与约束
+
+- 组件拖放生成字段草稿；字段 key 必须与 AppSpec 数据模型字段一致，不能只在 UI 中改名而不更新模型引用。
+- 属性编辑包括标签、组件类型、必填、默认值、布局、校验、联动、可见/只读条件和多语言；规则需可解析、可测试，不允许点击标签只弹 Toast。
+- 保存时校验字段引用、重复 key、规则表达式、组件与数据类型兼容、必填与默认值冲突，并写入新的表单 revision。
+- 预览模式应使用真实控件执行客户端校验；提交/暂存必须给出本地模拟和生产 API 两种状态的明确边界。
+- 国际化翻译应保留 locale key、源文、译文、状态和人工审核记录；AI 翻译为建议，不直接覆盖已审核文本。
+
+### 权限、审计与验收
+
+权限动作：`form:read/design/update/publish/preview/submit`。审计字段增删改、规则调整、布局变更、表单版本发布和提交。E2E：拖放组件、属性变更、规则有效/无效、模型字段引用、撤销重做、保存重载、预览校验、locale 切换、键盘操作和窄屏布局。
+
+### 当前原型核对
+
+- 有：画布拖放、字段属性编辑、布局切换、撤销/重做增强、字段建议选择、预览和多语言入口。
+- 未形成真实闭环：部分校验规则点击仅 Toast；预览提交/暂存没有真实保存；多语言内容部分硬编码，AI 翻译仅模拟；表单与模型字段一致性仅部分由 AppSpec 轻量校验器覆盖。
+- 验收状态：D1；P1 部分交互；I1/V1/S1 未证明。
+
