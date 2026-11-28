@@ -23,6 +23,7 @@ App.mods.form = {
       <button class="btn" onclick="FormM.preview()">👁️ 预览</button>
       <button class="btn" onclick="FormM.previewRuntime()">▶️ 运行预览</button>
       <button class="btn" onclick="FormM.multiLang()">🌐 多语言</button>
+      <button class="btn" onclick="FormM.validateAndSave()">✓ 校验并提交 AppSpec</button>
       <button class="btn btn-p" onclick="FormM.save()">💾 保存</button>
     </div>
     <div class="designer">
