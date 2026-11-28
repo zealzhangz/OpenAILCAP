@@ -161,3 +161,13 @@ test('Prisma generator is loaded before data modeling enhancements',async()=>{
   const html=await read('public/index.html');
   assert.ok(html.indexOf('js/prisma-schema.js')<html.indexOf('js/modules/data-modeling-enhancements.js'));
 });
+
+
+test('organization enhancements replace random permissions and toast-only transfer/promotion with persisted local state',async()=>{
+  const source=await read('public/js/modules/organization-enhancements.js');
+  for(const token of ['permissionTemplates','orgChangeRequests','decideChange','本地模拟审批人','汇报环路'])
+    assert.ok(source.includes(token),token);
+  assert.ok(!source.includes('Math.random'));
+  const html=await read('public/index.html');
+  assert.ok(html.indexOf('js/modules/organization-enhancements.js')>html.indexOf('js/modules/organization.js'));
+});
