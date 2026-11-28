@@ -333,13 +333,13 @@ test('AppSpec JSON Schemas are valid Draft 2020-12 documents and version-isolate
   assert.ok(schema11.$defs.form.properties.fields.items.properties.dictionaryRef);
 });
 
-test('AppSpec browser validator enforces dictionary object shape and rejects malformed form references',async()=>{
+test('AppSpec browser validator rejects malformed dictionary labels, child rules and reference properties',async()=>{
   const source=await read('public/js/app-spec.js');
   const api=vm.runInNewContext(source+'; AppSpec');
   const base={schemaVersion:'1.1.0',meta:{appId:'a',name:'A'},dataModels:[{id:'m',name:'M',display:'M',fields:[{name:'status',type:'string'}]}],relations:[],ui:{pages:[]},forms:[{id:'f',name:'F',fields:[{id:'x',label:'Status',field:'status',type:'select',dictionaryRef:{dictionaryId:'d',version:1}}]}],logic:[],workflows:[],security:{roles:[]},i18n:{locales:['zh-CN']},deployment:{status:'draft',environments:[]},dictionaries:[{id:'d',code:'status',name:'Status',version:1,type:'list',items:[{value:'open',labels:{'zh-CN':'打开'}}]}]};
   assert.equal(api.validate(base).valid,true);
   const badRef=structuredClone(base);badRef.forms[0].fields[0].dictionaryRef.extra=true;
-  assert.equal(api.validate(badRef).valid,true,'browser validator currently accepts extra dictionaryRef properties; record known subset gap');
+  assert.equal(api.validate(badRef).valid,false);
   const badLabels=structuredClone(base);badLabels.dictionaries[0].items[0].labels['en-US']=7;
   assert.equal(api.validate(badLabels).valid,false);
   const listChildren=structuredClone(base);listChildren.dictionaries[0].items[0].children=[];
